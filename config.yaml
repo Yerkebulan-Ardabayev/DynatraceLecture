@@ -1,0 +1,127 @@
+tenant_url: https://guu84124.live.dynatrace.com
+state_file: state/storage_state.json
+output_dir: output
+logs_dir: logs
+
+# === REAL routes из живого тенанта guu84124 (Dynatrace Platform + Classic) ===
+# Получено из nav-сканирования /ui/settings/builtin:os-services-monitoring
+seed_routes:
+  # --- Главные обзорные страницы Classic ---
+  - /ui/dashboards
+  - /ui/problems
+  - /ui/services
+  - /ui/applications
+  - /ui/databases
+  - /ui/releases
+  - /ui/slo
+  - /ui/hub
+  - /ui/system-notifications
+
+  # --- Аналитика / Observability ---
+  - /ui/data-explorer
+  - /ui/metrics
+  - /ui/network
+  - /ui/profiling-optimization
+  - /ui/diagnostictools
+  - /ui/diagnostictools/healthstate
+  - /ui/diagnostictools/purepaths
+  - /ui/business-events
+  - /ui/logs-events
+  - /ui/user-sessions
+  - /ui/user-sessions/query
+  - /ui/user-sessions/replay-landing
+  - /ui/entity/list
+
+  # --- Security ---
+  - /ui/security
+  - /ui/security/overview
+  - /ui/security/vulnerabilities
+  - /ui/security/code-vulnerabilities
+  - /ui/security/attacks
+
+  # --- Cloud / Infra ---
+  - /ui/cloudfoundry
+  - /ui/deploymentstatus
+
+  # --- Settings (главный, далее depth=2 раскроет ~150 sub-pages) ---
+  - /ui/settings
+  - /ui/access-tokens
+
+  # --- Якорные Settings sub-pages, чтобы гарантированно зацепить весь tree ---
+  - /ui/settings/builtin:os-services-monitoring
+  - /ui/settings/builtin:management-zones
+  - /ui/settings/builtin:tags.auto-tagging
+  - /ui/settings/builtin:alerting.profile
+  - /ui/settings/builtin:problem.notifications
+  - /ui/settings/builtin:anomaly-detection.services
+  - /ui/settings/builtin:logmonitoring.log-storage-settings
+  - /ui/settings/builtin:appsec.rule-settings
+  - /ui/settings/builtin:monitoring.slo
+  - /ui/settings/builtin:deployment.oneagent.updates
+  - /ui/settings/builtin:rum.web.enablement
+
+crawl:
+  max_depth: 2
+  max_pages: 1500
+  page_timeout_ms: 45000
+  navigation_wait_ms: 2500
+  viewport_width: 1920
+  viewport_height: 1080
+
+  url_skip_patterns:
+    - "/entity/HOST-"
+    - "/entity/SERVICE-"
+    - "/entity/PROCESS_GROUP-"
+    - "/entity/PROCESS_GROUP_INSTANCE-"
+    - "/entity/APPLICATION-"
+    - "/entity/CONTAINER_GROUP-"
+    - "/entity/CUSTOM_DEVICE-"
+    - "/entity/CLOUD_APPLICATION-"
+    - "/entity/KUBERNETES_"
+    - "/entity/SYNTHETIC_TEST-"
+    - "/entity/MOBILE_APPLICATION-"
+    - "/problem/P-"
+    - "/release/"
+    - "/log/viewer"
+    - "logout"
+    - "signout"
+    - "support.dynatrace"
+    - "docs.dynatrace"
+    - "community.dynatrace"
+    - "refId="
+
+discovery:
+  depth: 2          # глубина обхода в discovery
+  max_pages: 1500
+
+deep:
+  depth: 3
+  max_pages: 2000
+
+safe_actions:
+  click_deny_text:
+    - delete
+    - remove
+    - disable
+    - save
+    - apply
+    - send
+    - submit
+    - run
+    - execute
+    - confirm
+    - "yes"
+    - create
+    - edit
+    - duplicate
+    - share
+    - download
+    - export
+    - upload
+    - install
+    - uninstall
+    - reset
+    - clear
+    - generate token
+    - revoke
+    - rotate

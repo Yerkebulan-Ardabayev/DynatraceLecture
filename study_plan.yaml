@@ -1,0 +1,426 @@
+# План обучения "Обучение Dynatrace extended JUSAN"
+# Маппинг: день -> тема -> Dynatrace UI routes
+# routes тестировались на guu84124.live.dynatrace.com (Classic + Platform)
+
+days:
+  # ====================== DAY 1 ======================
+  - id: day-1
+    title: "Введение в систему Dynatrace"
+    objectives: |
+      Знакомство с веб-интерфейсом, архитектурой и основными концепциями.
+      Знакомство с ключевыми объектами системы.
+    topics:
+      - id: architecture
+        name: "Архитектура Dynatrace"
+        kind: concept
+        notes: "Концептуальная тема (слайды). UI-обвязка через Hub и Settings → Deployment."
+        routes:
+          - /ui/hub
+
+      - id: components
+        name: "Компоненты системы: OneAgent, ActiveGate, серверная часть"
+        kind: live
+        routes:
+          - /ui/settings/builtin:deployment.oneagent.default-mode
+          - /ui/settings/builtin:deployment.oneagent.updates
+          - /ui/settings/builtin:deployment.activegate.updates
+          - /ui/settings/builtin:activegate-token
+          - /ui/settings/builtin:deployment.management.update-windows
+
+      - id: oneagent-principles
+        name: "Принцип работы и возможности OneAgent"
+        kind: live
+        routes:
+          - /ui/settings/builtin:oneagent.features
+          - /ui/settings/builtin:process.process-monitoring
+          - /ui/settings/builtin:process.built-in-process-monitoring-rule
+
+      - id: dem
+        name: "Цифровой опыт (Digital Experience Monitoring): основные принципы"
+        kind: live
+        routes:
+          - /ui/applications
+          - /ui/user-sessions
+
+      - id: ui-overview
+        name: "Обзор интерфейса и навигации"
+        kind: live
+        routes:
+          - /ui/dashboards
+          - /ui/services
+          - /ui/applications
+          - /ui/databases
+          - /ui/problems
+          - /ui/releases
+
+      - id: smartscape
+        name: "Топология Smartscape"
+        kind: live
+        notes: "На новом тенанте Classic Smartscape может быть отдельным app. Пробуем известные пути."
+        routes:
+          - /ui/apps/dynatrace.classic.smartscape
+          - /ui/entity/list
+
+      - id: key-objects
+        name: "Хосты, процессы, сервисы, приложения — обзор ключевых объектов"
+        kind: live
+        routes:
+          - /ui/entity/list
+          - /ui/services
+          - /ui/applications
+
+      - id: data-explorer
+        name: "Встроенные метрики, Data Explorer"
+        kind: live
+        routes:
+          - /ui/data-explorer
+          - /ui/metrics
+
+      - id: baselines
+        name: "Построение базовых линий и работа с порогами"
+        kind: live
+        routes:
+          - /ui/settings/builtin:anomaly-detection.services
+          - /ui/settings/builtin:anomaly-detection.databases
+          - /ui/settings/builtin:anomaly-detection.infrastructure-hosts
+          - /ui/settings/builtin:anomaly-detection.holiday-aware-baseline
+          - /ui/settings/builtin:anomaly-detection.frequent-issues
+
+      - id: problems-feature
+        name: "Функционал Problems: автоматическая детекция инцидентов"
+        kind: live
+        routes:
+          - /ui/problems
+          - /ui/settings/builtin:problem.notifications
+          - /ui/settings/builtin:anomaly.detection.alerts-category-update
+
+      - id: dashboards
+        name: "Системные и пользовательские дашборды"
+        kind: live
+        routes:
+          - /ui/dashboards
+          - /ui/settings/builtin:dashboards.general
+          - /ui/settings/builtin:dashboards.presets
+          - /ui/settings/builtin:dashboards.image.allowlist
+
+  # ====================== DAY 2 ======================
+  - id: day-2
+    title: "Инфраструктура, контейнеры, базы данных, сети"
+    objectives: |
+      Понимание связи инфраструктурных ресурсов с сервисами и пользовательским опытом.
+      Интерпретация причины деградации на уровне ОС, контейнеров и баз данных.
+    topics:
+      - id: os-monitoring
+        name: "Мониторинг ОС: CPU, RAM, IO, процессы в Dynatrace"
+        kind: live
+        routes:
+          - /ui/entity/list
+          - /ui/settings/builtin:os-services-monitoring
+          - /ui/settings/builtin:disk.options
+          - /ui/settings/builtin:anomaly-detection.disk-rules
+
+      - id: oneagent-infra
+        name: "Как OneAgent собирает инфраструктурные метрики"
+        kind: live
+        routes:
+          - /ui/settings/builtin:oneagent.features
+          - /ui/settings/builtin:infrastructure.disk.edge.anomaly-detectors
+
+      - id: hosts-processes
+        name: "Хосты и процессы: взаимосвязи, показатели, атрибуты"
+        kind: live
+        routes:
+          - /ui/entity/list
+          - /ui/settings/builtin:process-grouping-rules
+          - /ui/settings/builtin:process-group.simple-detection-rule
+          - /ui/settings/builtin:process-group.advanced-detection-rule
+          - /ui/settings/builtin:process.custom-process-monitoring-rule
+          - /ui/settings/builtin:processavailability
+          - /ui/settings/builtin:process-visibility
+
+      - id: containers
+        name: "Мониторинг контейнеров"
+        kind: live
+        routes:
+          - /ui/settings/builtin:container.technology
+          - /ui/settings/builtin:container.built-in-monitoring-rule
+          - /ui/settings/builtin:container.monitoring-rule
+          - /ui/settings/builtin:process-group.cloud-application-workload-detection
+
+      - id: kubernetes
+        name: "Мониторинг Kubernetes: кластеры, ноды, поды, ворклоады"
+        kind: live
+        routes:
+          - /ui/settings/builtin:cloud.kubernetes.monitoring
+          - /ui/settings/builtin:kubernetes.generic.metadata.enrichment
+          - /ui/settings/builtin:kubernetes.security-posture-management
+          - /ui/settings/builtin:anomaly-detection.kubernetes.cluster
+          - /ui/settings/builtin:anomaly-detection.kubernetes.namespace
+          - /ui/settings/builtin:anomaly-detection.kubernetes.node
+          - /ui/settings/builtin:anomaly-detection.kubernetes.workload
+          - /ui/settings/builtin:anomaly-detection.kubernetes.pvc
+          - /ui/settings/builtin:app-transition.kubernetes
+
+      - id: databases
+        name: "Мониторинг БД: Oracle, PostgreSQL, MS SQL, MongoDB"
+        kind: live
+        routes:
+          - /ui/databases
+          - /ui/settings/builtin:anomaly-detection.databases
+
+      - id: services-overview
+        name: "Типы сервисов / стандартная инфографика"
+        kind: live
+        routes:
+          - /ui/services
+          - /ui/settings/builtin:service-detection-rules
+          - /ui/settings/builtin:service-detection-v2-for-oneagent
+
+      - id: service-cards
+        name: "Сравнение периодов, анализ времени отклика, ключевые запросы"
+        kind: live
+        routes:
+          - /ui/services
+          - /ui/settings/builtin:anomaly-detection.services
+          - /ui/settings/builtin:unified-services-endpoint-metrics
+
+      - id: problems-navigation
+        name: "Переход к сервисам и хостам из карточки Problems"
+        kind: live
+        routes:
+          - /ui/problems
+
+  # ====================== DAY 3-4 ======================
+  - id: day-3-4
+    title: "Архитектура сквозного мониторинга и Observability"
+    objectives: |
+      Понимание цепочки «пользователь → приложение → сервисы → хосты».
+      Анализ маршрутизации запросов и поиск корневых причин инцидентов.
+      Представление о SLI/SLO/SLA и жизненном цикле инцидентов.
+    topics:
+      # --- Часть 1: Observability ---
+      - id: mlt-concepts
+        name: "Метрики, логи, трейсы: концепции и реализация"
+        kind: live
+        routes:
+          - /ui/data-explorer
+          - /ui/metrics
+          - /ui/logs-events
+          - /ui/diagnostictools/purepaths
+          - /ui/diagnostictools
+
+      - id: service-flow
+        name: "Связи сервисов и Service Flow"
+        kind: live
+        routes:
+          - /ui/services
+
+      - id: service-object
+        name: "Логический объект Service: полное описание интерфейса"
+        kind: live
+        routes:
+          - /ui/services
+          - /ui/settings/builtin:service-detection.full-web-service
+          - /ui/settings/builtin:service-detection.external-web-service
+          - /ui/settings/builtin:service-splitting-rules
+
+      - id: response-analysis
+        name: "Анализ отклика, деградаций и аномалий"
+        kind: live
+        routes:
+          - /ui/services
+          - /ui/settings/builtin:anomaly-detection.services
+          - /ui/settings/builtin:failure-detection.environment.parameters
+          - /ui/settings/builtin:failure-detection.environment.rules
+          - /ui/settings/builtin:failure-detection-rulesets
+
+      # --- Часть 2: Apps ---
+      - id: instrumentation
+        name: "Инструментирование приложений: Web, Mobile"
+        kind: live
+        routes:
+          - /ui/settings/builtin:rum.web.enablement
+          - /ui/settings/builtin:rum.mobile.enablement
+          - /ui/settings/builtin:rum.web.rum-javascript-file-name
+          - /ui/settings/builtin:rum.web.custom-rum-javascript-version
+          - /ui/settings/builtin:rum.web.rum-javascript-updates
+
+      - id: app-detection
+        name: "Детектирование приложений: правила, группы, лучшие практики"
+        kind: live
+        routes:
+          - /ui/settings/builtin:rum.web.app-detection
+          - /ui/settings/builtin:rum.web.beacon-domain-origins
+          - /ui/settings/builtin:rum.host-headers
+          - /ui/settings/builtin:rum.ip-determination
+          - /ui/settings/builtin:rum.ip-mappings
+
+      - id: app-cards
+        name: "Инфографика приложений: показатели UX и производительности"
+        kind: live
+        routes:
+          - /ui/applications
+          - /ui/settings/builtin:rum.user-experience-score
+          - /ui/settings/builtin:usability-analytics
+
+      - id: key-actions
+        name: "Ключевые пользовательские действия + дополнительные свойства"
+        kind: live
+        routes:
+          - /ui/settings/builtin:user-action-custom-metrics
+          - /ui/settings/builtin:rum.custom.enablement
+          - /ui/settings/builtin:rum.web.resource-types
+          - /ui/settings/builtin:rum.web.resource-cleanup-rules
+
+      - id: sessions
+        name: "Сессии пользователей: структура, атрибуты, Session Replay"
+        kind: live
+        routes:
+          - /ui/user-sessions
+          - /ui/user-sessions/replay-landing
+          - /ui/settings/builtin:sessionreplay.cookie
+          - /ui/settings/builtin:sessionreplay.web.resource-capturing
+          - /ui/settings/builtin:elasticsearch.user-session-export-settings-v2
+
+      - id: thresholds
+        name: "Настройка порогов, аномалий и базовых линий (для apps)"
+        kind: live
+        routes:
+          - /ui/settings/builtin:anomaly-detection.rum-web
+          - /ui/settings/builtin:anomaly-detection.rum-mobile
+          - /ui/settings/builtin:anomaly-detection.rum-custom
+          - /ui/settings/builtin:anomaly-detection.rum-custom-crash-rate-increase
+          - /ui/settings/builtin:anomaly-detection.rum-mobile-crash-rate-increase
+
+      # --- Часть 3: Reliability ---
+      - id: sli-slo-sla
+        name: "SLI, SLO, SLA: подходы и реализация"
+        kind: live
+        routes:
+          - /ui/slo
+          - /ui/settings/builtin:monitoring.slo
+          - /ui/settings/builtin:monitoring.slo.normalization
+
+      - id: reliability-config
+        name: "Настройка измерения надёжности на уровне сервисов и приложений"
+        kind: live
+        routes:
+          - /ui/settings/builtin:health-experience.service-alert
+          - /ui/settings/builtin:health-experience.frontend-alert
+          - /ui/settings/builtin:health-experience.cloud-alert
+
+      - id: incident-lifecycle
+        name: "Incident Lifecycle: от детекции до Root Cause Analysis"
+        kind: live
+        routes:
+          - /ui/problems
+          - /ui/settings/builtin:alerting.profile
+          - /ui/settings/builtin:alerting.maintenance-window
+          - /ui/settings/builtin:problem.notifications
+          - /ui/settings/builtin:issue-tracking.integration
+
+      - id: appsec
+        name: "Обзор Security Module (Application Security)"
+        kind: live
+        routes:
+          - /ui/security
+          - /ui/security/overview
+          - /ui/security/vulnerabilities
+          - /ui/security/code-vulnerabilities
+          - /ui/security/attacks
+          - /ui/settings/builtin:appsec.rule-settings
+          - /ui/settings/builtin:appsec.attack-protection-settings
+          - /ui/settings/builtin:appsec.attack-protection-advanced-config
+          - /ui/settings/builtin:appsec.attack-protection-allowlist-config
+          - /ui/settings/builtin:appsec.runtime-vulnerability-detection
+          - /ui/settings/builtin:appsec.code-level-vulnerability-rule-settings
+          - /ui/settings/builtin:appsec.third-party-vulnerability-rule-settings
+          - /ui/settings/builtin:appsec.notification-alerting-profile
+          - /ui/settings/builtin:appsec.notification-attack-alerting-profile
+
+  # ====================== DAY 5 ======================
+  - id: day-5
+    title: "Мониторинг фронтенда и пользовательского опыта"
+    objectives: |
+      Понимание реального пользовательского опыта.
+      Поведение пользователей, влияние UX на надёжность и бизнес-показатели.
+    topics:
+      - id: rum
+        name: "Real User Monitoring (RUM): реальные пользовательские сессии"
+        kind: live
+        routes:
+          - /ui/user-sessions
+          - /ui/user-sessions/query
+          - /ui/settings/builtin:rum.web.enablement
+          - /ui/settings/builtin:rum.mobile.enablement
+
+      - id: ux-metrics
+        name: "Метрики UX: Apdex и другие показатели качества"
+        kind: live
+        routes:
+          - /ui/applications
+          - /ui/settings/builtin:rum.user-experience-score
+          - /ui/settings/builtin:usability-analytics
+
+      - id: journeys
+        name: "Анализ путей пользователей (Journey, Funnel)"
+        kind: live
+        routes:
+          - /ui/user-sessions/query
+          - /ui/user-sessions
+
+      - id: session-replay
+        name: "Воспроизведение сессий (Session Replay)"
+        kind: live
+        routes:
+          - /ui/user-sessions/replay-landing
+          - /ui/settings/builtin:sessionreplay.cookie
+          - /ui/settings/builtin:sessionreplay.web.resource-capturing
+
+      - id: app-segments
+        name: "Разделение фронтенд-приложений на части, фильтры, сегменты"
+        kind: live
+        routes:
+          - /ui/settings/builtin:rum.web.app-detection
+          - /ui/settings/builtin:rum.web.beacon-domain-origins
+          - /ui/settings/builtin:rum.provider-breakdown
+
+      - id: synthetic
+        name: "Synthetic Monitoring: HTTP, Browser, браузерные шаги"
+        kind: live
+        notes: "ВНИМАНИЕ: на тестовом тенанте guu84124 endpoint /ui/synthetic возвращает 403 (нет прав). Зафиксируем как gap."
+        routes:
+          - /ui/synthetic
+          - /ui/settings/builtin:synthetic.synthetic-availability-settings
+          - /ui/settings/builtin:synthetic.browser.outage-handling
+          - /ui/settings/builtin:synthetic.http.outage-handling
+
+      - id: alerting-profiles
+        name: "Настройка правил оповещения и Alerting Profiles"
+        kind: live
+        routes:
+          - /ui/settings/builtin:alerting.profile
+          - /ui/settings/builtin:alerting.maintenance-window
+          - /ui/settings/builtin:anomaly-detection.metric-events
+
+      - id: alerting-logic
+        name: "Работа с оповещениями и их логика в Dynatrace"
+        kind: live
+        routes:
+          - /ui/system-notifications
+          - /ui/settings/builtin:problem.notifications
+          - /ui/settings/builtin:issue-tracking.integration
+
+      - id: usql
+        name: "USQL / DQL: запросы, возможности, ограничения"
+        kind: live
+        notes: "USQL устарел в новых тенантах, используется DQL через Notebooks/Sessions Query."
+        routes:
+          - /ui/user-sessions/query
+
+      - id: api
+        name: "Dynatrace API: обзор сценариев интеграции"
+        kind: live
+        routes:
+          - /ui/access-tokens
+          - /ui/settings/builtin:tokens.token-settings

@@ -1,0 +1,14 @@
+.env
+state/
+output/
+logs/
+checkpoints/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.idea/
+.vscode/
+.link_check_cache.json
+.ruff_cache/
+*.backup-*
