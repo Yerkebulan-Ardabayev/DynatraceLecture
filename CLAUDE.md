@@ -78,9 +78,9 @@ HTML собирается с `<meta name="dt-build-id">` + build-id в `title` (
 - Tech-факт не в dtkb и не в docs → **спроси пользователя**, не выдумывай.
 - UI-элемент не в `ui_elements.json` → возможно, captured скрины устарели; не цитируй дословно, опиши обобщённо («в разделе Settings обычно есть поле X»).
 
-## Не репозиторий
+## Репозиторий
 
-dt-crawler **НЕ git-репо**. «Пуш» = `python plan_html.py` — генерирует `training.html`. Нет коммитов, нет веток.
+dt-crawler — git-репо: `https://github.com/Yerkebulan-Ardabayev/DynatraceLecture.git`, default branch `main`. Артефакт `training.html` собирается через `plan_html.py`. После значимых правок: `git add … && git commit -m "…" && git push`.
 
 ## Связанные правила (в memory/)
 
