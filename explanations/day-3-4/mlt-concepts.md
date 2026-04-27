@@ -1,4 +1,19 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 1 из 14: «Метрики, логи, трейсы: концепции и реализация»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/data-explorer -->
+<!-- revision: 2026-04-27 -->
+
+🔖 Редакция от 2026-04-27.
+
+Путь в UI: **Observe and explore → Data Explorer / Metrics / Logs**, **Application Observability → Distributed Traces / Multidimensional Analysis**.
+
+## 📚 Источники
+
+- [Distributed traces (Managed)](https://docs.dynatrace.com/managed/observe-and-explore/distributed-traces)
+- [Log Monitoring (Managed)](https://docs.dynatrace.com/managed/observe-and-explore/log-monitoring)
+- [Metrics (Managed)](https://docs.dynatrace.com/managed/observe-and-explore/metrics)
+- [Data Explorer (Managed)](https://docs.dynatrace.com/managed/observe-and-explore/explorer)
+- [Data retention periods (Managed)](https://docs.dynatrace.com/managed/shortlink/data-retention-periods)
+- [Span and trace context propagation (Managed)](https://docs.dynatrace.com/managed/observe/application-observability/distributed-traces/context-propagation)
 
 ## 📍 КАРТА — три основы observability и их экраны в Dynatrace
 
@@ -53,6 +68,7 @@ Data Explorer разбирался в Дне 1 (Тема 8). В теме observa
 - **Связывает с сущностями.** Каждая запись привязывается к хосту / процессу / контейнеру. Из карточки сервиса клик «посмотреть логи» открывает только логи этого сервиса.
 
 **Формат запроса в Managed** — простой поиск по словам + фильтры в UI: `ERROR AND service.name=payment-service`, `severity=FATAL AND host.name=prod-app-01`. Полноценный DQL (Dynatrace Query Language) — язык нового SaaS-стэка поверх Grail. В air-gapped Managed он **не работает**, используются классический Logs UI и USQL для сессий.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe-and-explore/log-monitoring -->
 
 *Типовое включение.* Log Monitoring — Opt-In фича (разбиралась в Дне 2, Тема 2). Полный сбор логов всей инфраструктуры дорог по DDU-лицензиям. Обычно ограничивают prod-приложениями и критичной инфраструктурой.
 
@@ -68,12 +84,13 @@ Data Explorer разбирался в Дне 1 (Тема 8). В теме observa
 **Как работает PurePath:**
 
 1. Входящий HTTP-запрос попадает в инструментированный сервис. OneAgent перехватывает вход, генерирует `trace ID` и `span ID`.
-2. Сервис делает исходящие вызовы — другие сервисы по HTTP, БД по SQL, очереди по Kafka / JMS. OneAgent автоматически добавляет trace headers (`x-dynatrace`) в каждый исходящий запрос.
+2. Сервис делает исходящие вызовы — другие сервисы по HTTP, БД по SQL, очереди по Kafka / JMS. OneAgent автоматически добавляет trace-заголовки в каждый исходящий запрос. Используются три механизма: **`x-dynatrace`** (проприетарный), **`traceparent` / `tracestate`** (стандарт W3C Trace Context, общий для OneAgent и OpenTelemetry), **`dtdTraceTagInfo`** (для очередей и messaging).
 3. Принимающий сервис видит заголовок, связывает свою работу с контекстом родителя, создаёт child span.
 4. Ветки развиваются рекурсивно. Получается **дерево спанов** — все работы, выполненные для обслуживания одного изначального запроса.
 5. Все спаны уходят в кластер и связываются в единый PurePath.
 
 На экране Distributed Traces — список PurePath-ов с фильтрами по времени, сервису, длительности, статусу. Клик открывает **waterfall-диаграмму**: временная развёртка всех спанов с длительностью каждого.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/application-observability/distributed-traces/context-propagation -->
 
 *Пример использования.* Жалоба «оформление платежа занимает 5 секунд». Без трейсов инженер видит только «клиент ждал 5 сек». С PurePath: 500 мс frontend, 200 мс gateway, 3000 мс auth-service (ожидание LDAP), 1300 мс payment-service. Корень — медленный LDAP. Без ручного поиска логов.
 
@@ -111,17 +128,28 @@ PurePath работает **автоматически** для всех тех�
 - Servlet / Filter в Java.
 - Middleware в Express / Koa.
 - Controller в ASP.NET.
-- Handler в Go (через eBPF).
+- 64-bit Go-исполняемые файлы — автоматическая инъекция инструментации в бинарь (поддержка x86 c OneAgent 1.323+, ARM64 на отдельных версиях).
 
 Каждая точка входа и выхода автоматически становится спаном в PurePath.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe-and-explore/distributed-traces -->
 
 **Совместимость с OpenTelemetry.** Dynatrace принимает OTLP-поток от приложений, инструментированных OTel, и объединяет его спаны с автоматическими PurePath-спанами в единое дерево. В одной системе видно и автоматически, и вручную инструментированные части.
 
 ### Хранение и прореживание MLT-данных
 
-- **Metrics.** Cassandra и metrics-store. Полное разрешение — несколько дней, дальше прореживание (1 мин → 5 мин → 1 час → 1 день). По умолчанию 13 месяцев, настраивается.
-- **Logs.** Elasticsearch кластера. Срок зависит от объёма и лицензии. По умолчанию 5-7 дней, часто поднимают до 30.
-- **Traces.** Cassandra с индексами для быстрого поиска. Обычно 35 дней для полных PurePath. Долгосрочные агрегаты (Throughput, percentiles) хранятся как метрики с обычным retention.
+- **Metrics Classic.** Cassandra и metrics-store. Горизонт хранения — **5 лет** с прогрессивным прореживанием:
+  - 0–14 дней → гранулярность 1 минута
+  - 14–28 дней → 5 минут
+  - 28–400 дней → 1 час
+  - 400 дней – 5 лет → 1 день
+- **Log Monitoring Classic.** Elasticsearch с replication factor 2. Срок хранения — **35 дней** (фиксировано).
+- **Distributed Traces Classic.** Cassandra с индексами для быстрого поиска. Полные транзакционные детали — **до 365 дней (настраивается)**. Code-Level Insights (детальный код-профиль) — **10 дней** в исходном виде, дальше данные оптимизируются под агрегированный анализ.
+- **Davis problems & events.** 14 месяцев (фиксировано).
+
+Долгосрочные агрегаты сервисов (Throughput, percentiles) хранятся как метрики с retention из лестницы выше, не как PurePath.
+
+Цифры из retention для SaaS / Grail (10 лет, 15 месяцев и т.п.) к Managed Classic не относятся.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/data-retention-periods -->
 
 ### Air-gapped контекст
 

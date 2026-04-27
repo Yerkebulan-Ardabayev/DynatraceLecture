@@ -1,4 +1,17 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 2 из 14: «Связи сервисов и Service Flow»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/services -->
+<!-- revision: 2026-04-27 -->
+
+🔖 Редакция от 2026-04-27.
+
+Путь в UI: **Application Observability → Services** → клик на сервис → блок **Understand dependencies → View service flow**.
+
+## 📚 Источники
+
+- [Service flow (Managed)](https://docs.dynatrace.com/managed/shortlink/service-flow)
+- [Services (Managed)](https://docs.dynatrace.com/managed/shortlink/services)
+- [Smartscape topology (Managed)](https://docs.dynatrace.com/managed/shortlink/smartscape)
+- [Distributed traces (Managed)](https://docs.dynatrace.com/managed/observe-and-explore/distributed-traces)
 
 ## 📍 КАРТА — Service Flow как инструмент анализа зависимостей
 
@@ -12,10 +25,11 @@
 
 | Аспект | Smartscape | Service Flow |
 |---|---|---|
-| Что показывает | Все сущности и их связи в окружении | Цепочки вызовов между конкретными сервисами |
-| Ориентация | Все уровни: Application → Service → PG → Host | Только Service-level |
-| Контекст | Глобальный снимок на момент времени | Агрегация за период запросов |
-| Основа данных | Авто-обнаружение топологии | Реальные PurePath-ы |
+| Что показывает | Все сущности и их связи в окружении за окно ~72 часа | Цепочки вызовов между конкретными сервисами |
+| Ориентация | Пять уровней: Applications → Services → Processes → Hosts → Data centers | Только Service-level |
+| Контекст | Near real-time снимок зависимостей за окно | Агрегация за выбранный timeframe |
+| Основа данных | Авто-обнаружение топологии (OneAgent + Service Discovery) | Реальные PurePath-ы за выбранный период |
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/smartscape -->
 
 ---
 
@@ -33,7 +47,8 @@ Captured h2 заголовок: **239Services**. Service Flow открывает
 **Как попасть в Service Flow.**
 1. Открыть список Services.
 2. Кликнуть на любой сервис (например, `EasytravelService`).
-3. В карточке сервиса перейти в блок **Service Flow** (обычно в центре экрана или через вкладку).
+3. В карточке сервиса найти блок **Understand dependencies** → нажать **View service flow**.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/service-flow -->
 
 **Что показывает Service Flow.** Graph, где:
 - **Слева** — клиенты этого сервиса (кто его вызывает): другие сервисы, приложения RUM, synthetic monitors.
@@ -59,17 +74,14 @@ Captured h2 заголовок: **239Services**. Service Flow открывает
 
 ## 🎓 ТЕОРИЯ — как Service Flow агрегирует данные
 
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Service flow — карта зависимостей](https://docs.dynatrace.com/docs/shortlink/services)
-
 ### Источник данных
 
 Service Flow строится **на основе распределённых трейсов (PurePath)**. За выбранный временной период Dynatrace анализирует все PurePath, в которых участвовал текущий сервис:
 - **Входящие вызовы** — кто инициировал запросы, попадающие в этот сервис (upstream).
 - **Исходящие вызовы** — куда сервис ходил для обработки запросов (downstream).
 
-Каждая пара (caller, callee) агрегируется: число вызовов, среднее время, частота ошибок.
+Каждая пара (caller, callee) агрегируется: число вызовов, среднее время, частота ошибок. Сервисы с малым вкладом группируются автоматически (метки вида «2 services» или «4 instances»).
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/service-flow -->
 
 ### Агрегация по времени
 
@@ -79,10 +91,11 @@ Service Flow строится **на основе распределённых �
 
 ### Отличие от Smartscape на практике
 
-- **Smartscape** — **структурный** взгляд. Все связи, которые OneAgent когда-либо видел, включая давно не использованные. Подходит для общей архитектуры.
-- **Service Flow** — **операционный** взгляд. Что реально происходит за период. Подходит для анализа инцидентов и планирования изменений.
+- **Smartscape** — **структурный** взгляд. Near real-time-снимок зависимостей за окно ~72 часа. Подходит для общей архитектуры.
+- **Service Flow** — **операционный** взгляд. Что реально происходит за выбранный timeframe. Подходит для анализа инцидентов и планирования изменений.
 
 Типовое использование параллельно: Smartscape — ревизия ландшафта раз в неделю, Service Flow — ежедневно при работе с конкретными сервисами.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/smartscape -->
 
 ### Air-gapped specifics
 

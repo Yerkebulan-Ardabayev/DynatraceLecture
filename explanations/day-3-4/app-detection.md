@@ -1,4 +1,17 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 6 из 14: «Детектирование приложений: правила, группы, лучшие практики»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.web.app-detection -->
+<!-- revision: 2026-04-27 -->
+
+🔖 Редакция от 2026-04-27.
+
+Путь в UI: **Settings → Web and mobile monitoring → Web → Application detection / Beacon origins for CORS / Identify host names / IP determination / Geographic regions → Map IP addresses to locations**.
+
+## 📚 Источники
+
+- [Application detection rules (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/application-detection-rules)
+- [Beacon origin allowlist (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-beacon-domain-allowlist)
+- [Detection of IP addresses, locations and user agents (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/detection-of-ip-addresses-locations-and-user-agents)
+- [Web Applications RUM (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications)
 
 ## 📍 КАРТА — пять страниц про детекцию и группировку приложений
 
@@ -24,14 +37,21 @@
 
 *Что такое App detection.* RUM-сниппет собирает данные со всех страниц веб-сервера. Чтобы разделить их между Applications (например, `www.example.com` → `Public Site`, `portal.example.com` → `Client Portal`), нужны правила детекции.
 
-**Правила матчатся по:**
+**Правила матчатся по URL** в формате `scheme://host:port/path?query` (порты 80 и 443 опускаются по умолчанию). Доступные операторы матчинга: **contains / ends with / equals**. Правила оцениваются **сверху вниз, срабатывает первое совпавшее**, дальнейшая обработка останавливается. Лимит — **до 1000 правил на окружение**.
+
+Можно сопоставлять:
 
 - **URL / host name** — основное условие (хост в домене → приложение).
 - **URL path prefix** — `/api/*` в одно приложение, `/admin/*` в другое.
 - **Query parameter** — по значению специального параметра.
 - **HTTP header** — по кастомному заголовку от reverse-proxy.
 
+Изменения правил доезжают до OneAgent обычно в течение минуты.
+
+На той же странице есть инструмент **Check your existing detection rules** — ввести URL и увидеть, какое правило сработает и включён ли RUM.
+
 *Типовое применение.* 3-10 правил App detection по количеству разных публичных и внутренних веб-приложений. Каждое правило даёт отдельный Application в интерфейсе с собственными метриками и SLI.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/application-detection-rules -->
 
 ### Шаг 2 — Beacon origins for CORS
 
@@ -39,11 +59,18 @@
 
 Путь: `/ui/settings/builtin:rum.web.beacon-domain-origins`.
 
-*Что это.* RUM-сниппет в браузере отправляет данные (beacons) на специальный endpoint ActiveGate. Если пользователь открыл страницу на `www.example.com`, а beacons идут на `collector.example.com`, браузер считает это cross-origin запросом и может заблокировать (CORS policy).
+*Что это.* RUM-сниппет в браузере отправляет данные (beacons) на специальный endpoint. Если страница на `www.example.com`, а beacons идут на `collector.example.com`, браузер считает это cross-origin запросом и применяет CORS-политику.
 
-Страница настраивает список доменов, от которых ActiveGate **принимает** beacons. Явно разрешает cross-origin от доменов организации.
+Страница настраивает список origins, от которых endpoint **принимает** cross-origin RUM-beacons. До 20 правил на окружение. Same-origin beacons (одинаковые protocol/host/port) под allowlist не попадают и не нуждаются в правилах.
 
-*Типовое содержание.* Все публичные домены и их CDN: `www.example.com`, `portal.example.com`, `mobile-api.example.com`, `cdn.example.com` и аналогичные.
+*Поведение allowlist:*
+- Список пустой → принимаются beacons с любого origin (дефолтное поведение).
+- Добавлено хотя бы одно правило → отклоняется всё, что не подходит, ответ `403 Forbidden`.
+
+*Когда нужен.* CORS обязателен только для двух сценариев: agentless-приложения (beacons идут на Cluster ActiveGate на другом домене) и auto-injected приложения с переключённым beacon endpoint.
+
+*Типовое содержание.* Все публичные домены и их CDN: `www.example.com`, `portal.example.com`, `mobile-api.example.com`, `cdn.example.com`.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-beacon-domain-allowlist -->
 
 ### Шаг 3 — Identify host names
 
@@ -63,9 +90,12 @@
 
 Путь: `/ui/settings/builtin:rum.ip-determination`.
 
-*Что настраивает.* HTTP-заголовок для определения IP клиента. Та же проблема, что и с host name: за reverse-proxy реальный IP клиента в `X-Forwarded-For` или `X-Real-IP`.
+*Что настраивает.* Список HTTP-заголовков для определения IP клиента. Когда запрос приходит напрямую в инструментированный сервер, IP берётся из socket. За reverse-proxy / CDN / load balancer Dynatrace разбирает заголовки в **заданном порядке** (его можно менять, можно добавить свои). Стандартный набор включает `X-Forwarded-For`, `X-Real-IP` и аналоги.
+
+По умолчанию **последний октет IP маскируется** для соблюдения приватности.
 
 *Риск без настройки.* Все клиенты кажутся с IP прокси. Геолокация не работает, анализ по странам невозможен.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/detection-of-ip-addresses-locations-and-user-agents -->
 
 ### Шаг 5 — Map IP addresses to locations
 
@@ -73,9 +103,10 @@
 
 Путь: `/ui/settings/builtin:rum.ip-mappings`.
 
-*Что настраивает.* Правила преобразования IP в геолокацию. По умолчанию Dynatrace использует встроенную GeoIP-базу, обновляется с поставками.
+*Что настраивает.* Кастомные правила преобразования IP в геолокацию. Для веб-приложений Dynatrace по умолчанию использует **MaxMind Geo2 database**, которая обновляется с каждой поставкой Managed-релиза. Для мобильных при наличии разрешения предпочтение отдаётся GPS, иначе fallback на IP-геолокацию.
 
-*Для внутренних IP* (10.x, 192.168.x) автоматической геолокации нет — этих диапазонов нет во встроенной базе. Добавляют кастомные mapping: `10.10.0.0/16 → офис 1`, `10.20.0.0/16 → офис 2`. Это помогает анализу «в каком офисе медленно открывается корпоративный портал».
+*Для внутренних IP* (10.x, 192.168.x) автоматической геолокации нет — этих диапазонов в MaxMind нет. Добавляют кастомные mapping: `10.10.0.0/16 → офис 1`, `10.20.0.0/16 → офис 2`. Это помогает анализу «в каком офисе медленно открывается корпоративный портал».
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/detection-of-ip-addresses-locations-and-user-agents -->
 
 ---
 
@@ -106,6 +137,7 @@
 
 ### Air-gapped specifics
 
-**GeoIP база** поставляется в сборке Dynatrace. Обновляется при ручной загрузке новых сборок через CMC. Для кастомных IP-mappings всё локально.
+**MaxMind Geo2 database** входит в сборку Managed и обновляется при ручной загрузке новых сборок через CMC. Кастомные IP-mappings полностью локальны.
 
-**Cross-origin** в закрытом контуре сложнее, потому что домен ActiveGate обычно публикуется на внутреннем DMZ с specific CORS-настройкой. Список разрешённых origins должен включать все внутренние домены банка.
+**Cross-origin** в закрытом контуре сложнее, потому что домен ActiveGate обычно публикуется на внутреннем DMZ со специфичной CORS-настройкой. Список разрешённых origins должен включать все внутренние домены банка.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/detection-of-ip-addresses-locations-and-user-agents -->

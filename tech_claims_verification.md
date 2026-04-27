@@ -263,6 +263,53 @@ Revision dates везде обновлены `2026-04-26 → 2026-04-27`.
 
 ---
 
+## Сессия Учебного дня 3 от 2026-04-27 — день 3 строгий /managed/-only аудит
+
+7 тем (`mlt-concepts`, `service-flow`, `service-object`, `response-analysis`, `instrumentation`, `app-detection`, `app-cards`) проверены целиком против `docs.dynatrace.com/managed/` свежими WebFetch'ами в этой сессии. Все live-ui теги, revision-метки, last-verified — на 2026-04-27. Все Источники приведены к формату «только `/managed/`».
+
+**Найдено и исправлено фактических неточностей: 13.**
+
+| # | Claim (было) | File:line | Источник правды | Решение |
+|---|---|---|---|---|
+| 39 | «Metrics: По умолчанию 13 месяцев, настраивается» | `day-3-4/mlt-concepts.md:124` | [Data retention periods (Managed)](https://docs.dynatrace.com/managed/shortlink/data-retention-periods): «Metrics Classic — 5 years с лестницей 0–14d/14–28d/28–400d/400d–5y» | ❌ **переписано**: 5 лет с явной лестницей гранулярности |
+| 40 | «Logs: По умолчанию 5-7 дней, часто поднимают до 30» | `day-3-4/mlt-concepts.md:124` | Same source: «Log Monitoring Classic — 35 days fixed, ES replication factor 2» | ❌ **переписано**: 35 дней (фиксировано) |
+| 41 | «Traces: Обычно 35 дней для полных PurePath» | `day-3-4/mlt-concepts.md:124` | Same source: «Distributed Traces Classic — max 365 days configurable; Code-Level Insights 10 days» | ❌ **переписано**: 365 дней (cfg) + 10 дней code-level |
+| 42 | «Handler в Go (через eBPF)» | `day-3-4/mlt-concepts.md:111` | [Go support](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/go): «Automatic injection and instrumentation of 64-bit Go executables on x86 (OneAgent 1.323+)»; eBPF — это Service Discovery, **не** инструментация трейсов | ❌ **исправлено**: «64-bit Go-исполняемые файлы — автоматическая инъекция в бинарь, x86 c 1.323+» |
+| 43 | «trace headers (`x-dynatrace`) в каждый исходящий запрос» | `day-3-4/mlt-concepts.md:71` | [Span and trace context propagation (Managed)](https://docs.dynatrace.com/managed/observe/application-observability/distributed-traces/context-propagation): три механизма — `x-dynatrace`, W3C `traceparent/tracestate`, `dtdTraceTagInfo` | ⚠️ **дополнено**: добавлены W3C-заголовки и messaging tag |
+| 44 | «Smartscape: Application → Service → PG → Host (4 уровня), всё что когда-либо видел» | `day-3-4/service-flow.md:18` | [Smartscape (Managed)](https://docs.dynatrace.com/managed/shortlink/smartscape): «5 tiers: Applications → Services → Processes → Hosts → Data centers; data from past 72 hours» | ❌ **исправлено**: 5 уровней + окно 72 часа |
+| 45 | «В карточке сервиса перейти в блок Service Flow (через вкладку)» | `day-3-4/service-flow.md:36` | [Service flow (Managed)](https://docs.dynatrace.com/managed/shortlink/service-flow): «Navigate to Services, select your target service, then choose 'View service flow' under the Understand dependencies section» | ⚠️ **уточнено**: «блок Understand dependencies → View service flow» |
+| 46 | «Full Web Service — серверы, принимающие SOAP / JAX-WS / REST с явной схемой» | `day-3-4/service-object.md:32` | [Service types (Managed)](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/service-types): «Full Web Services defined by WSDL» | ⚠️ **уточнено**: только WSDL-based (классические SOAP / JAX-WS, в основном Java и .NET); добавлено отличие от Web request service по триплету server/context-root/app-id |
+| 47 | «По умолчанию HTTP 5xx → failure, 4xx — нет» (без указания exceptions / error pages) | `day-3-4/response-analysis.md:42` | [Configure service failure detection (Managed)](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/configure-service-failure-detection): дефолт = exceptions Java/.NET/Node/PHP + error pages + HTTP 500–599 server-side + HTTP 400–599 client-side perspective | ⚠️ **переписано**: полный дефолтный набор + список реальных параметров (success-forcing, ignored, custom) |
+| 48 | «Имя файла RUM JS по умолчанию ruxitagentjs_*.js, можно переименовать» | `day-3-4/instrumentation.md:53` | [Configure RUM monitoring code source (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-monitoring-code-source): «default prefix `ruxitagent`», полное имя `ruxitagentjs_<modules>_<version>.js`, сегмент `ruxitagentjs_` после префикса остаётся всегда | ⚠️ **уточнено**: префикс vs полное имя, поведение при кастомном префиксе |
+| 49 | «RUM JavaScript updates: Automatic / Manual / Delayed на N дней» | `day-3-4/instrumentation.md:74-78` | Schema `builtin-rum-web-rum-javascript-updates`: набор — LATEST_STABLE / PREVIOUS_STABLE / CUSTOM (+ legacy IE7-10, IE11, IE 11 dropped at 1.293) | ❌ **переписано**: реальные опции из схемы; «Delayed» — выдумка, удалена |
+| 50 | «Mobile RUM SDK: com.dynatrace.android:agent для Android, DynatraceSwift.framework для iOS» | `day-3-4/instrumentation.md:106` | [Mobile Applications RUM (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/mobile-applications): Android — Dynatrace Android Gradle plugin (auto) или OneAgent SDK (manual); iOS — OneAgent for iOS auto-instrumentation через SPM/CocoaPods + SwiftUI instrumentor; гибрид: Cordova/Flutter/RN/Xamarin/MAUI | ⚠️ **переписано**: реальные имена пакетов и подходов |
+| 51 | «По умолчанию Dynatrace использует встроенную GeoIP-базу» | `day-3-4/app-detection.md:76` | [Detection of IP, locations, user agents (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/detection-of-ip-addresses-locations-and-user-agents): «MaxMind Geo2 database» + «last octet of end-user IP is masked by default» | ⚠️ **уточнено**: MaxMind Geo2 + маскирование последнего октета по умолчанию |
+| 52 | «Core Web Vitals: LCP, FID, CLS» | `day-3-4/app-cards.md:5, 29` | Dynatrace дашборд «Page performance & errors» с SaaS 1.331/1.332 трекает LCP, INP, CLS; FID заменён на INP в Web Vitals | ⚠️ **обновлено**: FID → INP (Interaction to Next Paint); пометка «заменил FID» |
+
+**Также добавлено (не было в файлах вообще):**
+
+- Apdex thresholds **0.94–1.0 / 0.85–0.94 / 0.7–0.85 / 0.5–0.7 / <0.5** — из [Apdex ratings (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings).
+- Service Flow: автоматическая агрегация мелких сервисов («2 services», «4 instances») — из shortlink.
+- App detection: лимит 1000 правил, операторы contains/ends with/equals, изменения доезжают до OneAgent ~за минуту, инструмент «Check your existing detection rules».
+- Beacon CORS: лимит 20 правил, поведение пустого allowlist (принимаем всё) vs ≥1 правила (отказ = 403), CORS только для agentless или alternative-endpoint сценариев.
+- Anomaly detection for services: явно прописана структура — relative+absolute thresholds для Response time (All requests + Slowest 10%) и Failure rate, reference period 7 дней default, low-load handling.
+
+**Подтверждённые без изменений:** Apdex 0.94 = Excellent (course → подтверждён), Service Flow data source = PurePath, Service splitting механика для одного процесса, RUM beacons через ActiveGate/Cluster ActiveGate, IP-mappings для внутренних сетей.
+
+**Финал по дню:**
+
+- python scripts/quality_check.py → ✅ 0 errors (2 warnings из day-1, не Day 3)
+- python scripts/link_check.py → ✅ **92 URL × 200 OK** (после фикса одного 404 — `/observe-and-explore/notifications-and-alerting/anomaly-detection` → `/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services`)
+- empty_screens_todo.md — новых пустых/SaaS-only экранов в Day 3 не появилось
+
+**Lessons Day 3:**
+1. retention-цифры пересмотрены централизованно (5 лет / 35 дней / 365 дней) — те же ошибки уже фиксили в Day 2, но у Day 3 mlt-concepts были свои собственные неверные числа (13 месяцев / 5-7 дней / 35 дней). Lesson: новый файл = новая проверка, старый журнал не освобождает.
+2. eBPF → Service Discovery (НЕ инструментация трейсов). Это сквозная путаница, которая уже прокрадывалась в day-1; здесь она снова появилась как «Handler в Go (через eBPF)». Lesson: при упоминании eBPF в контексте трейсов — обязательно WebFetch.
+3. Web Vitals терминология — FID устарел, заменён на INP. Lesson: терминологию Web Vitals обновлять при каждом проходе RUM-тем.
+4. Service Detection v1 vs v2 — в Managed работает SDv1, SDv2 — SaaS-only с OneAgent в Public Preview. Соответствующие баннеры/упоминания в курсе нужно ставить в SDv1-контекст.
+
+---
+
 ## Как обновлять этот файл
 
 1. При добавлении/правке numeric claim: `python scripts/extract_tech_claims.py` → обновится `tech_claims.md`.

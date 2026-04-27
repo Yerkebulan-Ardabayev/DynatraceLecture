@@ -1,4 +1,18 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 4 из 14: «Анализ отклика, деградаций и аномалий»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/services -->
+<!-- revision: 2026-04-27 -->
+
+🔖 Редакция от 2026-04-27.
+
+Путь в UI: **Application Observability → Services**, **Settings → Anomaly detection → Services**, **Settings → Server-side service monitoring → Failure detection / parameters / rules**.
+
+## 📚 Источники
+
+- [Configure service failure detection (Managed)](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/configure-service-failure-detection)
+- [Service detection v1 (Managed)](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1)
+- [Services (Managed)](https://docs.dynatrace.com/managed/shortlink/services)
+- [Davis AI и anomaly detection (Managed)](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services)
+- [Distributed traces (Managed)](https://docs.dynatrace.com/managed/observe-and-explore/distributed-traces)
 
 ## 📍 КАРТА — пять страниц про отклик и детекцию ошибок
 
@@ -28,7 +42,8 @@
 
 Путь: `/ui/settings/builtin:anomaly-detection.services`.
 
-Разбирался в Дне 1 (baselines) и Дне 2 (service-cards). В контексте «анализ отклика» — это страница, где задаются пороги для детекции деградаций Response time (по All requests и Slowest 10%) и роста Failure rate. Ключевые блоки: Response time degradations, Failure rate increases, Service load drops/spikes, Reference period.
+Разбирался в Дне 1 (baselines) и Дне 2 (service-cards). В контексте «анализ отклика» — это страница, где задаются пороги детекции для **Response time degradations** (отдельно All requests и Slowest 10%, два режима — relative-baseline % и absolute-threshold мс, оба должны нарушаться одновременно для алерта), **Failure rate increases** (relative % и absolute %, оба порога), **Service load drops/spikes**, **Reference period** (по умолчанию 7 дней). Для сервисов с малым трафиком есть параметр исключения low-load (actions/min).
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services -->
 
 ### Шаг 3 — Failure detection parameters
 
@@ -38,13 +53,24 @@
 
 *Что такое Failure detection.* Механизм, который определяет, **какой запрос считать «упавшим»**. Anomaly detection ловит отклонения метрик от нормы. Failure detection задаёт саму основу метрики Failure rate: какие запросы идут в знаменатель, а какие — в числитель «упавших».
 
-**Глобальные параметры на странице:**
+**По умолчанию Dynatrace детектит failure** через:
 
-- Считать ли HTTP 4xx как failures (по умолчанию нет, только 5xx).
-- Считать ли каждое исключение в коде failure или только необработанные.
-- Минимальный порог срабатывания — чтобы единичный 500 не давал Failure rate 100% при низком трафике.
+- Programming exceptions (Java / .NET / Node.js / PHP), прерывающие service call.
+- Error pages, отдаваемые web container.
+- HTTP 500–599 (server-side errors).
+- HTTP 400–599 — со стороны клиента (client-side perspective).
 
-*Типовой подход.* Обычно дефолт работает. Настройка нужна для особых случаев: если 400 Bad Request считается признаком проблем (неправильная интеграция с партнёром), включают 4xx → failures для конкретных сервисов.
+**Глобальные параметры на странице (HTTP + General):**
+
+- Override какие коды считать server-side / client-side failures.
+- Поведение при отсутствующем HTTP response code.
+- Отдельная политика для HTTP 404 (broken link).
+- Список **success-forcing exceptions** (технические исключения, не считающиеся failure).
+- Список **ignored exceptions** (handled gracefully).
+- Custom error rules на основе request attributes.
+
+*Типовой подход.* Обычно дефолт работает. Настройка нужна для особых случаев: если 400 Bad Request надо вернуть в success (клиент сам ошибся), либо наоборот — отдельные 200 с ошибочным телом помечать как failure.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/configure-service-failure-detection -->
 
 ### Шаг 4 — Failure detection rules
 
@@ -57,10 +83,13 @@
 **Структура правила:**
 
 - **Service scope** — к каким сервисам применяется.
-- **Condition** — что считать ошибкой: HTTP-коды, exception types, HTTP headers.
-- **Action** — считать failure / не считать / считать warning.
+- **Condition** — что считать ошибкой: HTTP-коды, exception types, request attributes.
+- **Action** — считать failure / не считать / forced success.
+
+Правила оцениваются **сверху вниз, срабатывает первое совпавшее**; per-service override доступен через **Services → выбрать сервис → More (...) → Settings → Failure detection → Override global failure detection settings**.
 
 *Типовое правило.* Exclude пользовательских ошибок из Failure rate для authentication-сервисов. Без этого в пиковые часы Failure rate взлетает от неправильных паролей и создаёт ложные алерты.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/configure-service-failure-detection -->
 
 ### Шаг 5 — Failure detection (rulesets)
 

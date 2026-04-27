@@ -1,8 +1,21 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 7 из 14: «Инфографика приложений: показатели UX и производительности»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/applications -->
+<!-- revision: 2026-04-27 -->
+
+🔖 Редакция от 2026-04-27.
+
+Путь в UI: **Application Observability → Frontend** (список Applications), **Settings → Web and mobile monitoring → User experience score / Usability analytics**.
+
+## 📚 Источники
+
+- [Apdex ratings (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings)
+- [Adjust Apdex settings for web applications (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-apdex-web)
+- [Detection of IP, locations, user agents (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/detection-of-ip-addresses-locations-and-user-agents)
+- [Web Applications RUM (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications)
 
 ## 📍 КАРТА — три страницы про метрики UX
 
-Термины темы: `Apdex / Application Performance Index` (0-1), `UX score / индекс пользовательского опыта`, `Core Web Vitals / LCP / FID / CLS`, `Rage click / злой клик / многократный клик в frustration`, `Dead click / клик по неинтерактивному элементу`.
+Термины темы: `Apdex / Application Performance Index` (0-1), `UX score / индекс пользовательского опыта`, `Core Web Vitals / LCP / INP / CLS`, `Rage click / злой клик / многократный клик в frustration`, `Dead click / клик по неинтерактивному элементу`.
 
 | Что показать | Путь в меню | Прямая ссылка |
 |---|---|---|
@@ -22,12 +35,13 @@
 
 **В карточке приложения (в боевом окружении):**
 
-- **Apdex score** — индекс удовлетворённости пользователей (0-1, >0.94 = Excellent).
+- **Apdex score** — индекс удовлетворённости пользователей (шкала 0–1: 0.94–1.0 Excellent, 0.85–0.94 Good, 0.7–0.85 Fair, 0.5–0.7 Poor, <0.5 Unacceptable).
 - **User actions per session** — сколько действий пользователь делает за сессию в среднем.
 - **JavaScript errors** — число JS-ошибок и частота.
 - **Response time** — медиана и перцентили времени загрузки страницы.
-- **Core Web Vitals** — LCP (Largest Contentful Paint), FID (First Input Delay), CLS (Cumulative Layout Shift).
+- **Core Web Vitals** — LCP (Largest Contentful Paint), INP (Interaction to Next Paint, заменил FID), CLS (Cumulative Layout Shift).
 - **Distribution** — по браузерам, странам, устройствам, версиям приложения.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings -->
 
 ### Шаг 2 — User experience score
 
@@ -41,7 +55,8 @@
 
 - Какие факторы учитывать (скорость, ошибки, поведение).
 - Веса факторов.
-- Пороги для классификации Satisfied / Tolerating / Frustrated.
+- Пороги для классификации Satisfactory / Tolerable / Frustrating (так документация Managed называет три категории Apdex и UX score; в UI per-application можно править через **Web → выбрать приложение → More (...) → Edit → General settings**, отдельные ползунки для Load actions, XHR actions, Custom actions).
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-apdex-web -->
 
 ### Шаг 3 — Usability analytics
 
@@ -66,7 +81,8 @@
 
 ### Слой 1 — Performance metrics
 
-Чисто технические показатели. Page load time, First Contentful Paint, Time to Interactive. Измеряются RUM-сниппетом через Web Performance API браузера. Не зависят от пользовательского поведения.
+Чисто технические показатели. Page load time, First Contentful Paint, Time to Interactive, плюс Core Web Vitals (LCP, INP, CLS). Измеряются RUM-сниппетом через Web Performance API браузера и связанные API. Не зависят от пользовательского поведения.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications -->
 
 ### Слой 2 — User behaviour metrics
 

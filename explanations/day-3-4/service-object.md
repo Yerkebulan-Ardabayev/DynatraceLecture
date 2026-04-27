@@ -1,4 +1,18 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 3 из 14: «Логический объект Service: полное описание интерфейса»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/services -->
+<!-- revision: 2026-04-27 -->
+
+🔖 Редакция от 2026-04-27.
+
+Путь в UI: **Application Observability → Services**, **Settings → Service Detection → Rules for Full Web Services / Rules for External Web Services / Service splitting**.
+
+## 📚 Источники
+
+- [Services (Managed)](https://docs.dynatrace.com/managed/shortlink/services)
+- [Service detection v1 (Managed)](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1)
+- [Service types in SDv1 (Managed)](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/service-types)
+- [Customize service detection (Managed)](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/customize-service-detection)
+- [Smartscape topology (Managed)](https://docs.dynatrace.com/managed/shortlink/smartscape)
 
 ## 📍 КАРТА — Service как сущность и правила его детекции
 
@@ -29,16 +43,21 @@ Captured: **239Services**. Полный разбор структуры спис
 
 Путь: **Settings → Service Detection → Rules for Full Web Services**. Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:service-detection.full-web-service`.
 
-*Что такое Full Web Service.* Тип сервиса в Dynatrace для серверов, **принимающих входящие SOAP / JAX-WS / REST с явной схемой**. Отличается от обычного Web request service более детальными метаданными — Dynatrace видит operation name, WSDL-контракт, типы запросов и ответов.
+*Что такое Full Web Service.* Тип сервиса в Dynatrace для приложений, у которых описание интерфейса задано **WSDL-контрактом** (классические SOAP / JAX-WS, в основном Java и .NET-фреймворки). Dynatrace берёт имя сервиса и `targetNamespace` прямо из WSDL — поэтому и сам сервис, и его operation узнаются точно.
 
-**Типы правил на странице** — как разбить сервисы:
+Отличается от **Web request service** (обычный HTTP без явной схемы), который Dynatrace идентифицирует по триплету *web server name + context root + web application ID*.
 
-- Имя WSDL-сервиса и operation.
-- SOAP-action header.
-- URL-паттерн с параметрами.
-- Имя Java-класса SOAP-endpoint.
+**Типы правил на странице** — как переименовать или объединить Full Web Services:
 
-*Типовое применение.* Интеграции с legacy-системами (АБС, T24 Temenos, карточный процессинг). Часто используется SOAP или WSDL-based REST. Тонкие правила разбиения разделяют бизнес-операции одного endpoint-а на отдельные Service.
+- По имени WSDL-сервиса и operation.
+- По SOAP-action header.
+- По URL-паттерну с параметрами.
+- По имени Java-класса SOAP-endpoint.
+
+Правила оцениваются **сверху вниз, срабатывает первое совпавшее** — порядок имеет значение.
+
+*Типовое применение.* Интеграции с legacy-системами (АБС, T24 Temenos, карточный процессинг), у которых SOAP-интерфейс с WSDL. Тонкие правила разделяют бизнес-операции одного endpoint-а на отдельные Service.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/service-types -->
 
 ### Шаг 3 — Service detection rules for External Web Services
 
@@ -46,11 +65,12 @@ Captured: **239Services**. Полный разбор структуры спис
 
 Путь: **Settings → Service Detection → Rules for External Web Services**. Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:service-detection.external-web-service`.
 
-*Что такое External Web Service.* Сервис на другой стороне исходящих вызовов. Инструментированное приложение делает HTTP-запрос наружу к системе без OneAgent — SaaS API, сторонний сервис, партнёрская система.
+*Что такое External Web Service.* Сервис на другой стороне исходящих вызовов. Инструментированное приложение делает HTTP-запрос наружу к системе без OneAgent — внешний API, партнёрская система, SaaS-эндпоинт.
 
 Dynatrace не видит внутреннюю работу таких систем, но видит **вызов с нашей стороны**: хост, URL, время ответа, статус. External web services попадают в Service Flow справа от нашего сервиса (downstream).
 
-**Правила на странице** — как разбивать external-сервисы. Например, вызовы к `https://api.example.com/*` → в External Service `Example API`, вызовы к `https://partner.example.org/*` → в отдельный `Partner API`. Без правил все external-вызовы попадают в один обобщённый «External services».
+**Правила на странице** — как разбивать external-сервисы по домену / поддомену / URL. Например, вызовы к `https://api.example.com/*` → в External Service `Example API`, вызовы к `https://partner.example.org/*` → в отдельный `Partner API`. Без правил все external-вызовы попадают в один обобщённый external-сервис. Правила оцениваются сверху вниз, срабатывает первое совпавшее.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/customize-service-detection -->
 
 ### Шаг 4 — Service splitting
 
@@ -68,13 +88,12 @@ Dynatrace не видит внутреннюю работу таких сист�
 
 На этой странице админ управляет правилами splitting для всех процессов в окружении.
 
+> *Service Detection v2* (новый механизм со сплиттингом по resource attributes для OpenTelemetry-сервисов) в Managed Classic не задействован — используется классический SDv1, описанный в этой теме.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1 -->
+
 ---
 
 ## 🎓 ТЕОРИЯ — что такое Service в модели Dynatrace
-
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Services — сущность сервиса](https://docs.dynatrace.com/docs/shortlink/services)
 
 ### Service как логическая, а не физическая сущность
 

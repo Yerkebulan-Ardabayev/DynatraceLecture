@@ -1,4 +1,17 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 5 из 14: «Инструментирование приложений: Web, Mobile»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.web.enablement -->
+<!-- revision: 2026-04-27 -->
+
+🔖 Редакция от 2026-04-27.
+
+Путь в UI: **Settings → Web and mobile monitoring → Web (или Mobile) → Enablement and cost control / RUM JavaScript → File name / Version / Updates**.
+
+## 📚 Источники
+
+- [Web Applications RUM (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications)
+- [Mobile Applications RUM (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/mobile-applications)
+- [Configure RUM monitoring code source (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-monitoring-code-source)
+- [Control the RUM JavaScript version (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-javascript-version)
 
 ## 📍 КАРТА — пять страниц настройки RUM-инструментации
 
@@ -50,9 +63,10 @@
 
 Путь: `/ui/settings/builtin:rum.web.rum-javascript-file-name`.
 
-*Что настраивает.* Имя файла JavaScript-сниппета, который OneAgent внедряет в HTML-ответы. По умолчанию `ruxitagentjs_*.js`. Можно переименовать для скрытия technology fingerprint.
+*Что настраивает.* Префикс имени файла JavaScript-сниппета, который OneAgent внедряет в HTML-ответы. По умолчанию префикс **`ruxitagent`** (полное имя — например `/ruxitagentjs_ICA7NQVfqrtux_10307250124095659.js`, где после префикса идёт хеш активных модулей и версия). Префикс можно заменить на свой; сегмент `ruxitagentjs_` после префикса остаётся для идентификации запроса.
 
-*Когда меняют.* В инсталляциях с повышенными требованиями к безопасности переименовывают в нейтральное `site-analytics.js` или аналогичное, чтобы технологию нельзя было опознать из HTML.
+*Когда меняют.* В инсталляциях с повышенными требованиями к безопасности префикс заменяют на нейтральный (`site-analytics`, `metrics-loader`), чтобы технологию нельзя было опознать из HTML. Частая смена префикса временно снижает объём собираемых данных, поэтому делается редко.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-monitoring-code-source -->
 
 ### Шаг 4 — Custom RUM JavaScript version
 
@@ -60,9 +74,10 @@
 
 Путь: `/ui/settings/builtin:rum.web.custom-rum-javascript-version`.
 
-*Что настраивает.* Версия RUM-JavaScript, которая внедряется. По умолчанию Latest stable. Можно зафиксировать на Previous stable (если новая вызывает проблемы) или на конкретной кастомной версии.
+*Что настраивает.* Конкретная статическая версия RUM-JavaScript, на которую можно сослаться, если в RUM JavaScript updates выбран вариант **Custom**.
 
-*Зачем нужно.* Новая версия RUM-JS может оказаться несовместимой с редкой версией браузера (старый корпоративный IE и аналоги). В таких случаях временно откатывают.
+*Зачем нужно.* Когда новая версия конфликтует с редким окружением (старый корпоративный IE и аналоги), сюда вписывают известную рабочую версию, а в **RUM JavaScript updates** выставляют Custom — обновления приостановлены.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-javascript-version -->
 
 ### Шаг 5 — RUM JavaScript updates
 
@@ -70,21 +85,19 @@
 
 Путь: `/ui/settings/builtin:rum.web.rum-javascript-updates`.
 
-*Что настраивает.* Политика обновления RUM-JS:
+*Что настраивает.* Политика версии RUM-JS, выбирается из набора:
 
-- **Automatic updates** — новая версия применяется автоматически при выпуске.
-- **Manual** — только по действию администратора.
-- **Delayed** — с задержкой в N дней от релиза.
+- **Latest stable** — самая свежая стабильная (динамическая, обновляется автоматически).
+- **Previous stable** — предыдущая стабильная (тоже динамическая).
+- **Custom** — фиксированная статическая версия из соседней страницы Custom RUM JavaScript version.
+- Legacy-варианты Latest IE7-10 supported / Latest IE11 supported — доступны только в окружениях, созданных до версии 1.294 (поддержка IE 11 была прекращена в RUM JS 1.293).
 
-*Типовая политика.* Delayed на 7-14 дней. Даёт Dynatrace время выловить ранние баги у других клиентов, прежде чем версия дойдёт до production.
+*Типовая политика.* В прод-приложениях выставляют Previous stable: одна версия буфера к выловленным регрессиям. Latest stable удобен в dev/QA-окружениях. Custom применяют только если найдена конкретная несовместимость и нужна стабильная привязка.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-javascript-version -->
 
 ---
 
 ## 🎓 ТЕОРИЯ — как работает инструментация RUM
-
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [OneAgent — инструментация](https://docs.dynatrace.com/docs/shortlink/oneagent)
 
 ### Web RUM — через JavaScript snippet
 
@@ -103,11 +116,18 @@
 
 ### Mobile RUM — через SDK
 
-**Механика.** В мобильное приложение при сборке встраивается Dynatrace SDK (`com.dynatrace.android:agent:X.Y.Z` для Android, `DynatraceSwift.framework` для iOS). SDK при старте приложения:
+**Механика.** В мобильное приложение при сборке встраивается Dynatrace SDK:
+
+- **Android.** Основной путь — Dynatrace Android Gradle plugin (auto-instrumentation). Для тонкой интеграции есть OneAgent SDK for Android (manual).
+- **iOS.** Основной путь — OneAgent for iOS auto-instrumentation, подключение через Swift Package Manager или CocoaPods. Для SwiftUI-приложений есть отдельный SwiftUI instrumentor.
+- **Гибридные стэки.** Поддерживаются Apache Cordova, Flutter, React Native, Xamarin, .NET MAUI через соответствующие плагины.
+
+SDK при старте приложения:
 1. Регистрирует crash handler.
-2. Перехватывает сетевые запросы (через URLSession / OkHttp).
-3. Собирает данные о пользовательских сессиях.
-4. Пересылает в ActiveGate.
+2. Перехватывает сетевые запросы (URLSession на iOS, OkHttp / HttpURLConnection на Android).
+3. Собирает данные о пользовательских сессиях и user actions.
+4. Шлёт в ActiveGate (или Cluster ActiveGate для агентless-схемы).
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/mobile-applications -->
 
 ### Air-gapped RUM
 
