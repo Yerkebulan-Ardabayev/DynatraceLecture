@@ -7,6 +7,7 @@ Reads:
     explanations/{day_id}/{topic_id}.md  — markdown content
     output/data/pages.jsonl  — screenshots (filtered by source=plan)
 """
+
 import hashlib
 import io
 import json
@@ -179,29 +180,39 @@ def build_topics_data(plan, pages):
         }
         for t in d["topics"]:
             expl_file = EXPL_DIR / d["id"] / f"{t['id']}.md"
-            md_text = expl_file.read_text(encoding="utf-8") if expl_file.exists() else ""
+            md_text = (
+                expl_file.read_text(encoding="utf-8") if expl_file.exists() else ""
+            )
             shots = []
             for p in by_topic_pages.get(t["id"], []):
                 sc = p.get("screenshot", "")
                 if sc:
                     rel = sc.split("output/", 1)[1] if "output/" in sc else sc
-                    short = p["title"].split(" - ")[0] if " - " in p["title"] else p["title"]
-                    shots.append({
-                        "title": short,
-                        "route": p.get("plan_route", ""),
-                        "src": rel,
-                        "status": status_marker(p),
-                    })
-            day_data["topics"].append({
-                "id": t["id"],
-                "name": t["name"],
-                "kind": t.get("kind", "live"),
-                "notes": t.get("notes", ""),
-                "html": md_to_html(md_text),
-                "has_explanation": bool(md_text),
-                "screenshots": shots,
-                "routes_planned": t.get("routes", []),
-            })
+                    short = (
+                        p["title"].split(" - ")[0]
+                        if " - " in p["title"]
+                        else p["title"]
+                    )
+                    shots.append(
+                        {
+                            "title": short,
+                            "route": p.get("plan_route", ""),
+                            "src": rel,
+                            "status": status_marker(p),
+                        }
+                    )
+            day_data["topics"].append(
+                {
+                    "id": t["id"],
+                    "name": t["name"],
+                    "kind": t.get("kind", "live"),
+                    "notes": t.get("notes", ""),
+                    "html": md_to_html(md_text),
+                    "has_explanation": bool(md_text),
+                    "screenshots": shots,
+                    "routes_planned": t.get("routes", []),
+                }
+            )
         result.append(day_data)
     return result
 
@@ -381,7 +392,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
     <div id="content">
       <div id="content-inner">
         <div id="topic-default">
-          <h2>Обучение Dynatrace Managed — JUSAN</h2>
+          <h2>Обучение Dynatrace Managed</h2>
           <p>Полный материал курса с теорией и скриншотами тенанта.</p>
           <p>Выбери тему слева, чтобы начать.</p>
         </div>
@@ -510,7 +521,7 @@ function showTopic(idx) {
   prevBtn.disabled = idx <= 0;
   nextBtn.disabled = idx >= FLAT.length - 1;
 
-  try { localStorage.setItem('dt-jusan-last', String(idx)); } catch(e){}
+  try { localStorage.setItem('dt-course-last', String(idx)); } catch(e){}
 }
 
 // Внешние ссылки: открывать в новой вкладке + кнопка "copy URL" при hover.
@@ -602,7 +613,7 @@ document.addEventListener('keydown', e => {
 });
 
 buildNav();
-const last = parseInt(localStorage.getItem('dt-jusan-last') || '-1');
+const last = parseInt(localStorage.getItem('dt-course-last') || '-1');
 if (last >= 0 && last < FLAT.length) showTopic(last);
 </script>
 </body>
@@ -618,10 +629,8 @@ def main():
     data = build_topics_data(plan, pages)
     data_json = json.dumps(data, ensure_ascii=False)
     build_id = compute_build_id()
-    html = (
-        HTML_TEMPLATE
-        .replace("__DATA_PLACEHOLDER__", data_json)
-        .replace("__BUILD_ID__", build_id)
+    html = HTML_TEMPLATE.replace("__DATA_PLACEHOLDER__", data_json).replace(
+        "__BUILD_ID__", build_id
     )
     OUT_FILE.write_text(html, encoding="utf-8")
     total_topics = sum(len(d["topics"]) for d in data)
@@ -629,7 +638,9 @@ def main():
     total_shots = sum(len(t["screenshots"]) for d in data for t in d["topics"])
     print(f"OK  ->  {OUT_FILE}")
     print(f"     build-id: {build_id}")
-    print(f"     {len(data)} days, {total_topics} topics ({with_expl} with explanation), {total_shots} screenshots")
+    print(
+        f"     {len(data)} days, {total_topics} topics ({with_expl} with explanation), {total_shots} screenshots"
+    )
     size_kb = OUT_FILE.stat().st_size / 1024
     print(f"     {size_kb:.1f} KB")
 
