@@ -1,4 +1,15 @@
 > 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 9 из 10: «USQL / DQL: запросы, возможности, ограничения»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/user-sessions/query -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27.**
+
+> 📚 **Источники (только Dynatrace Managed):**
+>
+> - [Custom queries, segmentation, and aggregation of session data (USQL)](https://docs.dynatrace.com/managed/observe/digital-experience/session-segmentation/custom-queries-segmentation-and-aggregation-of-session-data)
+> - [Leverage user action and user session properties for web applications](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/analyze-and-use/action-and-session-properties)
+> - [User actions](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/user-actions)
+> - [Real User Monitoring (RUM)](https://docs.dynatrace.com/managed/shortlink/rum)
 
 ## 📍 КАРТА — одна страница, два языка
 
@@ -81,33 +92,48 @@ LIMIT 50;
 
 USQL — SQL-подобный язык для запросов по пользовательским сессиям и user actions. Создан Dynatrace в 2016 году, когда формировалась RUM-функциональность.
 
-**Синтаксис близок к SQL**, но ориентирован на одну большую виртуальную таблицу `usersession` (и `useraction` для детального уровня):
+**Синтаксис близок к SQL**, но ориентирован на четыре виртуальные таблицы:
+
+- `usersession` — одна строка на сессию.
+- `useraction` — одна строка на user action.
+- `userevent` — события (например, page changes, rage events).
+- `usererror` — ошибки и crashes.
 
 ```sql
 SELECT <columns>
-FROM {usersession | useraction}
+FROM <usersession | useraction | userevent | usererror>
 WHERE <conditions>
 GROUP BY <columns>
 ORDER BY <columns>
 LIMIT <n>;
 ```
 
-**Особенности USQL:**
+Только `SELECT` и `FROM` обязательны.
 
-- **FROM только `usersession` или `useraction`.** Нет join-ов, нет других таблиц. Всё в одной виртуальной «таблице» сессий или действий.
-- **Нет JOIN, UNION, subquery** — язык намеренно упрощён.
-- **Специальные функции:**
-  - `matchesUserActionName(useraction, 'Click on ...')` — проверка имени действия.
-  - `IF(condition, value_if_true, value_if_false)` — условный оператор.
-  - `funnel(step1, ..., stepN)` — построение воронки встроенной функцией.
-  - `topValues(column, N)` — топ-N значений.
-- **Ограничения ресурсов.** Квота по времени (обычно 30 сек) и по объёму (обычно 10 000 сессий).
+**Поддерживаемые ключевые слова и функции (по официальной документации):**
+
+- **Keywords:** `AND`, `OR`, `WHERE`, `GROUP BY`, `ORDER BY`, `DISTINCT`, `BETWEEN`, `IN`, `LIKE`, `FILTER`.
+- **Aggregation:** `SUM`, `AVG`, `MIN`, `MAX`, `MEDIAN`, `COUNT`, `PERCENTILE`.
+- **Date functions:** `YEAR`, `MONTH`, `DAY`, `HOUR`, `MINUTE`, `DATETIME`.
+- **Специализированные:** `FUNNEL`, `TOP`, `CONDITION`, `KEYS`.
+
+**Ограничения USQL:**
+
+- **Только закрытые сессии.** Live-сессии в выборке не участвуют.
+- **Default LIMIT 50, max 5000** — увеличить можно через `LIMIT <n>` до 5000, выше — нельзя.
+- **Single table per SELECT.** JOIN-ов между таблицами нет.
+- **Нет field-to-field comparisons** — нельзя сравнить два поля строки между собой.
+- **LIKE-ограничение** — запрос с 11+ LIKE-условиями, у которых wildcard стоит не в конце, отклоняется.
 
 **Доступ к USQL:**
 
 - Через UI (разобрано в Шаге 1).
-- Через Dynatrace API endpoint `/api/v1/userSessionQueryLanguage/table` — вызов из скриптов, дашбордов, BI-инструментов.
+- Через REST endpoints **`/table`** (плоский результат) и **`/tree`** (иерархический) с API-токеном.
 - Через Data Explorer — часть USQL-запросов встраивается как tile в dashboard.
+
+**Time filtering** в USQL: переменные `$TIME_FRAME_START`, `$TIME_FRAME_END`, `$NOW` (с конструкциями вида `$NOW - DURATION("2h")`).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/session-segmentation/custom-queries-segmentation-and-aggregation-of-session-data -->
 
 ### DQL — Dynatrace Query Language
 
@@ -154,9 +180,10 @@ fetch logs
 - Дата/время: `now() - 1d`, `now() - 1h`, фиксированные timestamp'ы.
 - Boolean: `AND`, `OR`, `NOT`.
 
-**Funnel-функция:**
+**FUNNEL-функция** — строит воронку по последовательности шагов:
+
 ```sql
-SELECT funnel(
+SELECT FUNNEL(
   useraction.name = "Load of /",
   useraction.name = "Click on Login",
   useraction.name = "Load of /dashboard",
@@ -187,7 +214,7 @@ FROM usersession;
 - **Логи приложений.** USQL про сессии и actions, не про логи. Для логов — Logs UI в Dynatrace (или DQL в SaaS).
 - **Метрики сервисов.** USQL не работает с `builtin:service.*` метриками. Для них — Data Explorer / Metrics API.
 - **Трейсы.** USQL не видит PurePath-данные на уровне backend. Для трейсов — dedicated API или Distributed Tracing.
-- **Долгосрочные тренды.** По умолчанию USQL держит данные 35 дней. Старше — нет. Для долгосрочного хранения — экспорт в Elasticsearch / S3.
+- **Долгосрочные тренды.** Реальная глубина истории по сессиям ограничена retention RUM/Sessions Classic (35 дней). Для долгосрочного хранения — экспорт в Elasticsearch (User session export) или внешний BI (см. ниже).
 
 ### Альтернативы — куда смотреть для других типов данных
 
@@ -200,11 +227,11 @@ USQL — специализированный инструмент для одн
 
 ### Типичные ошибки новичков
 
-- **Забыть `WHERE startTime > now() - N`.** По умолчанию USQL смотрит «всё, что есть» — занимает минуты или даёт timeout. Всегда ограничивать время.
+- **Забыть фильтр по времени** (`WHERE startTime > $NOW - DURATION("1d")` или диапазон через `BETWEEN`). USQL без явного окна работает по дольшему интервалу — времени уходит много, легко получить timeout.
 - **Использовать `SELECT *`.** Получает 50+ колонок, ломает UI-таблицу, тратит квоту объёма.
-- **Забыть `LIMIT`.** USQL отдаст столько, сколько сможет (до квоты), UI может повиснуть на рендеринге.
-- **Путать FROM.** `FROM usersession` — одна строка на сессию. `FROM useraction` — одна строка на действие (много строк на сессию). Разные структуры, разные колонки.
-- **Путать синтаксис `country = 'KZ'` vs `usersession.country = 'KZ'`.** В usersession — без префикса. В useraction — иногда нужен префикс `usersession.country`.
+- **Забыть `LIMIT`.** Default — 50 строк, max — 5000. UI может повиснуть на рендеринге, если ожидать тысячи строк.
+- **Путать FROM.** Четыре таблицы: `usersession` (одна строка на сессию), `useraction` (одна строка на действие), `userevent` (события), `usererror` (ошибки/crashes). Разные структуры, разные колонки.
+- **Поле-к-полю сравнения нельзя.** USQL не поддерживает сравнение двух полей одной строки между собой — для такого сценария нужно вычислять оба поля и сравнивать в скрипте.
 
 ### API-экспорт USQL
 

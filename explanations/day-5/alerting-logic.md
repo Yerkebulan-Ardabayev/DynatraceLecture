@@ -1,4 +1,14 @@
 > 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 8 из 10: «Работа с оповещениями и их логика в Dynatrace»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:problem.notifications -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27.**
+
+> 📚 **Источники (только Dynatrace Managed):**
+>
+> - [Problem notifications](https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/problem-notifications)
+> - [Problem alerting profiles](https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/alerting-profiles)
+> - [Issue-tracking integration](https://docs.dynatrace.com/managed/deliver/release-monitoring/issue-tracking-integration)
 
 ## 📍 КАРТА — три страницы про доставку уведомлений
 
@@ -41,13 +51,16 @@
 
 Разбирался в Дне 1, Тема 10 (problems-feature). Здесь дополнительно, с упором на alerting. В air-gapped Managed движок AutomationEngine / Workflows не активен — работаем с классическими Problem notifications.
 
-**Типы интеграций:**
+**Типы интеграций (по официальной /managed/ документации):**
 
-- **Email** — SMTP-уведомление на заданные адреса. Требует настройки SMTP-сервера на уровне Cluster Management Console. Обычно корпоративный Exchange или Postfix.
-- **Slack / Microsoft Teams** — через incoming webhook URL. Настройка на стороне мессенджера: создать webhook в admin-панели, получить URL, вставить в Dynatrace.
-- **Jira / ServiceNow / Other ITSM** — через REST API и token. Dynatrace создаёт тикет при появлении проблемы, обновляет при изменении статуса, закрывает при resolution.
-- **PagerDuty / OpsGenie** — специализированные on-call системы. Триггерят дежурного по телефону или SMS согласно rotation schedule.
-- **Webhook (generic)** — простой HTTP POST с JSON-payload проблемы на любой кастомный endpoint. Можно написать собственный receiver: webhook → парсинг → запись в SIEM или внутренний мессенджер.
+- **Incident Management:** Opsgenie, VictorOps, PagerDuty, xMatters, Jira — эскалация, on-call rotation, тикеты.
+- **ChatOps:** Slack, Microsoft Teams — через incoming webhook URL мессенджера.
+- **Enterprise Service Management:** ServiceNow — для ITIL-процессов крупных enterprise.
+- **Custom:** Email (SMTP) и Webhook (generic HTTP POST с настраиваемым JSON-payload).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/problem-notifications -->
+
+**Когда уходят уведомления.** Push в третью сторону происходит **только при появлении (detected)** и **при разрешении (resolved)** проблемы — не на каждое обновление. Это сделано, чтобы снизить alert fatigue, но даёт сюрприз: если сервис «мерцает» без формального resolve, дополнительных нотификаций не будет.
 
 **Для каждой интеграции настраивается:**
 
@@ -70,46 +83,35 @@
 
 Путь: `https://guu84124.live.dynatrace.com/ui/settings/builtin:issue-tracking.integration`.
 
-*Что настраивает.* Специальная интеграция, связывающая Dynatrace с системами трекинга задач на уровне **releases**. В отличие от Problem notifications, здесь речь не об алертах, а о **привязке багрепортов к релизам кода**.
+*Что настраивает.* Специальная интеграция, которая показывает **статистику багов и тикетов привязанных к релизу** — это не двусторонняя синхронизация Problem ↔ ticket, а получение из issue-tracker'а количества и сводки issue для конкретной версии.
 
-**Как работает.** Dynatrace знает о релизах через Release API или метаданные build-сервера. Каждый сервис имеет версию. При возникновении проблемы Dynatrace может:
+**Как работает.** Dynatrace знает о релизах через метаданные сервиса (см. version detection в Дне 1, Тема 5). Для каждой версии задаётся query (с placeholder'ами `{PRODUCT}` и `{VERSION}`), который Dynatrace выполняет в issue-tracker'е и показывает результат в Release inventory: сколько open / closed багов привязано к релизу.
 
-1. Определить, с какого релиза проблема появилась.
-2. Автоматически создать тикет в Jira / ServiceNow с описанием.
-3. Связать тикет с релизом в своём UI. Из карточки релиза видно все проблемы, которые он вызвал.
-4. При resolution проблемы обновить статус тикета.
+**Важно.** Issue-tracking integration **не создаёт тикеты сам** и **не закрывает их по resolution problem**. Автоматическое создание тикета на проблему — отдельная задача через **Problem notifications** (Шаг 2 этой темы).
 
-**Поддерживаемые системы:**
+**Поддерживаемые системы (5 интеграций):**
 
-- **Jira** (Cloud, Server, Data Center) — через Jira REST API.
-- **GitHub Issues** — через GitHub API.
-- **Azure DevOps / Azure Boards** — через Azure DevOps REST API.
-- **ServiceNow Incidents** — через ServiceNow REST API.
+- **Jira on-premises** (Server / Data Center) — через REST API + standard credentials.
+- **Jira Cloud** — через REST API + OAuth/API token.
+- **GitHub** — через GitHub API + token.
+- **GitLab** — через GitLab API + API token.
+- **ServiceNow** — фильтрация attribute-value (placeholder'ы `{PRODUCT}`/`{VERSION}` не используются).
+
+**Лимит:** до **20 issue-tracking конфигураций**.
 
 **Поля настройки:**
 
-- **Integration name.**
-- **Base URL** (например `https://jira.example.com`).
-- **Username + API token** (для Jira Cloud — API token, не пароль).
-- **Project key / target queue** — куда создавать тикеты.
-- **Default issue type** — Bug, Incident, Story.
+- **Issue label**, **Query** (с placeholder'ами).
+- **Issue type / Target system / Target URL.**
+- **Credentials** (зависит от системы — OAuth, API token или standard credentials).
 
-*Типовой use case.* Пост-mortem после инцидента:
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/deliver/release-monitoring/issue-tracking-integration -->
 
-1. Команда разбирает, что произошло.
-2. Заводят action items: «починить retry logic», «добавить cache», «увеличить timeout».
-3. Каждый action item — тикет в Jira, привязанный к исходному Dynatrace-инциденту.
-4. Менеджер отслеживает на следующий sprint planning: все action items разобраны, на следующий review — все закрыты.
-
-Issue-tracking integration автоматизирует шаг «создать тикет», сокращает ручную работу после инцидента.
+*Типовой use case.* После релиза руководитель команды открывает Release inventory и видит: «версия 2.34.0 — 3 open issues в Jira». Это даёт быструю обратную связь: что новый релиз ещё ловит баги, прежде чем переходить к следующему. Создание самих тикетов и автоматизация post-mortem-action items — задача Problem notifications + наружных автоматизаций (см. ниже).
 
 ---
 
 ## 🎓 ТЕОРИЯ — логика оповещений
-
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Metric events — условия алертов](https://docs.dynatrace.com/docs/shortlink/metric-events)
 
 ### Когда уведомление срабатывает
 
@@ -125,13 +127,14 @@ Issue-tracking integration автоматизирует шаг «создать 
 
 ### Дубликаты и rate limiting
 
-Каждая проблема создаёт уведомление **один раз** в самом начале. Нюансы:
+По официальной документации, push в третью сторону происходит **только при detect и при resolve** проблемы — Dynatrace не дублирует нотификацию на каждое обновление статуса:
 
-- Если в alerting profile включено `Send event repeatedly` — дубликаты каждые N минут, пока проблема жива.
-- Если проблема «мерцает» (появляется-исчезает-появляется) — создаются отдельные проблемы, каждая своё уведомление.
-- Если уведомление не удалось отправить (integration fail) — Dynatrace делает retry до 3 раз.
+- Если проблема «мерцает» (появляется → исчезает → появляется) — каждое появление это **новая Problem** с собственной парой detect / resolve, поэтому в каналах будет несколько пар уведомлений на один реальный сбой.
+- Если уведомление не удалось отправить (integration unhealthy), Dynatrace делает retry — состояние интеграции отображается в System notifications (Шаг 1).
 
-Жалобы на дубликаты в каналах — обычно следствие `Send repeatedly` или плохо настроенных мерцающих проблем (нестабильный baseline).
+Жалобы на «дубликаты в каналах» — обычно следствие нестабильного baseline'а, из-за которого одна и та же ситуация распадается на серию мерцающих проблем.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/problem-notifications -->
 
 ### Custom payload для webhook
 
@@ -193,23 +196,19 @@ Dynatrace шлёт только начальное уведомление, да�
 
 ### Issue tracking vs Problem notification — разница
 
-| Признак | Problem notification | Issue tracking |
+| Признак | Problem notification | Issue tracking integration |
 |---|---|---|
-| Когда срабатывает | На любую Problem | На Problem с указанием затрагиваемого release |
-| Что делает | Шлёт уведомление в Slack/Teams/email | Создаёт тикет в Jira/ServiceNow, связывает с release |
-| Зачем | Дежурный узнал | Тикет есть для работы, трекинг |
-| Дубликаты | Возможны (alerting profile logic) | Нет (один Problem → один тикет) |
-| Life cycle | Не отслеживает закрытие тикета | Синхронизирует статус с статусом Problem |
+| Что делает | Push-уведомление в Slack/Teams/email/PagerDuty/Jira/ServiceNow/webhook | Подтягивает **статистику тикетов** из Jira/GitHub/GitLab/ServiceNow по query на конкретный релиз |
+| Когда срабатывает | На detect и на resolve проблемы | По расписанию / при просмотре Release inventory |
+| Создаёт тикеты? | Да, при наличии integration с trackerom (Jira / ServiceNow) — но только при detect | Нет — только читает данные |
+| Закрывает тикеты? | Нет | Нет |
+| Лимит | По alerting profile | До 20 конфигураций на environment |
 
-Обычно используют оба: notification-канал для оперативного реагирования (дежурный увидел в мессенджере → полез разбираться), issue tracking — для систематизации работы (пост-инцидентный тикет в Jira → tracked до закрытия).
+Обычно используют оба: Problem notifications — для оперативного реагирования (дежурный увидел в мессенджере → полез разбираться), issue tracking — для пост-релизной статистики (сколько багов привязано к версии 2.34.0). Двусторонняя синхронизация Problem ↔ ticket в публичной /managed/ документации не задокументирована — её нужно реализовывать вручную через webhook + внешний automation-сервис.
 
-### AutomationEngine / Workflows — новая модель
+### AutomationEngine / Workflows — это SaaS
 
-**Dynatrace Workflows** — low-code движок автоматизации поверх классического Problem notifications. Вместо простого «получить problem → отправить webhook» можно:
-
-- Получить problem → обогатить данными из CMDB → проверить business impact → решить приоритет → если Critical — триггернуть PagerDuty + открыть тикет в Jira + записать в аудит-лог. Всё в одном workflow.
-
-*В air-gapped Managed Workflows доступны НЕ ВЕЗДЕ* — это часть новой Apps-платформы. В курсе опираемся на классические Problem notifications.
+Dynatrace Workflows — low-code-движок автоматизации поверх Problem notifications, который позволяет цепочку «получить problem → обогатить данными → решить приоритет → триггернуть несколько действий» собирать как orchestration. **В air-gapped Managed эта функциональность не активна** — это часть Apps-платформы Dynatrace SaaS. В курсе опираемся на классические Problem notifications + кастомные webhook-receiver'ы для расширенной логики.
 
 ### Ключевые термины
 

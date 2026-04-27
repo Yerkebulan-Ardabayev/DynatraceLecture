@@ -1,4 +1,14 @@
 > 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 7 из 10: «Настройка правил оповещения и Alerting Profiles»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:alerting.profile -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27.**
+
+> 📚 **Источники (только Dynatrace Managed):**
+>
+> - [Problem alerting profiles](https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/alerting-profiles)
+> - [Maintenance windows](https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/maintenance-windows)
+> - [Metric events (Davis AI)](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/metric-events)
 
 ## 📍 КАРТА — три страницы про алерт-правила
 
@@ -22,15 +32,17 @@
 
 *Что видно.* Страница настройки alerting profiles. В air-gapped Managed новая Workflows-платформа не активна — работаем с классическими alerting profiles.
 
-*Что такое alerting profile.* Именованный набор правил — «какие проблемы в какие интеграции отправлять».
+*Что такое alerting profile.* Именованный набор фильтров — «какие проблемы попадают в этот профиль и далее в привязанные интеграции».
 
-**Поля правила:**
+**Структура профиля (по официальной /managed/ документации):**
 
-- **Event filter** — тип события (Davis problem, metric event, availability incident и др.).
-- **Severity** — Critical / Warning / Info.
-- **Entity filter** — какие сущности затронуты (hosts, services, applications) через management zone или tag.
-- **Delay** — минут ждать перед отправкой. Отсекает случайные всплески.
-- **Send event repeatedly** — дублировать уведомления при продолжении проблемы.
+- **Management zone** — фильтр по management zone (или All zones).
+- **Severity rules** — до **100 правил** на профиль, объединяются логикой **OR**: если событие попадает хотя бы в одно правило, профиль срабатывает. В правиле задаётся severity, минимальная длительность проблемы перед уведомлением и фильтр по тегам сущностей.
+- **Event filters** — до **20 правил** на профиль. Внутри: criteria без отрицания объединяются OR'ом, criteria с отрицанием — AND'ом, две группы между собой — AND'ом. Поддерживаются и predefined event types, и custom events (по title / description / properties).
+
+Все три блока (management zone + severity rules + event filters) объединяются логикой **AND**. В environment всегда есть Default-профиль, его нельзя удалить, но можно изменить.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/alerting-profiles -->
 
 **Типовой набор профилей:**
 
@@ -52,19 +64,23 @@
 
 *Что настраивает.* Периоды, когда Dynatrace либо не создаёт проблемы, либо создаёт без отправки уведомлений. Разбирали в Дне 3-4, Тема 13 — здесь дополнительные детали.
 
-**Три режима maintenance window:**
+**Два типа maintenance window (по /managed/ документации):**
 
-- **Detect and alert** — нормальный режим (не maintenance window, а дефолт).
-- **Detect, no alerting** — проблемы фиксируются в истории, уведомления не идут. Полезно для ночных ETL: хочется видеть проблемы постфактум, но не будить дежурных.
-- **Do not detect or alert** — ничего не происходит. Полезно для plan-release, когда в ходе деплоя 5-10 минут «хаоса» — норма.
+- **Planned** — окно, известное заранее (плановое обслуживание).
+- **Unplanned** — окно, оформленное задним числом или для уже идущего сбоя.
+
+Оба типа исключают период из расчёта baseline'ов, чтобы аномалии в этот период не портили эталонные значения метрик.
 
 **Параметры окна:**
 
 - **Name and description** — для документации.
-- **Type** — Planned (разовое) или Recurring (повторяющееся).
-- **Schedule** — дата, время, часовой пояс.
-- **Scope** — какие сущности попадают: All entities, Management zone (например, prod-retail), Specific entities (выбранные hosts / services / apps).
-- **Alerting mode** — один из трёх режимов выше.
+- **Schedule** — дата, время, часовой пояс. Для повторяющихся окон используется опция повторяемости (one-time / daily / weekly / monthly), это не отдельный «тип», а свойство Planned-окна.
+- **Scope** — какие сущности попадают: All entities, Management zone, Specific entities (выбранные hosts / services / apps).
+- **Suppress problems / Suppress alerting** — два независимых тумблера: можно подавить только нотификации, оставив detection, либо подавить и обнаружение проблем тоже.
+
+Лимит: до **2000 maintenance windows на environment**. На странице Problems есть фильтр **«Under maintenance»** для просмотра проблем, которые произошли внутри окна.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/maintenance-windows -->
 
 **Типовые окна:**
 
@@ -85,26 +101,33 @@
 
 *Типовой кейс.* Автоматические Davis baselines не покрывают специфическую бизнес-метрику. Например, в Dynatrace через Extensions идёт метрика «количество заявок на кредит за минуту». Davis её не знает — для него это просто число. Бизнес знает: если меньше 10 за минуту в рабочие часы — что-то сломано на фронтенде. Создаём metric event.
 
+**Два типа metric events (по официальной документации):**
+
+- **Metric key events** — оценивают входящие значения **одной** метрики; поддерживают только static thresholds.
+- **Metric selector events** — оценивают сложные запросы (`metric selector`), могут включать историю и арифметику между несколькими метриками; поддерживают все три стратегии порога.
+
+**Три стратегии порога:**
+
+- **Static threshold** — фиксированное число (`< 10`, `> 100`).
+- **Auto-adaptive threshold** — порог рассчитывается Dynatrace по истории метрики (только для metric selector events).
+- **Seasonal baseline** — confidence bands для метрик с сезонной структурой (только для metric selector events).
+
 **Поля metric event:**
 
-- **Metric selector** — какая метрика следить (`builtin:custom.loan_applications_per_minute`).
-- **Dimension filters** — по каким dimensions (`mz = retail-banking`, `branch_type = online`).
-- **Threshold:**
-  - **Static threshold** — `< 10` или `> 100`.
-  - **Auto-adaptive** — больше 3σ отклонение от недельной нормы.
-- **Condition duration** — сколько времени должно держаться условие (например, 3 минуты).
-- **Severity** — Critical / Warning / Info.
-- **Alerting profile** — сразу привязка, в какой профиль уйдёт.
+- **Metric selector / metric key** — какая метрика отслеживается.
+- **Dimension filters** — по каким dimensions (например, `mz = retail-banking`, `branch_type = online`).
+- **Threshold strategy** — одна из трёх выше.
+- **Condition** — длительность нарушения порога перед созданием события.
+- **Severity** — задаётся в самом метрик-event'е и далее матчится в alerting profile.
+- Топология: событие автоматически привязывается к наиболее релевантной сущности (host / process / service); если метрика ссылается на несколько entity-типов, Dynatrace выбирает наиболее подходящий.
 
-*Лимиты.* Overview of limits — счётчик использованных / доступных metric events. У Managed-лицензии обычно лимит 1000 metric events на тенант. Следить за счётчиком, чтобы не упереться.
+*Лимит.* В Managed — до **10 000 metric event configurations на environment**. Отдельные конфигурации, у которых проблемы (throttling, query failures, blocked configurations), Dynatrace отслеживает.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/metric-events -->
 
 ---
 
 ## 🎓 ТЕОРИЯ — архитектура алертинга в Dynatrace
-
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Metric events — alerting profile scope](https://docs.dynatrace.com/docs/shortlink/metric-events)
 
 ### Полный pipeline алерта
 
@@ -187,18 +210,17 @@ Maintenance windows — не только удобство, но и compliance-�
 
 Все «запланированные нестабильности» должны быть записаны как maintenance windows, иначе дежурный тревожится на них каждый месяц.
 
-### Metric events лимит 1000 — как не упереться
+### Metric events лимит 10 000 — как не упереться
 
-Лимит 1000 metric events на тенант кажется большим, но быстро исчерпывается:
-
-- Каждый микросервис × каждая важная метрика = быстрый рост.
-- 100 микросервисов × 10 метрик = уже 1000.
+Лимит — до **10 000 metric event configurations на environment**. Это много, но при микросервисной архитектуре исчерпывается заметно быстрее, чем кажется: каждый микросервис × каждая важная бизнес-метрика быстро суммируются.
 
 **Стратегии экономии:**
 
-- **Использовать dimensions, а не отдельные metric events.** Один metric event с фильтром `service:*` сам создаёт алерты для каждого сервиса.
-- **Не дублировать Davis.** Если Davis смотрит метрику — не создавать свой metric event на то же самое.
-- **Периодический аудит.** Раз в квартал смотреть список metric events, удалять неактуальные.
+- **Использовать dimensions, а не отдельные metric events.** Один metric event на metric selector с многомерным фильтром (`service:*`) сам распадается на алерты для каждого совпадения.
+- **Не дублировать Davis.** Если Davis уже смотрит метрику через built-in anomaly detection — не создавать свой metric event на то же самое.
+- **Периодический аудит.** Раз в квартал смотреть список metric events и удалять неактуальные; throttled / blocked конфигурации Dynatrace помечает отдельно — их в первую очередь стоит проверять.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/metric-events -->
 
 ### Alerting profiles vs Anomaly Detection settings
 

@@ -1,4 +1,15 @@
 > 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 6 из 10: «Synthetic Monitoring: HTTP, Browser, браузерные шаги»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/synthetic -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27.**
+
+> 📚 **Источники (только Dynatrace Managed):**
+>
+> - [Synthetic Monitoring (shortlink)](https://docs.dynatrace.com/managed/shortlink/synthetic-monitoring)
+> - [Create a private Synthetic location](https://docs.dynatrace.com/managed/observe/digital-experience/synthetic-monitoring/private-synthetic-locations/create-a-private-synthetic-location)
+> - [Manage private Synthetic locations](https://docs.dynatrace.com/managed/observe/digital-experience/synthetic-monitoring/private-synthetic-locations/manage-private-synthetic-locations)
+> - [Synthetic monitoring overview](https://docs.dynatrace.com/managed/observe/digital-experience/synthetic-monitoring)
 
 ## 📍 КАРТА — четыре страницы про Synthetic Monitoring
 
@@ -25,16 +36,19 @@
 
 **Что видно на скриншоте.** Страница 403 — You don't have permission to view this page. Error details - 403 forbidden.
 
-На живом Managed-тенанте здесь список всех настроенных synthetic-мониторов:
+На живом Managed-тенанте здесь список всех настроенных synthetic-мониторов. По официальной документации Dynatrace Synthetic Monitoring в Managed предлагает **четыре типа** мониторов:
 
-- **HTTP monitors** — простые проверки одного URL через HTTP(S) каждые N минут. Пример: «каждую минуту бить в `https://example.com/health`, ожидать 200 OK с текстом `"status":"ok"`, за максимум 2 секунды». Метрики монитора:
-  - **Availability** — процент успешных проверок за период.
-  - **Response time** — медиана, перцентили.
-  - **Location** — с какой точки проверялось (для географического анализа).
+- **Single-URL Browser monitors** — эквивалент симулированного посещения приложения современным браузером. Запускаются c публичных или **private** локаций; периодичность — раз в 5 минут или реже.
+- **Browser clickpaths** — сценарии с заданной последовательностью кликов и пользовательского ввода для бизнес-критичных процессов.
+- **HTTP monitors** — простые HTTP(S)-запросы для проверки доступности API endpoint'ов и одиночных ресурсов. Поддерживаются Multi-step HTTP-сценарии (например, `GET /auth` → `POST /login` с извлечённым токеном → `GET /user/profile`). High-resource HTTP-варианты с OAuth2 / Kerberos выполняются только на private locations.
+- **Network Availability Monitoring (NAM)** — мониторы remote hosts, когда HTTP-endpoint'ы недостаточны: ICMP-ping, TCP-connection check, DNS-resolution. NAM работает **только на private locations**.
 
-- **Browser monitors** — сложные сценарии. Робот-браузер открывает сайт, кликает кнопки, заполняет формы, проверяет результат. Пример: «открой `example.com`, нажми Login, введи тестовые креды, проверь, что попал на главную, выйди». End-to-end сценарии.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/synthetic-monitoring -->
 
-- **Multi-step HTTP monitors** — цепочки HTTP-запросов для API: `GET /auth` → `POST /login` с token из предыдущего → `GET /user/profile` с session cookie. Проверяет работу API-цепочки.
+Метрики любого монитора:
+- **Availability** — процент успешных проверок за период.
+- **Response time** — медиана, перцентили.
+- **Location** — с какой локации проверялось (для географического анализа).
 
 ### Шаг 2 — Synthetic availability settings
 
@@ -84,10 +98,6 @@
 
 ## 🎓 ТЕОРИЯ — Synthetic Monitoring как инструмент
 
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Synthetic Monitoring](https://docs.dynatrace.com/docs/shortlink/synthetic-monitoring)
-
 ### RUM vs Synthetic — разница и комбинация
 
 **RUM** — реальные пользователи, естественный трафик, реальная нагрузка. Минусы:
@@ -109,34 +119,52 @@
 
 ### Типы synthetic monitors детально
 
-**HTTP monitor** — минимальный:
-- Один HTTP-запрос (GET, POST, PUT, …).
-- Запускается с ActiveGate (любого, где включена роль Synthetic).
-- Проверки: HTTP code, time до first byte, content matching.
-- Частота: от 1 минуты до 60 минут.
-- **Use case**: health check endpoint-ов, API доступность.
+**HTTP monitor** — простые HTTP-проверки:
+- Один или цепочка HTTP-запросов (GET, POST, PUT, …) — Multi-step реализуется как несколько шагов внутри одного HTTP-монитора с возможностью извлечь значение из ответа предыдущего шага и подставить в следующий.
+- Запускается с Synthetic-enabled ActiveGate в private location.
+- Проверки: HTTP code, response time, content matching.
+- High-resource варианты с OAuth2 / Kerberos — только на private locations.
+- **Use case**: health check endpoint-ов, API availability, end-to-end API-цепочки (authenticate → fetch → update → logout).
 
-**Browser monitor (Classic)** — полная симуляция пользователя:
-- Запускается headless-браузер (Chromium).
-- Выполняет сценарий: клики, ввод, проверки.
-- Проверяет все ресурсы страницы (HTML, CSS, JS, картинки), все XHR-запросы.
-- Метрики: Visually Complete, Speed Index, Page Load Time.
-- Частота: от 5 минут до 60 минут (дороже HTTP, ресурсы браузера).
-- **Use case**: end-to-end функциональные сценарии (login, поиск, корзина, оплата).
+**Single-URL Browser monitor** — посещение одной страницы реальным браузером:
+- Запускается современный браузер (на Linux ActiveGate с 1.331 — Chrome for Testing с авто-обновлением, можно отключить для air-gapped).
+- Проверяет все ресурсы страницы, метрики Visually Complete, Speed Index, Page Load Time.
+- Минимальная частота — 5 минут или реже.
 
-**Multi-step HTTP monitor** — цепочка API-запросов:
-- Несколько HTTP-шагов, каждый зависит от предыдущего.
-- Поддерживает extract variable → use in next step (например, извлечь `accessToken` из ответа login и использовать в следующем запросе).
-- **Use case**: end-to-end API-сценарии (authenticate → fetch → update → logout).
+**Browser clickpath** — сценарий с последовательностью кликов:
+- Записывается через Recorder-расширение или собирается вручную из шагов.
+- Робот выполняет клики, ввод, ассерты состояния — end-to-end бизнес-сценарии (login, поиск, корзина, оплата).
+- Дороже Single-URL по ресурсам и времени, ниже частота.
+
+**Network Availability Monitoring (NAM)** — сетевая доступность хостов:
+- Поддерживает ICMP (ping), TCP connect, DNS lookup.
+- Применяется, когда HTTP-endpoint'а нет или важна сетевая связность.
+- **Только private locations.**
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/synthetic-monitoring -->
 
 ### Где запускаются synthetic мониторы
 
-- **В облачной Dynatrace** — на глобальной сети Dynatrace Cluster Synthetic (Frankfurt, Mumbai, Sydney и др.).
-- **В Managed air-gapped** — только с ваших ActiveGate с включённой ролью Synthetic.
+В Dynatrace Managed используются **private locations** — synthetic-мониторы выполняются с ваших же ActiveGate'ов внутри корпоративной сети. Public Synthetic locations Dynatrace формально существуют как отдельная фича, но в **air-gapped Managed** (без outbound в интернет к Dynatrace public synthetic-инфраструктуре) использоваться не могут — это ровно тот случай, ради которого нужны private locations.
 
-*Ограничение.* Если только один ActiveGate (например в одном ЦОД), synthetic видит доступность приложения только оттуда. Падение сети между ЦОД-1 и ЦОД-2 не обнаружится — synthetic «не пробивает» между ними.
+**Synthetic-enabled ActiveGate**:
+- **Clean installation:** при установке роли Synthetic другие модули ActiveGate отключаются, чтобы посторонние процессы не искажали performance-метрики.
+- **Версии:** Environment ActiveGate **1.169+** или Cluster ActiveGate (с Managed **1.176+**).
+- Поддерживает **и browser, и HTTP** мониторы.
+- Один или несколько Synthetic-enabled ActiveGate'ов формируют private location.
 
-*Рекомендация.* Минимум 2 ActiveGate в разных зонах (основной + резервный ЦОД), на каждом — роль Synthetic. Мониторы настраиваются «с обеих локаций» — видна и доступность приложения, и межсайтовая связность.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/synthetic-monitoring/private-synthetic-locations/create-a-private-synthetic-location -->
+
+**Capacity-индикация private location** в UI:
+- Зелёный — загрузка <80%.
+- Жёлтый — >80% или нет failover-резерва.
+- Красный — >90% или часть мониторов уже не запускается.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/synthetic-monitoring/private-synthetic-locations/manage-private-synthetic-locations -->
+
+*Ограничение.* Если только один ActiveGate (например, в одном ЦОД), synthetic видит доступность приложения только оттуда. Падение сети между ЦОД-1 и ЦОД-2 не обнаружится — synthetic «не пробивает» между ними.
+
+*Рекомендация.* Минимум 2 Synthetic-enabled ActiveGate в разных зонах (основной + резервный ЦОД). Мониторы настраиваются «с обеих локаций» — видна и доступность приложения, и межсайтовая связность.
 
 ### Алертинг через Alerting profiles
 
@@ -188,9 +216,9 @@ Synthetic — идеальный источник данных для SLO:
 
 ### Почему 403 на captured-тенанте
 
-Тенант `guu84124` для учебных целей, лицензии на Synthetic Monitoring на нём нет. В Managed Dynatrace лицензия продаётся отдельными модулями: Infrastructure, APM, Frontend (RUM), Synthetic, AppSec, Log Management. Если модуль не куплен — страницы UI недоступны с HTTP 403.
+Тенант `guu84124` для учебных целей, на этом окружении доступ к Synthetic закрыт (страница `/ui/synthetic` отдаёт 403). В Managed Dynatrace функциональность Synthetic — отдельный лицензируемый модуль; если модуль на тенанте не активирован или роль пользователя не имеет прав на Synthetic-зону, страница UI возвращает 403.
 
-На боевом тенанте модуль Synthetic обычно в лицензии. Доступ настраивается через IAM на уровне Management zones и Permissions.
+На боевом Managed-тенанте, где модуль активирован, доступ настраивается через IAM на уровне Management zones и Permissions. Скриншот этой страницы для учебника снимается **в empty_screens_todo.md** как известный gap captured-тенанта (см. ниже).
 
 ### Ключевые термины
 

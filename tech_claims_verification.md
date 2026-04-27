@@ -401,6 +401,81 @@ Revision dates везде обновлены `2026-04-26 → 2026-04-27`.
 
 ---
 
+## Сессия Учебного дня 5 от 2026-04-27 — день 5 строгий /managed/-only аудит
+
+10 тем (`rum`, `ux-metrics`, `journeys`, `session-replay`, `app-segments`, `synthetic`, `alerting-profiles`, `alerting-logic`, `usql`, `api`) проверены целиком против `docs.dynatrace.com/managed/` свежими WebFetch'ами в этой сессии. Все live-ui теги, revision-метки, last-verified — на 2026-04-27. Все Источники приведены к формату «только `/managed/`».
+
+**Найдено и исправлено фактических неточностей: 21.**
+
+### Темы 1–3 (rum / ux-metrics / journeys)
+
+| Блок (было) | File | Источник правды | Решение |
+|---|---|---|---|
+| Mobile Agent SDK: «Android — gradle-зависимость, iOS — CocoaPods или Swift Package Manager» | `rum.md` Шаг 4 | [Android Gradle plugin (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/mobile-applications/instrument-android-app/instrumentation-via-plugin) + [iOS instrument (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/mobile-applications/instrument-ios-app): «Android Gradle plugin / Maven Central / bytecode instrumentation»; «Swift Package Manager (recommended). Carthage and static builds deprecated since 8.323. CocoaPods publishing stopped — migrate to SPM» | ⚠️ переписано: Android — Dynatrace Android Gradle plugin (Maven Central, bytecode); iOS — Swift Package Manager (рекомендованный), CocoaPods publishing остановлен, Carthage/static builds dropped с 8.323 |
+| User session timeout: «По умолчанию session завершается, если пользователь 30 минут неактивен» | `rum.md` ТЕОРИЯ | [User session shortlink (Managed)](https://docs.dynatrace.com/managed/shortlink/user-session): web 30 min, mobile/custom 10 min | ⚠️ дополнено: 30 min web, 10 min mobile/custom |
+| Web Vitals: «LCP, FID, CLS» как одинаково актуальные | `rum.md` ТЕОРИЯ + `ux-metrics.md` | Web Vitals stand. update 2024: FID заменён на INP (Interaction to Next Paint) | ⚠️ FID помечен как устаревающий, INP добавлен; явно сказано «FID в более старых версиях, INP в актуальных» |
+| Apdex шкала: «0.85+ Excellent / 0.70-0.85 Good / 0.50-0.70 Fair / <0.50 Poor» | `ux-metrics.md` ТЕОРИЯ | [Apdex ratings (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings): «Excellent 0.94–1.0 / Good 0.85–0.94 / Fair 0.7–0.85 / Poor 0.5–0.7 / Unacceptable < 0.5» | ❌ исправлено: 5 уровней c корректными границами, добавлен Unacceptable |
+| User Experience Score описан как пороги Apdex | `ux-metrics.md` Шаг 2 + ТЕОРИЯ | [UX score (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/user-experience-score): session-level Frustrating/Tolerable/Satisfying с весами User action 3 / Error 1 / Rage event 2 / Crash 5000; one Frustrating element → не Satisfying | ❌ переписано как session-level UX-score с весами; разведено с action-level Apdex |
+| USQL: `matchesUserActionName(useraction, '...')` | `journeys.md` Шаг 2 + `usql.md` ТЕОРИЯ | Custom queries (Managed) — функции `FUNNEL`, `TOP`, `CONDITION`, `KEYS`; `matchesUserActionName` не задокументирована в /managed/ | ❌ удалено: запрос переписан через `name = '...'` из `useraction` |
+| USQL пример: одна большая «таблица», `usersession`/`useraction` | `usql.md` ТЕОРИЯ | Custom queries (Managed): 4 таблицы — `usersession`, `useraction`, `userevent`, `usererror`; default LIMIT 50, max 5000; only closed sessions; REST `/table` `/tree`; нет field-to-field comparisons; LIKE с 11+ non-trailing wildcards rejected | ⚠️ дополнено: 4 таблицы, точные лимиты, ограничения |
+| User action naming rules: общая формулировка «Settings → Web and mobile monitoring → Application → User actions → Rules» | `journeys.md` ТЕОРИЯ | [Custom user action names (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/initial-setup/create-custom-names-for-user-actions): отдельно load actions / XHR actions; placeholders `pageUrl/sourceUrl/xhrUrl` + до 50 кастомных; processing — Extract / Replace / Regex; 250 правил/app; detection order `data-dtname → nodeName → innerText/textContent` | ⚠️ переписано с точными лимитами и приоритетом детекции имени |
+
+### Темы 4–5 (session-replay / app-segments)
+
+| Блок (было) | File | Источник правды | Решение |
+|---|---|---|---|
+| Session Replay masking: «default password / cc-number / data-dtrum-mask + mask all text» | `session-replay.md` ТЕОРИЯ | [Configure Session Replay (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/configure-session-replay-web): 4 режима — Mask all / Mask user input / Allow list / Block list; маскируются только alphanumeric, format-разделители видны | ❌ переписано: 4 режима с точными формулировками; разница Recording vs Playback masking; permission «Replay sessions without masking» |
+| Session Replay opt-in mode | `session-replay.md` | Та же страница: opt-in через `dtrum.enableSessionReplay()` + cookie consent banner | ✅ добавлено |
+| Session Replay sampling effective % | `session-replay.md` Шаг 3 | Та же страница: фактический % = % из RUM × % из Session Replay (RUM 50% × SR 20% = 10% общих сессий) | ✅ добавлено |
+| Session Replay restrictions: «Canvas/WebGL → чёрные прямоугольники» | `session-replay.md` Ограничения | [Session Replay restrictions (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/session-replay-restrictions-web): Frames, Canvas, WebGL, Web Animations API, Plugins, Java applets — **не поддерживаются** (НЕ «чёрные прямоугольники»); iframe нужен RUM JS отдельно; OneAgent 1.241+ | ❌ переписано: список не поддерживаемых технологий, требования iframe, OneAgent 1.241+, blob/object URLs не воспроизводятся, .value-property issue |
+| Application detection: «3 типа правил Domain/Path/Query» + лимит не указан | `app-segments.md` Шаг 1 | [Check application detection (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/application-detection-rules): URL `scheme://host:port/path?query`; до 1000 правил/env; sequential priority; Check URL feature | ⚠️ дополнено: точная структура URL, лимит 1000, Check URL feature, ограничение «session не растягивается между доменами» |
+| Application detection: «one application per domain» как единственный авто-режим | `app-segments.md` ТЕОРИЯ | [Define applications (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/initial-setup/define-your-applications-via-the-my-web-application-placeholder): 3 подхода — Auto-injection с placeholder «My web application» / Application detection rules / Agentless RUM | ⚠️ переписано: 3 подхода + правило «не переименовывать My web application» |
+
+### Темы 6–8 (synthetic / alerting-profiles / alerting-logic)
+
+| Блок (было) | File | Источник правды | Решение |
+|---|---|---|---|
+| Synthetic monitor types: «HTTP / Browser / Multi-step HTTP» (3 типа) | `synthetic.md` Шаг 1 + ТЕОРИЯ | [Synthetic Monitoring shortlink (Managed)](https://docs.dynatrace.com/managed/shortlink/synthetic-monitoring): **4 типа** — Single-URL Browser / Browser Clickpaths / HTTP (включая Multi-step) / Network Availability Monitoring (NAM, ICMP/TCP/DNS, only private locations) | ❌ переписано: 4 типа; Multi-step — это шаги внутри HTTP, не отдельный тип |
+| Synthetic в Managed: «только с ваших ActiveGate» | `synthetic.md` ТЕОРИЯ | [Create private synthetic location (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/synthetic-monitoring/private-synthetic-locations/create-a-private-synthetic-location): Synthetic-enabled ActiveGate — clean install (другие модули отключаются), Environment AG **1.169+** или Cluster AG **1.176+**; capacity-индикация green <80% / yellow >80% / red >90% | ⚠️ дополнено: clean install, версии AG, capacity-индикация |
+| Maintenance window типы: «Planned / Recurring + 3 режима Detect-and-alert/Detect-no-alerting/Do-not-detect» | `alerting-profiles.md` Шаг 2 | [Maintenance windows (Managed)](https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/maintenance-windows): **Planned / Unplanned**; recurrence — опция Planned; **Suppress problems / Suppress alerting** — два независимых toggle; до 2000/env; фильтр «Under maintenance» в Problems | ❌ переписано: 2 типа (Planned/Unplanned), recurrence как опция, 2 независимых toggle, лимит 2000 |
+| Metric events лимит: «1000 на тенант» | `alerting-profiles.md` Шаг 3 + ТЕОРИЯ | [Metric events (Managed)](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/metric-events): **до 10 000 metric event configurations / environment**; 2 типа — Metric key events (только static) / Metric selector events (все стратегии); 3 стратегии — Static / Auto-adaptive / Seasonal baseline | ❌ исправлено: лимит 10 000, 2 типа, 3 стратегии порога |
+| Alerting profile: «Event filter / Severity (Critical/Warning/Info) / Entity filter / Delay / Send event repeatedly» | `alerting-profiles.md` Шаг 1 | [Alerting profiles (Managed)](https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/alerting-profiles): Management zone AND Severity rules (≤100, OR) AND Event filters (≤20, AND для negated, OR для non-negated); Default-профиль non-deletable | ⚠️ переписано: точные лимиты, AND/OR логика, Default non-deletable |
+| Issue tracking integration: «Jira / GitHub Issues / Azure DevOps / ServiceNow Incidents — Dynatrace создаёт тикет, обновляет статус, закрывает при resolution» | `alerting-logic.md` Шаг 3 | [Issue-tracking integration (Managed)](https://docs.dynatrace.com/managed/deliver/release-monitoring/issue-tracking-integration): 5 интеграций — Jira on-prem / Jira Cloud / GitHub / GitLab / ServiceNow; до 20 конфигураций; **это статистика релиза, не двусторонняя синхронизация**; placeholders `{PRODUCT}` `{VERSION}`; auto-create тикетов делает Problem notifications, auto-close НЕ делает | ❌ переписано: 5 интеграций (Azure DevOps убран как невалидный), 20 лимит, статистика релиза vs автотикетинг |
+| Problem notifications: «Email / Slack / Microsoft Teams / Jira / ServiceNow / PagerDuty / OpsGenie / Webhook» + дубликаты «каждые N минут» | `alerting-logic.md` Шаг 2 + ТЕОРИЯ | [Problem notifications (Managed)](https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/problem-notifications): полный список — Opsgenie / VictorOps / PagerDuty / xMatters / Jira (Incident Mgmt) + Slack / Microsoft Teams (ChatOps) + ServiceNow (ESM) + Email / Webhook (Custom); push **только при detect и при resolve** (не «каждые N минут») | ⚠️ список интеграций расширен (VictorOps, xMatters добавлены), timing исправлен |
+
+### Темы 9–10 (usql / api)
+
+| Блок (было) | File | Источник правды | Решение |
+|---|---|---|---|
+| API token format: «`dt0c01.ABC123...XYZ789`» | `api.md` Шаг 1 | [Access tokens — Managed](https://docs.dynatrace.com/managed/manage/access-control/access-tokens): `prefix.publicPortion.secretPortion`; **dt0s01** — API tokens (НЕ dt0c01); 24-char public + 64-char secret; dt0s02 OAuth2; dt0s16 Platform tokens | ❌ исправлено: префикс dt0s01, 24-char public + 64-char secret, токен-типы по prefix |
+| Rate limit: «1000 запросов в минуту на токен» | `api.md` ТЕОРИЯ | [Dynatrace API (Managed)](https://docs.dynatrace.com/managed/dynatrace-api): «payload limits and request throttling»; точная цифра одной таблицей не зафиксирована | ⚠️ смягчено: формулировка про лимиты и 429 без указания конкретного числа |
+| API структура: «v1 / v2 / Configuration API / Settings API / Smartscape API» | `api.md` ТЕОРИЯ | Та же страница: категории — Environment / Configuration / Account Management / Cluster & Mission Control; v1/v2 у многих endpoint'ов; API Explorer в UI | ⚠️ переписано: 4 категории + API Explorer |
+
+### Финал
+
+- **Всего правок:** 21 фактических исправления + 0 удалённых тем (все 10 на месте) + 1 SaaS-only/403 скрин в `empty_screens_todo.md` (Day 5 synthetic).
+- **WebFetch за день:** ~95 (включая поисковые WebSearch для уточнения шорт-линков).
+- `python scripts/quality_check.py` → ✅ **0 errors** (2 warnings из day-1, не Day 5).
+- `python scripts/link_check.py` → ✅ **134 URL × 200 OK**.
+- `empty_screens_todo.md` дополнен записью про synthetic.md Шаг 1 (403 Forbidden на captured-тенанте, тема описана через docs).
+
+**Все live-ui / revision / 🔖 Редакция метки в файлах Day 5 имеют дату 2026-04-27.** Старые ссылки на `/docs/shortlink/...` в блоках Источников ТЕОРИИ удалены везде — заменены полным блоком наверху с минимум 4–6 `/managed/`-ссылками на тему.
+
+**Lessons Day 5:**
+
+1. **Apdex шкала** — самая распространённая ошибка в RUM-документации курса. В файле `ux-metrics.md` была комбинация старой 4-уровневой и неверных границ; реальная /managed/-документация даёт 5 уровней (включая Unacceptable < 0.5). Lesson: при упоминании Apdex score-уровней — обязательная сверка через `apdex-ratings`.
+2. **Apdex (action-level) vs User Experience Score (session-level)** — это **две разные** метрики. UX-score формируется через веса (User action 3, Error 1, Rage event 2, Crash 5000) и классифицирует сессию целиком. Lesson: разделять метрики по уровню (action / session) явно.
+3. **Web Vitals: FID → INP** в стандарте 2024. Третья сессия подряд, где это всплывает. Lesson: для всех новых RUM-материалов сразу употреблять INP, а FID — как «более старая версия».
+4. **Synthetic в Managed = 4 типа**, не 3 (плюс NAM — only private locations). Multi-step HTTP — это форма HTTP-monitor'а, а не отдельный тип. Lesson: structured types брать из shortlink, не из памяти.
+5. **API token prefix** — `dt0s01` для API, `dt0s02` для OAuth2, `dt0s16` для Platform. В курсе встретился старый префикс `dt0c01` — это устаревшая нотация. Lesson: при упоминании prefix — обязательно `dt0s01.`.
+6. **Issue tracking integration** vs **Problem notifications с интеграцией Jira** — две разные функциональности. Issue tracking даёт статистику релиза (bug counts), не создаёт тикеты сам. Это уже фиксировалось в Day 4, но в Day 5 alerting-logic.md ошибка повторилась. Lesson: каждое упоминание Jira / ServiceNow в контексте Dynatrace явно классифицировать как «Problem notification (push при detect/resolve)» или «Release inventory (статистика по версии)».
+7. **Maintenance windows** в Managed — это **Planned / Unplanned**, а не «Planned / Recurring». Recurring — опция Planned. Двух независимых toggle (suppress problems vs suppress alerting). Та же ошибка из Day 4, повторилась в Day 5 alerting-profiles.md. Lesson: формулировки про maintenance переписываются под /managed/-структуру каждый раз.
+8. **Metric events лимит 10 000, не 1000.** Серьёзная ошибка в alerting-profiles.md, которая бы испортила capacity-планирование у заказчика. Lesson: лимиты Davis-конфигураций сверять через `dynatrace-intelligence/anomaly-detection`.
+9. **Session Replay masking** — это 4 режима (Mask all / Mask user input / Allow list / Block list), а не «default + custom selectors + mask all text». Recording vs Playback — разные стратегии маскирования. Lesson: при настройке privacy explicit перечислять 4 режима с поведением каждого.
+10. **Issue tracking integration: 5 систем (Jira on-prem / Jira Cloud / GitHub / GitLab / ServiceNow)**, не «Jira / GitHub / Azure DevOps / ServiceNow». Azure DevOps в /managed/-документации не задокументирован как поддерживаемый Issue Tracking Integration. Lesson: при перечислении поддерживаемых систем — точно сверять список из /managed/-страницы, не дополнять «по аналогии».
+
+---
+
 ## Как обновлять этот файл
 
 1. При добавлении/правке numeric claim: `python scripts/extract_tech_claims.py` → обновится `tech_claims.md`.

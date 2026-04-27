@@ -1,4 +1,20 @@
 > 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 1 из 10: «Real User Monitoring (RUM): реальные пользовательские сессии»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/user-sessions -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27.**
+
+> 📚 **Источники (только Dynatrace Managed):**
+>
+> - [Real User Monitoring (RUM)](https://docs.dynatrace.com/managed/shortlink/rum)
+> - [RUM JavaScript injection](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/initial-setup/rum-injection)
+> - [Firewall constraints for RUM](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/initial-setup/firewall-constraints-for-rum)
+> - [User actions](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/user-actions)
+> - [Apdex ratings](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings)
+> - [Scores and ratings](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings)
+> - [User session (shortlink)](https://docs.dynatrace.com/managed/shortlink/user-session)
+> - [Dynatrace Android Gradle plugin](https://docs.dynatrace.com/managed/observe/digital-experience/mobile-applications/instrument-android-app/instrumentation-via-plugin)
+> - [Instrument iOS apps](https://docs.dynatrace.com/managed/observe/digital-experience/mobile-applications/instrument-ios-app)
 
 ## 📍 КАРТА — четыре страницы Real User Monitoring
 
@@ -91,9 +107,14 @@ LIMIT 100;
 
 *Что на странице.* Та же `Enablement and cost control`, но для мобильных приложений iOS и Android.
 
-*Разница с Web.* Автоматической инжекции нет — в мобильных приложениях нет HTML-страниц. Разработчик встраивает **Dynatrace Mobile Agent SDK** в код приложения при сборке. Android — gradle-зависимость, iOS — CocoaPods или Swift Package Manager.
+*Разница с Web.* Автоматической инжекции нет — в мобильных приложениях нет HTML-страниц. Разработчик встраивает **OneAgent for mobile** в код приложения при сборке.
 
-**Mobile Agent собирает:**
+- **Android.** Подключается **Dynatrace Android Gradle plugin** (опубликован в Maven Central) на уровне top-level `build.gradle` / `build.gradle.kts`. Plugin использует bytecode instrumentation (Java / Kotlin / другие JVM-языки), обрабатывает source-файлы основного модуля и сторонних библиотек до R8-обфускации. Native-код, web-компоненты и resource-файлы (XML layouts) автоматически не инструментируются.
+- **iOS.** Рекомендуемый способ интеграции — **Swift Package Manager** (`https://github.com/Dynatrace/swift-mobile-sdk.git` через `File → Swift Packages → Add Package Dependency` в Xcode). CocoaPods исторически поддерживался, но новые версии OneAgent SDK там больше не публикуются — для получения хотфиксов рекомендуется миграция на SPM. Static builds и Carthage для OneAgent for iOS перестали поддерживаться, начиная с версии 8.323.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/mobile-applications/instrument-android-app/instrumentation-via-plugin -->
+
+**OneAgent for mobile собирает:**
 
 - **Crash reports** — native crashes, Java / Kotlin exceptions, Swift / Objective-C exceptions.
 - **HTTP-запросы и тайминги** — через автоматическую инструментацию URLSession / OkHttp.
@@ -105,10 +126,6 @@ LIMIT 100;
 ---
 
 ## 🎓 ТЕОРИЯ — как RUM устроен изнутри
-
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Real User Monitoring (RUM)](https://docs.dynatrace.com/docs/shortlink/rum)
 
 ### Принцип: агент на стороне клиента
 
@@ -127,12 +144,16 @@ OneAgent на сервере живёт внутри JVM или process tree и 
 
 При загрузке страницы `ruxit.js` подключается первым делом. Он использует Browser Performance API (`window.performance`, `PerformanceObserver`, `Navigation Timing API`, `Resource Timing API`) и собирает:
 
-- **Core Web Vitals** — LCP (Largest Contentful Paint), FID (First Input Delay), CLS (Cumulative Layout Shift). Это метрики Google, которые стали индустриальным стандартом «быстро ли грузится страница».
+- **Core Web Vitals** — LCP (Largest Contentful Paint, измеряется в Chromium-браузерах через Google-предоставленный API), CLS (Cumulative Layout Shift) и метрика отзывчивости на ввод (FID — First Input Delay в более старых версиях, INP — Interaction to Next Paint в актуальных). LCP для Chromium доступен напрямую; для прочих браузеров используется собственная Visually complete-метрика Dynatrace.
 - **Resource timings** — сколько времени качался каждый CSS, JS, картинка, AJAX-запрос.
 - **Navigation timings** — сколько длились DNS lookup, TCP connect, TLS handshake, ответ сервера, парсинг HTML.
-- **User actions** — клики, ввод в формы, переходы по ссылкам. RUM-агент «оборачивает» их и связывает с backend-запросами, которые пошли в результате действия.
+- **User actions** — три типа: **Load actions** (загрузка страницы по URL), **XHR actions** (XmlHttpRequest или `fetch()`-вызовы и связанные DOM-изменения) и **Custom actions** (определяет разработчик через JS API). RUM-агент «оборачивает» их и связывает с backend-запросами, которые пошли в результате действия.
 - **JavaScript errors** — необработанные исключения, ошибки в Promise.
 - **Network errors** — неудачные AJAX (HTTP 5xx, таймауты, CORS-отказы).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/user-actions -->
+
+Поддержка Internet Explorer 11 прекращена начиная с RUM JavaScript 1.293 — для legacy-приложений на IE остаются только OneAgent serverside-данные.
 
 Все эти данные отправляются **beacon'ом** — небольшим HTTP-запросом к Dynatrace cluster (конкретно на ActiveGate или напрямую в cluster node). В Managed тенанте beacon идёт к ActiveGate, который пересылает его в Cluster Management Console.
 
@@ -140,20 +161,34 @@ OneAgent на сервере живёт внутри JVM или process tree и 
 
 **User action** — атомарное действие пользователя: клик, переход по ссылке, отправка формы. RUM-агент связывает каждый user action с **цепочкой backend-запросов**, которые он вызвал. Получается сквозная трассировка: клик в браузере → HTTP-запрос → сервис → база → ответ.
 
-**User session** — последовательность user actions одного пользователя, сгруппированных по одному client-id cookie и временному окну. По умолчанию session завершается, если пользователь 30 минут неактивен (inactivity timeout). Новая session с тем же пользователем считается разной — у неё свой session-id.
+**User session** — последовательность user actions одного пользователя, сгруппированных по одному client-id cookie и временному окну. По умолчанию session завершается:
+- **Web** — после 30 минут бездействия (inactivity timeout).
+- **Mobile / Custom** — после 10 минут бездействия.
+
+Новая session с тем же пользователем считается отдельной — у неё свой session-id. Только что закрывшаяся сессия может оставаться в UI ещё какое-то время до полной финализации.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/user-session -->
 
 **Один user — много сессий.** Если пользователь заходит каждое утро на неделе, это 5 сессий. Если на одном устройстве дважды в день — 14 сессий. Это важно для биллинга (цена в лицензии за user actions, не за пользователей) и для аналитики (retention — какой процент пользователей возвращается на следующий день).
 
 ### Apdex — User experience score
 
-Dynatrace для каждого user action считает **время отклика** и сравнивает с порогом:
-- **Satisfied** — время < T (например, 3 секунды для веб-страницы).
-- **Tolerating** — T ≤ время ≤ 4T.
-- **Frustrated** — время > 4T.
+Apdex (Application Performance Index) — единая метрика, которая показывает производительность приложения и влияние ошибок на пользовательский опыт. Dynatrace для каждого user action классифицирует его как **Satisfied**, **Tolerating** или **Frustrated** на основании настроенного на приложение порога; user actions с JavaScript-ошибками автоматически попадают в **Frustrated**.
 
-**Apdex (Application Performance Index)** = (Satisfied + 0.5 × Tolerating) / Total. Диапазон 0.0–1.0. 1.0 — все пользователи довольны, 0.0 — все страдают.
+Итоговый Apdex score лежит в диапазоне 0.0–1.0 и в Dynatrace разбит на пять уровней:
 
-Пороги настраиваются на странице User experience score (увидим в Теме 2).
+- **Excellent** — 0.94–1.0
+- **Good** — 0.85–0.94
+- **Fair** — 0.7–0.85
+- **Poor** — 0.5–0.7
+- **Unacceptable** — < 0.5
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings -->
+
+Пороги действий настраиваются на странице **User experience score** (увидим в Теме 2). Помимо action-уровня Apdex, в Dynatrace есть session-level **User Experience Score**, который классифицирует сессию целиком (Satisfying / Tolerating / Frustrating).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings -->
+
 
 ### Классический UI vs Apps-интерфейс
 
@@ -167,11 +202,18 @@ Dynatrace для каждого user action считает **время откл
 
 В SaaS Dynatrace RUM-beacon пользовательского браузера идёт напрямую в `<tenant>.live.dynatrace.com`. В Managed такая схема требовала бы, чтобы каждый компьютер клиента из интернета мог достучаться до вашей Managed-инсталляции — это нарушает air-gapped принцип.
 
-**Решение в Managed:**
-- Для внутренних приложений (корпоративный портал, ДБО для сотрудников) — beacon идёт напрямую к ActiveGate внутри сети.
-- Для интернет-приложений (публичный сайт банка, мобильное приложение для клиентов) — ставят **Public ActiveGate** в DMZ: он смотрит наружу, принимает beacon'ы, пересылает внутрь на Cluster через защищённый канал.
+**Что делает beacon:**
 
-Схема Public ActiveGate обсуждалась в Дне 1, Тема 2 «Компоненты Dynatrace». В настройках Web enablement есть параметр Beacon URL — он должен указывать на Public ActiveGate, а не на Cluster напрямую.
+- При **auto-injection** (OneAgent встроил `ruxit.js` сам) beacon идёт обратно на тот же web/app сервер на root-relative путь с префиксом `rb_` (например, `/rb_xxxxxxxxxx`); OneAgent на этом сервере перехватывает beacon и пересылает данные в кластер.
+- При **agentless monitoring** (тег вставлен в шаблон вручную) beacon по умолчанию отправляется на endpoint Cluster ActiveGate (URL вида `/bf` или `/bf/<id>`).
+
+**Решение в Managed:**
+- Для внутренних приложений (корпоративный портал, ДБО для сотрудников) — beacon идёт через ActiveGate внутри сети либо через web-сервер с OneAgent.
+- Для интернет-приложений (публичный сайт банка, мобильное приложение для клиентов) — ставят ActiveGate в DMZ: он смотрит наружу, принимает beacon'ы, пересылает внутрь на Cluster через защищённый канал.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/initial-setup/firewall-constraints-for-rum -->
+
+Схема ActiveGate в DMZ обсуждалась в Дне 1, Тема 2 «Компоненты Dynatrace». В настройках Web enablement задаётся endpoint, на который браузер шлёт beacon, — критично, чтобы он был достижим с устройств пользователей.
 
 ### Cost control — почему это важно в Managed
 

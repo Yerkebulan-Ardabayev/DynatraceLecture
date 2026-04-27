@@ -1,4 +1,14 @@
 > 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 10 из 10: «Dynatrace API: обзор сценариев интеграции»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/access-tokens -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27.**
+
+> 📚 **Источники (только Dynatrace Managed):**
+>
+> - [Access tokens — Managed](https://docs.dynatrace.com/managed/manage/access-control/access-tokens)
+> - [Dynatrace API overview](https://docs.dynatrace.com/managed/dynatrace-api)
+> - [Dynatrace API reference](https://docs.dynatrace.com/managed/discover-dynatrace/references/dynatrace-api)
 
 ## 📍 КАРТА — две страницы про API
 
@@ -21,7 +31,15 @@
 
 *Что видно.* Список всех API-токенов текущего пользователя. Колонки: `Token name`, `Last used`. Кнопки: `Generate new token`, `Show more actions`.
 
-*Что такое API-токен.* Строка вида `dt0c01.ABC123...XYZ789` длиной ~100 символов. Заменяет пароль при вызове API: вместо логин/пароль в заголовке идёт `Authorization: Api-Token dt0c01.ABC...`.
+*Что такое API-токен.* Строка из трёх частей через точку: `prefix.publicPortion.secretPortion`. Public-часть — 24 символа, secret-часть — 64 символа. Префикс задаёт тип токена:
+
+- **`dt0s01`** — API tokens для авторизации и SCIM.
+- **`dt0s02`** — OAuth2 clients для Dynatrace Apps.
+- **`dt0s16`** — Platform tokens для programmatic access.
+
+При вызове API вместо логин/пароль в заголовке идёт `Authorization: Api-Token dt0s01.<PUBLIC>.<SECRET>`. Public-портион можно безопасно показывать в логах для идентификации; secret-портион требует password-уровня защиты — при утечке токен нужно немедленно ротировать.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/manage/access-control/access-tokens -->
 
 **Зачем несколько токенов.** Каждая интеграция — свой токен с минимально необходимыми правами:
 
@@ -73,17 +91,20 @@ Admin-категория очень ограничительна, только �
 
 ### Структура API
 
-Dynatrace API — REST API, JSON-ответы. Базовый URL: `https://guu84124.live.dynatrace.com/api/`.
+Dynatrace API — REST API, JSON-ответы, HTTPS. Базовый URL внутреннего тенанта: `https://guu84124.live.dynatrace.com/api/`.
 
-Основные версии:
+Дeлится на крупные категории:
 
-- **API v1** — классический набор endpoint'ов (ретро, поддерживается, не развивается). Используется большинством старых интеграций.
-- **API v2** — современный, с улучшенной пагинацией, фильтрацией, идемпотентностью. Новый код писать на v2.
-- **Configuration API** — отдельный для настроек (v1), частично переезжает в **Settings API** (v2).
-- **Problem Feed API v1/v2** — для проблем.
-- **Smartscape API** — для иерархии сущностей.
+- **Environment APIs** — метрики, события, entities, problems, user sessions, synthetic monitoring, ActiveGate management.
+- **Configuration APIs** — anomaly detection, dashboards, services, custom monitors.
+- **Account Management APIs** — environment management, subscription details.
+- **Cluster & Mission Control APIs** — конфигурация инфраструктуры, обновления кластера.
 
-**Документация** — встроенный Swagger/OpenAPI в самом Dynatrace: `/rest/*/openapi` — можно тыкать API прямо из браузера без написания кода.
+Многие endpoint'ы существуют в **v1** (ретро) и **v2** (современный, с улучшенной пагинацией и фильтрацией) — например, Metrics, Problems, Synthetic. Для нового кода предпочтительна v2; v1 — для совместимости.
+
+**API Explorer** доступен прямо в UI (User menu → Dynatrace API) или по ссылке `https://<domain>/e/<env-id>/rest-api-doc/` — позволяет тыкать API из браузера без написания кода. Кнопка **Authorize** показывает требуемые права для каждого endpoint.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-api -->
 
 ### Основные группы endpoint'ов
 
@@ -165,13 +186,15 @@ curl -X POST "$DT_ENV/api/config/v1/dashboards" \
 
 ### Rate limits
 
-Dynatrace API имеет ограничения на частоту запросов. Для Managed обычно **1000 запросов в минуту на токен**. Превышение — HTTP 429 с заголовком `Retry-After`.
+Dynatrace API имеет ограничения на размер payload и частоту запросов; в публичной /managed/-документации точная цифра «N запросов в минуту на токен» одной таблицей не зафиксирована — она зависит от endpoint'а и версии. Превышение лимита возвращает **HTTP 429** с заголовком `Retry-After` (сколько секунд ждать перед повтором).
 
 **Правила работы:**
 
 - **Батчинг.** Если можно получить 1000 метрик в одном запросе — не слать 1000 отдельных.
 - **Caching.** Кэшировать редко меняющиеся результаты (список сущностей — раз в 5 минут, не на каждый запрос).
 - **Backoff.** При 429 ждать `Retry-After` и повторять.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-api -->
 
 ### Air-gapped и API
 
@@ -184,23 +207,17 @@ Dynatrace API имеет ограничения на частоту запрос
 
 ### SDK и библиотеки
 
-Официальные SDK от Dynatrace:
+В сообществе и Dynatrace-ecosystem существуют клиентские SDK для распространённых языков (Python, JavaScript / TypeScript, Go) — конкретные актуальные пакеты и их статус поддержки лучше уточнять в момент старта интеграции, версии и владельцы могут меняться. Для разовых скриптов в большинстве случаев достаточно обычного `curl`, типизированный SDK удобен только в крупных интеграционных проектах.
 
-- **Python** — `dynatrace-python-api` (pip install).
-- **JavaScript / TypeScript** — `@dynatrace/api`.
-- **Go** — `github.com/dtcookie/dynatrace-go-api`.
+### Monaco / Configuration as Code
 
-Оборачивают HTTP-вызовы в типизированные методы. Для сложных интеграций удобнее SDK, для простых скриптов — обычный `curl`.
+Отдельный инструмент Dynatrace — **Monaco** (Monitoring as Code). CLI для управления конфигурацией тенанта как код. Позволяет:
 
-### Monaco (Monitoring as Code)
-
-Отдельный инструмент Dynatrace — **Monaco**. CLI для управления конфигурацией тенанта как код (yaml-файлы). Позволяет:
-
-- Держать все alerting profiles, dashboards, monitor settings в Git.
-- Применять изменения через `monaco deploy` с diff-проверкой.
+- Держать alerting profiles, dashboards, monitor settings и другие сущности в Git.
+- Применять изменения через CLI с diff-проверкой.
 - Синхронизировать несколько тенантов (staging / prod / DR).
 
-*Типовой use case.* Поддержка нескольких Dynatrace-тенантов в идентичной конфигурации — основной ЦОД и резервный.
+*Типовой use case в air-gapped Managed.* Поддержка нескольких тенантов (основной ЦОД + резервный) в идентичной конфигурации — Monaco применяет один и тот же набор YAML-файлов к обоим, исключая ручной drift между ними.
 
 ### Завершение курса
 

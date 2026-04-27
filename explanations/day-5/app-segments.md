@@ -1,4 +1,16 @@
 > 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 5 из 10: «Разделение фронтенд-приложений на части, фильтры, сегменты»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.web.app-detection -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27.**
+
+> 📚 **Источники (только Dynatrace Managed):**
+>
+> - [Check application detection rules](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/application-detection-rules)
+> - [Define applications for Real User Monitoring](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/initial-setup/define-your-applications-via-the-my-web-application-placeholder)
+> - [Real User Monitoring (RUM)](https://docs.dynatrace.com/managed/shortlink/rum)
+> - [Firewall constraints for RUM](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/initial-setup/firewall-constraints-for-rum)
+> - [User actions](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/user-actions)
 
 ## 📍 КАРТА — три страницы про сегментацию приложений
 
@@ -31,14 +43,20 @@
 
 Без детекции Dynatrace видел бы **одно гигантское приложение** с общим Apdex. Падение производительности ДБО-для-юрлиц растворилось бы в объёме публичного сайта. Детекция разделяет трафик на четыре отдельных приложения, каждое со своим Apdex, SLO, командой ответственных.
 
-**Типы правил:**
+**Структура URL для детекции.** В Dynatrace правила работают на URL вида `scheme://host:port/path?query` (порты 80/443 опускаются). Правила могут опираться на host (домен), path и query string.
+
+**Типы паттернов в правилах:**
 
 - **Domain-based** — по полному домену (`corporate.example.com` → `Corporate Banking`).
-- **Path-based** — по URL-пути (`example.com/retail/*` → `Retail Banking`).
+- **Path-based** — по URL-пути (`example.com/retail/...` → `Retail Banking`).
 - **Query param** — по параметрам URL.
-- **Default fallback** — если ничего не подошло, назначается приложение по умолчанию.
+- **Default placeholder** — если ничего не подошло, трафик попадает в служебное приложение **My web application** (стартовая точка, переименовывать его не рекомендуется).
 
-*Порядок правил важен.* Применяются сверху вниз, первое совпавшее «выигрывает». Более специфичные правила должны быть выше общих.
+*Порядок правил важен.* Применяются последовательно сверху вниз, первое совпавшее «выигрывает». Более специфичные правила должны быть выше общих. Лимит — до 1000 правил на environment. Кнопка **Check URL** на этой же странице позволяет ввести URL и проверить, какое правило сработает и активен ли RUM для приложения.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/application-detection-rules -->
+
+*Важное ограничение.* User session не может растягиваться на несколько доменов — cookie технологически ограничен текущим доменом. Это надо учитывать при разделении приложения по поддоменам.
 
 ### Шаг 2 — Beacon origins for CORS
 
@@ -83,10 +101,6 @@
 
 ## 🎓 ТЕОРИЯ — сегментация и multi-tenancy на одном домене
 
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Real User Monitoring — applications](https://docs.dynatrace.com/docs/shortlink/rum)
-
 ### Зачем разделять приложения
 
 - **Разные SLO.** Для маркетингового сайта 3 сек загрузки — норма, для торговой платформы критично 500 мс. Одним Apdex не мониторить.
@@ -113,9 +127,15 @@
 
 ### Автоматический vs ручной режим detection
 
-По умолчанию Dynatrace использует **one application per domain** логику: каждый уникальный домен — отдельное приложение. Это работает для простых случаев (один сайт = один домен). Для сложных (несколько продуктов на одном домене) нужны правила.
+В Dynatrace доступны три способа определить структуру RUM-приложений:
+
+1. **Авто-инжекция OneAgent + placeholder.** Весь захваченный трафик изначально оседает в служебное приложение **My web application**, откуда домены затем мапятся на отдельные RUM-приложения.
+2. **Application detection rules.** Расширенные правила по URL/домену для случаев, когда одного «one application per domain» недостаточно.
+3. **Agentless RUM.** Когда нет доступа к серверу для авто-инжекции — `ruxit.js`-сниппет вставляется в код приложения вручную.
 
 **Рекомендация.** Начинать с автоматического режима, смотреть список детектированных приложений через неделю трафика. Если всё на одном домене — создавать path-based rules. Не увлекаться: слишком много приложений тоже плохо (каждое требует отдельной настройки пороговых значений, alerting, команды реагирования).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/initial-setup/define-your-applications-via-the-my-web-application-placeholder -->
 
 ### Provider breakdown как инструмент root cause
 
@@ -141,11 +161,11 @@ CORS (Cross-Origin Resource Sharing) — механизм браузерной �
 
 ### Multi-application домен в air-gapped Managed
 
-В Managed важен **Beacon URL** — адрес, куда RUM-агент шлёт beacon-ы. По умолчанию это тот же URL, откуда загрузился `ruxit.js` (обычно Public ActiveGate).
+В Managed критично, на какой endpoint RUM-агент отправляет beacon. При **auto-injection** beacon идёт обратно на тот же web/app сервер на root-relative путь с префиксом `rb_`; OneAgent на этом сервере перехватывает данные и пересылает их в кластер. При **agentless** RUM beacon отправляется на endpoint Cluster ActiveGate (URL вида `/bf` или `/bf/<id>`).
 
-Если приложения в разных сетях (внутренний портал шлёт в internal ActiveGate, публичный сайт — в Public ActiveGate), нужна кастомная настройка Beacon URL в каждой RUM-конфигурации.
+Если приложения находятся в разных сетях (внутренний портал — за internal ActiveGate, публичный сайт — за DMZ-ActiveGate), endpoint, на который браузер шлёт beacon, выбирается соответственно: для каждого приложения он должен быть достижим с тех устройств, где работают пользователи.
 
-Настраивается в Application settings → RUM → Capture settings → Beacon URL. Формат — полный URL до `/beacon` endpoint ActiveGate.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/initial-setup/firewall-constraints-for-rum -->
 
 ### Сегментация на уровне Mobile
 

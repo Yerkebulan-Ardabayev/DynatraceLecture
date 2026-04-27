@@ -1,4 +1,15 @@
 > 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 4 из 10: «Воспроизведение сессий (Session Replay)»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/user-sessions/replay-landing -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27.**
+
+> 📚 **Источники (только Dynatrace Managed):**
+>
+> - [Session Replay (shortlink)](https://docs.dynatrace.com/managed/shortlink/session-replay)
+> - [Configure Session Replay for web applications](https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/configure-session-replay-web)
+> - [Enable Session Replay for web applications](https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/enable-session-replay-web)
+> - [Technical restrictions for Session Replay for web applications](https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/session-replay-restrictions-web)
 
 ## 📍 КАРТА — три страницы про Session Replay
 
@@ -79,37 +90,37 @@
 **Настройки:**
 
 - **Capture CSS** — рекомендуется Да, без CSS страница развалится.
-- **Capture images** — trade-off: точнее, но тяжелее. Для интерфейса с простыми иконками включают, для e-commerce с каталогом товаров обычно нет.
+- **Capture images** — trade-off: точнее, но тяжелее.
 - **Capture fonts** — рекомендуется Да, иначе текст будет дефолтным.
-- **Max resource size** — лимит размера одного ресурса (по умолчанию 5 MB). Выше — не сохраняется.
+- **Max resource size** — лимит размера одного ресурса; выше — ресурс не сохраняется (точное значение задаётся в settings приложения).
 - **Ignore patterns** — URL-паттерны ресурсов, которые не сохранять (`*/ads/*` для маркетинговых баннеров).
 
-*Trade-off объёма.* Одна сессия с full replay — 2-20 MB, зависит от сложности страницы и длительности. При 500 000 сессий в день это около 1 TB в день только на Session Replay. Поэтому Session Replay включают не для всех, а для выборки:
+*Что нельзя восстановить.* Resources, защищённые персональной авторизацией (один URL — разное содержимое разным пользователям), и blob/object URLs не воспроизводятся; они должны быть доступны браузеру администратора при playback.
 
-- 10% от общего трафика — для общего анализа.
-- 100% от сессий с ошибками — чтобы разобрать каждый инцидент.
-- 100% от VIP-клиентов — для приоритетного разбора.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/session-replay-restrictions-web -->
 
-Правила настраиваются в Application settings → RUM → Session Replay → Cost control (страница доступна из карточки приложения).
+*Trade-off объёма.* По данным Dynatrace, в среднем минута записи и replay занимает порядка 100 кБ хранилища; для приложений с активными DOM-изменениями и iFrame'ами цифра выше. Storage-оценка для cluster-инсталляции: `sessions/day × avg session size (500 kB) × % recorded × retention (35 days) × buffer (1.5)`. Поэтому Session Replay включают не для всех, а для выборки — типовые стратегии: записывать только часть общего трафика, плюс 100% сессий с ошибками, плюс приоритетные сегменты (VIP-клиенты, критичные функции).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/enable-session-replay-web -->
+
+Cost control: фактическая доля записываемых сессий = % из настройки RUM × % из настройки Session Replay (например, RUM 50% × SR 20% = 10% от всех сессий). Настраивается в Application settings → Cost and traffic control.
 
 ---
 
 ## 🎓 ТЕОРИЯ — как устроен Session Replay
-
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Session Replay](https://docs.dynatrace.com/docs/shortlink/session-replay)
 
 ### Технология: DOM snapshots + diff
 
 Session Replay не записывает пиксели экрана (это были бы терабайты трафика на одну сессию и нарушение privacy). Вместо этого:
 
 1. **Full DOM snapshot** при старте сессии — HTML-структура, атрибуты, inline-styles.
-2. **Incremental diff** каждые 250 мс — что изменилось в DOM.
+2. **Incremental diff** во времени — что изменилось в DOM.
 3. **Events** — клики, touch-ы, прокрутки, ввод в поля. Только таймстемпы и координаты, значения полей маскируются.
 4. **Resources snapshot** — CSS-файлы, шрифты, картинки по настройкам из Шага 3.
 
-Всё сжимается собственным бинарным протоколом Dynatrace, шифруется, отправляется beacon-ом в кластер.
+Всё сжимается собственным бинарным протоколом Dynatrace и отправляется beacon-ом в кластер. Beacon Session Replay использует `application/octet-stream` — firewall между браузером и тенантом обязан его пропускать, иначе записи не дойдут до кластера.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/enable-session-replay-web -->
 
 ### Воспроизведение
 
@@ -123,19 +134,24 @@ Session Replay не записывает пиксели экрана (это б�
 
 ### Маскирование sensitive-данных
 
-**Default masking.** Dynatrace по умолчанию маскирует:
+В Dynatrace Session Replay для web доступны **четыре режима маскирования**:
 
-- Все `<input type="password">`.
-- Поля с `autocomplete="cc-number"` (номера карт).
-- Поля с атрибутом `data-dtrum-mask="mask"` — ручная разметка разработчика.
+- **Mask all** — маскируется всё (только структура страницы и заглушки текстов; используется в т.ч. для тестирования).
+- **Mask user input** — маскируются только поля ввода (текст, числа), всё остальное (статические тексты, заголовки) видно.
+- **Allow list** — записывается всё, кроме явно перечисленных селекторов; рекомендованный режим для большинства приложений.
+- **Block list** — записываются только явно разрешённые селекторы; всё остальное замаскировано.
 
-**Configurable masking.** Через Application settings → Session Replay → Privacy options можно:
+Маскирование закрывает только алфавитно-цифровые символы — формат-разделители (точки, запятые, двоеточия) остаются видны, что помогает воспроизвести «форму» данных без раскрытия содержимого.
 
-- Указать CSS-селекторы для маскирования (`#paymentForm input`, `.kyc-field`).
-- Указать селекторы для исключения из записи (`#cardCvv` — поле вообще не пишется, даже маскированным).
-- Включить режим `mask all text` — только структура страницы, все тексты заменяются чёрными полосами.
+URL-исключения настраиваются регулярными выражениями: при первом совпадении остальные правила игнорируются.
 
-*Рекомендация для sensitive-сценариев.* Включить `mask all text` по умолчанию и снимать маскирование только для конкретных полей, безопасных к показу (заголовки, навигация, статические тексты). Инверсия модели риска: по умолчанию ничего не видно, в явный whitelist попадает только согласованное с compliance.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/configure-session-replay-web -->
+
+**Recording vs Playback.** Маскирование может применяться как при записи, так и при воспроизведении: запись с маской — данные физически не попадают в beacon; маска при воспроизведении — данные хранятся, но скрыты от пользователей без отдельного permission «Replay sessions without masking».
+
+**Opt-in mode.** Чтобы соблюсти явное согласие пользователя, Session Replay можно перевести в режим opt-in — запись начинается только после вызова `dtrum.enableSessionReplay()` из JS приложения. Типовая схема: показать consent-баннер, при «Согласен» — установить cookie + дёрнуть `dtrum.enableSessionReplay()`.
+
+*Рекомендация для sensitive-сценариев.* Использовать **Mask all** или **Block list** по умолчанию и явно разрешать только заголовки, навигацию и статические тексты. Инверсия модели риска: по умолчанию ничего не видно, в whitelist попадает только согласованное с compliance.
 
 ### Юридические требования
 
@@ -168,10 +184,16 @@ Session Replay полезен, когда стандартная аналити�
 
 ### Ограничения
 
-- **Session Replay не работает в iframe**, если не настроена CORS-передача beacon-данных из iframe в parent.
-- **Browser extensions** (блокировщики, privacy-плагины) могут мешать записи — для clientов приватного фронта.
-- **Canvas и WebGL** записываются как чёрные прямоугольники (для чёрных клеток карт, графиков) — нужны отдельные настройки.
-- **Максимальная длина записанной сессии** — обычно 1 час (настраивается).
+Согласно официальным technical restrictions:
+
+- **Не поддерживаются** для записи: Frames (старые HTML-фреймы), Canvas, WebGL, Web Animations API, плагины (Adobe Flash Player, Java applets) и иные не-HTML технологии.
+- **iFrame** — нужен RUM JavaScript отдельно в каждый iFrame; одно и то же приложение должно мониторить и parent-страницу, и iFrame, иначе iframe в replay будет некорректно отображаться. Inserting RUM JS только в parent — content iframe в replay не появится.
+- **Resources, защищённые личной авторизацией** или blob/object URLs — не воспроизводятся.
+- **Form values, обновлённые через `.value`-property напрямую**, могут не попадать в diff; для корректного захвата — обновлять атрибут или `.textContent`.
+- **Browser extensions** (блокировщики, privacy-плагины) могут мешать инъекции и записи.
+- **OneAgent 1.241+** требуется на хостах для актуальной поддержки Session Replay.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/session-replay-restrictions-web -->
 
 ### Ключевые термины
 

@@ -1,4 +1,16 @@
 > 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 2 из 10: «Метрики UX: Apdex и другие показатели качества»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/applications -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27.**
+
+> 📚 **Источники (только Dynatrace Managed):**
+>
+> - [Apdex ratings](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings)
+> - [User experience score](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/user-experience-score)
+> - [Scores and ratings (overview)](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings)
+> - [User actions](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/user-actions)
+> - [Real User Monitoring (RUM)](https://docs.dynatrace.com/managed/shortlink/rum)
 
 ## 📍 КАРТА — три страницы про метрики пользовательского опыта
 
@@ -35,29 +47,26 @@
 
 Клик по строке открывает карточку приложения: графики, список user actions по типам, топ проблем, география пользователей.
 
-### Шаг 2 — User experience score (настройка порогов Apdex)
+### Шаг 2 — User experience score (настройка порогов Apdex и UX-score)
 
 ![User experience score — настройка порогов Apdex](screenshots/day-5/ux-metrics/settings/builtinrum.user-experience-score/User-experience-score-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.user-experience-score`.
 
-*Что настраивает.* Пороги, по которым user action классифицируется как Satisfied / Tolerating / Frustrated.
+*Что настраивает.* На этой странице задаются:
+1. **Action-level пороги Apdex** — по ним каждое действие классифицируется как Satisfied / Tolerating / Frustrated.
+2. **Session-level пороги User experience score** — по ним сессия целиком классифицируется как Satisfying / Tolerable / Frustrating (детали в ТЕОРИИ).
 
-*Формула.* Если время ≤ T → Satisfied, T < время ≤ 4T → Tolerating, время > 4T → Frustrated.
+*Формула Apdex.* Если время ≤ T → Satisfied, T < время ≤ 4T → Tolerating, время > 4T → Frustrated. Стандарт Apdex Alliance.
 
-**Web actions:**
+**Типы action, для которых задаются пороги (по captured-странице):**
 
-- **Page load** — загрузка полной страницы. Дефолт 3 секунды.
-- **XHR action** — AJAX-запрос. Дефолт 1 секунда.
-- **Route change** — SPA-переход без полной перезагрузки. Дефолт 1 секунда.
+- **Web** — Page load (загрузка полной страницы), XHR action (AJAX-вызов), Route change (SPA-переход без полной перезагрузки).
+- **Mobile** — App start (холодный запуск приложения), Custom action (через Mobile SDK), Web request (HTTP-запрос из мобильного приложения).
 
-**Mobile actions:**
+Конкретные значения по умолчанию настраиваются на самой странице и могут отличаться от тенанта к тенанту; типично page load измеряется в секундах, XHR / route change / web request — в десятых долях секунды.
 
-- **App start** — холодный запуск приложения. Дефолт 2 секунды.
-- **Custom action** — ручная разметка через Mobile SDK (`enterAction`). Дефолт 1 секунда.
-- **Web request** — HTTP-запрос из мобильного приложения. Дефолт 1 секунда.
-
-*Когда менять дефолты.* 3 секунды для page load — мировой стандарт для публичных сайтов. Для внутренних приложений (корпоративный портал, ДБО внутри офиса) это слишком мягко — локальная сеть без задержек интернета. Можно ужесточить до 1.5 секунды — Apdex станет ниже, но точнее отразит проблемы, видимые реальным пользователям.
+*Когда менять дефолты.* Для публичных сайтов с пользователями в открытом интернете обычно используют более мягкие пороги. Для внутренних приложений (корпоративный портал, ДБО внутри офиса) часто ужесточают: локальная сеть без задержек интернета означает, что задержка в 2 секунды у внутреннего пользователя — это уже плохо. Apdex станет ниже, но точнее отразит проблемы, видимые реальным пользователям.
 
 ### Шаг 3 — Usability analytics (аналитика раздражителей)
 
@@ -86,10 +95,6 @@
 
 ## 🎓 ТЕОРИЯ — количественная UX-аналитика
 
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Real User Monitoring — метрики UX](https://docs.dynatrace.com/docs/shortlink/rum)
-
 ### Зачем нужны UX-метрики
 
 Чтобы разговор с бизнесом на общем языке. Фраза разработчика «API отвечает за 200 мс» бизнесу ничего не говорит. Фраза «Apdex упал с 0.92 до 0.71, 30% пользователей теперь испытывают frustration» — конкретная и действенная.
@@ -98,29 +103,48 @@ UX-метрики — это мост между техническими пок
 
 ### Apdex — индустриальный стандарт
 
-Apdex разработан в 2004 году консорциумом Apdex Alliance (Compuware, HP, Mercury, и др.), стал стандартом в мире APM. Формула:
+Apdex (Application Performance Index) — индустриальный стандарт, ставший общеупотребимым в мире APM. Формула на user-action уровне:
 
 ```
 Apdex = (Satisfied + 0.5 × Tolerating) / Total
 ```
 
-- 1.0 — идеально, все пользователи в зоне Satisfied.
-- 0.85+ — «Excellent» (индустриальный порог для критичных приложений).
-- 0.70–0.85 — «Good».
-- 0.50–0.70 — «Fair».
-- < 0.50 — «Poor».
+User actions с JavaScript-ошибками автоматически попадают в **Frustrated** независимо от времени отклика. Итоговый Apdex score — это число от 0.0 до 1.0; в Dynatrace для него используется пятиуровневая шкала качества:
+
+- **Excellent** — 0.94–1.0
+- **Good** — 0.85–0.94
+- **Fair** — 0.7–0.85
+- **Poor** — 0.5–0.7
+- **Unacceptable** — < 0.5
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings -->
 
 **Пороги зависят от типа приложения.** Для системы аналитики 5 секунд на загрузку — норма, для платёжного виджета на кассе магазина — катастрофа. Поэтому Dynatrace позволяет задавать пороги индивидуально для каждого приложения через override на уровне application settings.
 
+### User experience score — на уровне сессии
+
+Параллельно action-уровневому Apdex существует **session-level User Experience Score**, который классифицирует сессию целиком как **Satisfying / Tolerable / Frustrating**. Формирование score устроено через веса элементов сессии:
+
+| Элемент сессии | Вес |
+|---|---|
+| User action | 3 |
+| Error | 1 (Frustrating) |
+| Rage event | 2 (Frustrating) |
+| Crash | 5000 (Frustrating) |
+
+Каждый элемент классифицируется как Satisfying / Tolerable / Frustrating, дальше Dynatrace сравнивает суммарный вес frustrating-элементов с настраиваемым порогом frustration. Жёсткое правило: если в сессии есть хотя бы один Frustrating-элемент с большим весом (например, crash), сессия не может быть Satisfying. Пороги настраиваются отдельно для web, mobile и custom приложений.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/user-experience-score -->
+
 ### Core Web Vitals — Google-стандарт
 
-Параллельно с Apdex есть метрики Google, встроенные в браузерный API и обязательные для ранжирования в поиске:
+Параллельно с Apdex есть метрики Google, встроенные в браузерный API:
 
-- **LCP (Largest Contentful Paint)** — время до появления самого крупного элемента на экране. Хорошо: <2.5 сек. Плохо: >4 сек.
-- **FID (First Input Delay) / INP (Interaction to Next Paint)** — время отклика на первый или самый долгий клик. Хорошо: <100 мс. Плохо: >300 мс.
-- **CLS (Cumulative Layout Shift)** — насколько «дёргается» вёрстка при загрузке. Хорошо: <0.1. Плохо: >0.25.
+- **LCP (Largest Contentful Paint)** — время до появления самого крупного элемента на экране. Доступен в Chromium-браузерах через Google-предоставленный API; для других браузеров Dynatrace использует собственную метрику Visually complete.
+- **Метрика отзывчивости на ввод** — FID (First Input Delay) в более старых версиях Web Vitals и INP (Interaction to Next Paint) в актуальных, заменивший FID в стандарте Google.
+- **CLS (Cumulative Layout Shift)** — насколько «дёргается» вёрстка при загрузке.
 
-**Dynatrace собирает их автоматически**, они видны в разделе Performance карточки приложения и в Data Explorer как `dt.rum.web.vitals.*` метрики.
+Конкретные «хорошо/плохо» пороги устанавливаются Google и регулярно меняются — их следует уточнять в актуальной редакции Web Vitals. **Dynatrace собирает эти метрики автоматически** в составе RUM JavaScript, они видны в карточке приложения и в Data Explorer.
 
 ### Apdex vs Web Vitals — что выбирать
 
@@ -155,12 +179,12 @@ Conversion — самый важный показатель из этого на
 
 ### Типичный SLO по UX
 
-Формулировка SLO для фронтенда критичного приложения:
+Пример формулировки SLO для фронтенда критичного приложения (значения подбираются под бизнес-задачу, ниже — иллюстрация):
 
-- **Availability.** >99.9% user actions завершаются без JS-errors и network failures.
-- **Performance.** Apdex ≥ 0.85 на 95% интервалов по 5 минут.
-- **Web Vitals.** LCP < 2.5 сек на 75-м перцентиле.
-- **Business.** Conversion rate по ключевой операции ≥ 98% (2% допустимых fail — технические ретраи).
+- **Availability.** Доля user actions, завершающихся без JS-errors и network failures, не ниже целевого уровня.
+- **Performance.** Apdex score выше целевого порога на основной массе временных интервалов.
+- **Web Vitals.** LCP / CLS / INP в пределах рекомендованных Google значений на 75-м перцентиле.
+- **Business.** Conversion rate по ключевой операции выше целевого уровня (часть fail-ов — технические ретраи).
 
 При нарушении любого SLO создаётся инцидент, анализируется причина, планируется исправление.
 

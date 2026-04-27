@@ -17,3 +17,13 @@
 - `screenshots/day-3-4/reliability-config/settings/builtinhealth-experience.cloud-alert/Cloud-health-alerts-settings-...png`
 
 Решение: тема reliability-config переписана с акцентом на реальные механизмы Managed Classic (Anomaly detection / SLO / Alerting profiles), Health Experience описана как SaaS-only слой (Services app / Experience Vitals app / Clouds app), которые в Managed Classic не активированы.
+
+## Day 5 (2026-04-27)
+
+### synthetic.md — Шаг 1 (`/ui/synthetic`) — 403 Forbidden
+
+Скриншот: `screenshots/day-5/synthetic/synthetic/403-You-dont-have-permission-to-view-this-page-Demo-live-Demo-Live-Dynatrace.png`
+
+На captured-тенанте `guu84124` страница списка synthetic-мониторов отдаёт **403 Forbidden** — модуль Synthetic на этом учебном окружении не активирован / у роли нет прав. UI-элементы для описания списка мониторов в captured-данных отсутствуют.
+
+Решение: тема synthetic.md описывает Synthetic Monitoring через официальную документацию Dynatrace Managed (типы мониторов, private locations, Synthetic-enabled ActiveGate, capacity-индикация); Шаг 1 явно отмечен как недоступный экран на captured-тенанте, дальше используются настроечные страницы Шагов 2–4 (availability settings, browser/HTTP outage handling), которые в captured-данных есть.
