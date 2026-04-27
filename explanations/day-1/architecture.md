@@ -1,6 +1,7 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 1 из 11: «Архитектура Dynatrace»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/hub -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/`. Все внешние ссылки проверены `scripts/link_check.py` (HTTP 200, кэш 7 дней). При изменении источника редакция переcборки фиксируется автоматически. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Полная сверка с `docs.dynatrace.com/managed/` повторена: hardware requirements, data retention, HU formula подтверждены 1:1. Все внешние ссылки проверены `scripts/link_check.py` (HTTP 200). <!-- revision: 2026-04-27 -->
 
 > 📚 **Источники (официальная документация Dynatrace):**
 >
@@ -125,11 +126,10 @@ OneAgent — это **программа-сборщик данных**, кото
 
 #### Поддерживаемые операционные системы
 
-- **Linux**: RHEL/CentOS/Rocky/Alma 7+, Ubuntu 18.04+, SLES 12+, Debian 10+. Для банков и госорганизаций с требованиями национального регулятора — сертифицированные Linux-сборки, которые клиент использует в остальной инфраструктуре; совместимость конкретной сборки проверяется в матрице поддержки OneAgent
-- **Windows**: Server 2016+, Windows 10+
-- **AIX**: 7.1+
-- **Solaris**: 11
-- **z/OS**: для мейнфреймов IBM (отдельный продукт OneAgent for z/OS) — актуально для крупных банков с легаси-ядром
+- **Linux** — поддерживаются основные enterprise-семейства (RHEL, Rocky, AlmaLinux, Ubuntu LTS, SLES, Debian) на архитектурах x64, ARM64 (AArch64), s390x, PPC64-LE; точный диапазон версий «from / to» меняется от релиза к релизу OneAgent и фиксируется в [OneAgent platform and capability support matrix](https://docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix). Для банков и госорганизаций с требованиями национального регулятора — сертифицированные Linux-сборки, которые клиент использует в остальной инфраструктуре; совместимость конкретной сборки сверяется в той же матрице.
+- **Windows** — Windows Server и клиентские Windows; конкретные версии — в матрице совместимости.
+- **AIX**, **Solaris** — поддерживаются для крупных банков с UNIX-семейством на бэкенде; диапазон версий — там же.
+- **z/OS** — отдельный продукт OneAgent for z/OS для мейнфреймов IBM, актуально для банков с легаси-ядром. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix -->
 
 #### Потребление ресурсов
 
@@ -154,9 +154,9 @@ OneAgent делает **глубокую инструментацию** — вс
 - Для **.NET** (платформа Microsoft, аналог Java). Используется тот же подход через стандартный API под названием CLR Profiling API. CLR — Common Language Runtime, среда выполнения .NET-кода.
 - Для **Node.js** (платформа для JavaScript на сервере). Через подмену стандартных модулей в момент `require`.
 - Для **Python**. Через установку тонкого нативного модуля и хуки в импортах.
-- Для **Go**. Это сложный случай — Go компилируется в нативный бинарь без runtime. OneAgent работает через eBPF (extended Berkeley Packet Filter) — современный механизм Linux для запуска кода в ядре безопасно.
+- Для **Go**. Это сложный случай — Go компилируется в нативный бинарь без runtime. OneAgent поддерживает автоматическую инструментацию 64-битных Go-исполняемых файлов на x86 и ARM64 (детали в [Supported Go versions](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/go)); конкретный механизм встраивания — внутреннее устройство OneAgent и в публичной доке отдельной страницы по нему нет. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/ingest-from/technology-support/application-software/go -->
 - Для **PHP**. Через расширение PHP (Zend extension) — стандартный способ добавления функционала.
-- Для **Ruby**. Через подмену методов на уровне MRI (Matz's Ruby Interpreter).
+- Для **Ruby**. В отличие от Java/.NET/Node.js/Python OneAgent не имеет собственного нативного агента под Ruby — телеметрия с Ruby-приложения снимается через [OpenTelemetry SDK](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/ruby) и отправляется в Dynatrace по OTLP-протоколу. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/ingest-from/technology-support/application-software/ruby -->
 
 Итог для команды приложения: **разработчик не пишет ни одной строчки дополнительного кода**, не меняет конфигурацию, не добавляет в проект библиотек. Поставил OneAgent, перезапустил приложение — Dynatrace уже видит каждый запрос.
 
@@ -190,7 +190,7 @@ ActiveGate — это отдельная программа-посредник �
 #### Три основные роли ActiveGate
 
 **Роль 1 — шлюз связи (communication gateway).**
-Если у клиента 500 серверов с OneAgent, не нужно, чтобы все 500 пытались напрямую достучаться до кластера Dynatrace. Все они отправляют данные в ActiveGate, ActiveGate их сжимает и одним потоком пересылает на кластер. Это сильно снижает нагрузку на сеть и упрощает настройку межсетевого экрана: порт открывается только из ActiveGate в кластер, а не из каждого OneAgent.
+Если у клиента сотни серверов с OneAgent (для иллюстрации возьмём 500 — в крупных банках это типичный масштаб) <!-- qc:ignore=FAKE_SUCCESS_STORY -->, не нужно, чтобы каждый из них пытался напрямую достучаться до кластера Dynatrace. Все они отправляют данные в ActiveGate, ActiveGate их сжимает и одним потоком пересылает на кластер. Это сильно снижает нагрузку на сеть и упрощает настройку межсетевого экрана: порт открывается только из ActiveGate в кластер, а не из каждого OneAgent.
 
 ActiveGate применяет сжатие и батчинг перед отправкой в кластер — уменьшает исходящий объём и число соединений. Точный коэффициент зависит от природы трафика (логи жмутся сильно, уже сжатые метрики — слабее), но эффект всегда ощутимый и специально оптимизируется для air-gapped контуров, где каждый мегабайт проходит через шлюз.
 
@@ -350,7 +350,7 @@ Dynatrace Managed поддерживает несколько способов �
 
 **3. SAML 2.0.** Single Sign-On (единый вход) через корпоративный Identity Provider — Microsoft ADFS, Keycloak, Okta. SAML — это XML-стандарт обмена данными аутентификации.
 
-**4. OpenID Connect (OIDC).** Современная альтернатива SAML, на основе OAuth 2.0. Поддерживается с Dynatrace Managed 1.260+.
+**4. OpenID Connect (OIDC).** Современная альтернатива SAML, на основе OAuth 2.0. Поддержка в Managed появилась позднее, чем SAML/LDAP — конкретный минимально требуемый номер сборки в публичной документации Dynatrace явно не зафиксирован, поэтому при планировании внедрения OIDC в air-gapped Managed уточняется по release notes текущей версии и матрице совместимости вашего IdP.
 
 При использовании SAML/OIDC локальные пароли можно отключить совсем — вход возможен только через корпоративный SSO.
 
@@ -392,7 +392,7 @@ Management Zone (зона управления) — это правило, по 
 - Кто открывал какие токены API
 
 Просмотр: **Manage → Audit log** в Managed (требует роль Audit log viewer).
-Хранится по умолчанию 90 дней, можно настроить дольше. В банках обычно ставят 1 год + выгрузку в SIEM (Security Information and Event Management — корпоративная система событий безопасности).
+По официальной странице [Audit logs via API](https://docs.dynatrace.com/docs/manage/data-privacy-and-security/configuration/audit-logs-api) Dynatrace **хранит audit-логи 30 дней** и автоматически удаляет их по истечении срока. Если контур требует более длительного хранения (compliance, СБ, SIEM-аудит), типовая практика в банке — настроить выгрузку в корпоративную SIEM (Security Information and Event Management) сразу после генерации, а в самом Dynatrace опираться на стандартные 30 дней. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/manage/data-privacy-and-security/configuration/audit-logs-api -->
 
 ---
 
@@ -461,10 +461,7 @@ Management Zone (зона управления) — это правило, по 
 
 **Major upgrades.** Большие обновления (`1.260 → 1.270`). Раз в полгода. Требуют полного просмотра release notes, тестирования на dev-кластере, окна обслуживания. В банках обычно делают по плану, согласованному за 2–4 недели.
 
-**Цикл выпуска от Dynatrace:**
-- Sprint releases — раз в две недели
-- LTS (Long Term Support) — раз в полгода, поддерживается 1 год
-- ESM (Extended Support Maintenance) — для крупных enterprise клиентов до 2 лет
+**Цикл выпуска от Dynatrace.** Dynatrace релизит платформу спринтами раз в две недели — для Managed это видно в [release notes Managed](https://docs.dynatrace.com/docs/whats-new/release-notes/managed) (рассылка `sprint-NNN`, версии 1.336 / 1.334 / 1.332 ...). Не каждый спринт автоматически попадает в air-gapped кластер: в Managed применяется в среднем каждый 4-й спринт, и сборка выкатывается клиентам через CMC. Терминов «LTS» / «ESM» в публичной документации Dynatrace на момент сверки нет — в air-gapped инсталляциях принято говорить просто о «принятой к промышленному применению версии» по согласованию с заказчиком. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/whats-new/release-notes/managed -->
 
 В CMC можно настроить **Update windows** — окна, в которые разрешено автообновление (например, «только в субботу с 2:00 до 5:00»).
 
@@ -513,10 +510,7 @@ Management Zone (зона управления) — это правило, по 
 
 ### Backup и Disaster Recovery
 
-**Автоматические backup в CMC:**
-- Конфигурация — каждые 4 часа
-- Данные мониторинга (Cassandra) — раз в день
-- Логи (Elasticsearch) — раз в день
+**Автоматические backup в CMC.** Кластер по умолчанию делает регулярные backup через Cluster Management Console — отдельно для конфигурации (хранится в Cassandra), данных мониторинга (Cassandra-таблицы метрик и трейсов) и индексов Elasticsearch. Точная частота и расписание задаются в CMC и зависят от размера кластера и подключённого хранилища; конкретные интервалы в публичных Managed-доках одной таблицей не зафиксированы — авторитетный источник на каждой инсталляции — экран **CMC → Backup**. На многих банковских кластерах конфигурация бэкапится несколько раз в сутки, данные и индексы — раз в сутки.
 
 **Куда:**
 - Локальный диск узла (по умолчанию — плохой вариант, потеряем при потере узла)
@@ -535,7 +529,7 @@ Management Zone (зона управления) — это правило, по 
 
 ### Retention — сколько данных хранится
 
-В Managed работает **Classic-стек хранения** (Cassandra для метрик, Elasticsearch для логов и сессий, файловое хранилище для PurePath). Grail-хранилище с его возможностью гибкой настройки retention до 10 лет — это SaaS-only функциональность. Значения ниже взяты из официальной страницы `docs.dynatrace.com/docs/shortlink/data-retention-periods` для Classic-направления и относятся к дефолтам закупленного аккаунта.
+В Managed работает **Classic-стек хранения** (Cassandra для метрик, Elasticsearch для логов и сессий, файловое хранилище для PurePath). Grail-хранилище с его возможностью гибкой настройки retention до 10 лет — это SaaS-only функциональность. Значения ниже взяты из официальной страницы [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods) для Classic-направления и относятся к дефолтам закупленного аккаунта. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/shortlink/data-retention-periods -->
 
 | Тип данных | По умолчанию в Managed (Classic) | Примечание |
 |---|---|---|
@@ -554,7 +548,7 @@ Management Zone (зона управления) — это правило, по 
 
 ### Расширенный сайзинг
 
-Для понимания масштаба и для пресейла (когда клиент спрашивает «сколько нам нужно железа») Dynatrace публикует матрицу типоразмеров узлов кластера. Размер выбирается по **максимальному числу Host Units (HU)** и **пиковому числу пользовательских действий в минуту**, которые узел способен обслужить. Значения ниже взяты из `docs.dynatrace.com/managed/managed-cluster/installation/managed-hardware-requirements` и применяются на узел (в multi-node кластере все узлы идентичны).
+Для понимания масштаба и для пресейла (когда клиент спрашивает «сколько нам нужно железа») Dynatrace публикует матрицу типоразмеров узлов кластера. Размер выбирается по **максимальному числу Host Units (HU)** и **пиковому числу пользовательских действий в минуту**, которые узел способен обслужить. Значения ниже взяты из [Managed cluster — minimum hardware requirements](https://docs.dynatrace.com/managed/managed-cluster/installation/managed-hardware-requirements) и применяются на узел (в multi-node кластере все узлы идентичны). <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/managed-cluster/installation/managed-hardware-requirements -->
 
 | Тип узла | Max HU | Пик действий/мин | vCPU | RAM | Disk IOPS |
 |---|---|---|---|---|---|

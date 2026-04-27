@@ -1,6 +1,7 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 7 из 11: «Хосты, процессы, сервисы, приложения — обзор ключевых объектов»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/entity/list/HOST -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с docs.dynatrace.com (концепция entities — общая для Managed и SaaS, типизированные списки в UI Managed работают идентично). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с docs.dynatrace.com (концепция entities — общая для Managed и SaaS, типизированные списки в UI Managed работают идентично). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
 > 📚 **Источники (официальная документация Dynatrace):**
 >
@@ -135,10 +136,14 @@ Data Center (ДЦ или облачный регион)
 
 ## 🎓 ТЕОРИЯ — зачем знать иерархию сущностей
 
+Иерархия сущностей описана в разделе [Smartscape — топология сущностей](https://docs.dynatrace.com/docs/shortlink/smartscape): четыре уровня (Applications / Services / Process Groups / Hosts) плюс Data Centers как логическая группировка.
+
 **Сквозной анализ инцидента.** При падении сервиса важно быстро ответить: какие приложения пострадали (уровень вверх), на каких хостах проблема (уровень вниз). Иерархия Application → Service → Process Group → Host — это и есть цепочка анализа.
 
-**Правильный scope алертов.** Alert profile с фильтром `type(SERVICE)` включает только сервисные проблемы, `type(HOST)` — только хостовые. Разные команды отвечают за разные уровни: SRE — за хосты, разработчики — за сервисы. Сегментация алертов по типу сущности важна для правильной маршрутизации.
+**Правильный scope алертов.** Alert profile с фильтром `type(SERVICE)` включает только сервисные проблемы, `type(HOST)` — только хостовые. Разные команды отвечают за разные уровни: SRE — за хосты, разработчики — за сервисы. Сегментация алертов по типу сущности важна для правильной маршрутизации. [Process group detection](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/pg-detection) объясняет, по каким правилам OneAgent объединяет процессы в одну группу и как это влияет на алерты на уровне Process Group.
 
 **Правильный выбор метрик.** Метрики разных уровней разные. `builtin:host.cpu.usage` — это метрика хоста. `builtin:service.response.time` — метрика сервиса. `builtin:apps.web.actionDuration` — метрика приложения. Путать их нельзя — они живут в разных measurement scope.
 
-**Management Zones.** Сегментация сущностей по зонам ответственности (Retail Banking, Corporate Banking, Treasury) работает на всех уровнях одновременно. Выбрал в верхнем фильтре zone «Retail» — видны только хосты, процессы, сервисы, приложения этой зоны.
+**Management Zones.** [Management zones](https://docs.dynatrace.com/docs/shortlink/management-zones) — сегментация сущностей по зонам ответственности (Retail Banking, Corporate Banking, Treasury) — работает на всех уровнях одновременно. Выбрал в верхнем фильтре zone «Retail» — видны только хосты, процессы, сервисы, приложения этой зоны.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/management-zones -->

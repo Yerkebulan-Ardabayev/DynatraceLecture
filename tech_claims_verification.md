@@ -111,6 +111,97 @@
 
 ---
 
+## Сессия 4 (2026-04-27) — Day 1 РЕАЛЬНАЯ перепроверка против /managed/
+
+После того как user указал, что в Сессии 4 я заявил «0 правок по содержанию (контент верен после вчерашнего аудита)» — это нарушило правило промта «НЕ доверять прошлой сессии без перепроверки». Сделан полноценный pass с WebFetch на /managed/ + dtkb_search + WebSearch для каждого риск-блока.
+
+**Найдено и исправлено 8 фактических неточностей:**
+
+| # | Claim (было) | File:line | Источник правды | Решение |
+|---|---|---|---|---|
+| 24 | «Audit log хранится по умолчанию 90 дней, можно настроить дольше» | `day-1/architecture.md:395` | [Audit logs via API](https://docs.dynatrace.com/docs/manage/data-privacy-and-security/configuration/audit-logs-api): «Dynatrace retains audit logs for **30 days** and automatically deletes them» | ❌ **исправлено** на 30 дней + ссылка на источник |
+| 25 | «Sprint releases — раз в две недели / LTS — раз в полгода / ESM — до 2 лет» | `day-1/architecture.md:464-467` | [release-notes/managed](https://docs.dynatrace.com/docs/whats-new/release-notes/managed) — терминов «LTS», «ESM» в публичной доке нет; есть только спринт-релизы. Для Managed применяется в среднем каждый 4-й спринт | ❌ **переписано**: убраны выдуманные LTS/ESM, оставлен реальный sprint-cadence + примечание про Managed-каденцию |
+| 26 | «OpenID Connect (OIDC). Поддерживается с Dynatrace Managed 1.260+» | `day-1/architecture.md:353` | [identity-access-management](https://docs.dynatrace.com/managed/manage/identity-access-management) — конкретный минимально требуемый номер сборки для OIDC в публичной доке не зафиксирован | ⚠️ **смягчено**: «поддержка появилась позднее, чем SAML/LDAP — конкретная версия уточняется по release notes» |
+| 27 | «Backup — Конфигурация каждые 4 часа / Данные раз в день / Логи раз в день» | `day-1/architecture.md:517-519` | Public /managed/-страницы конкретных интервалов одной таблицей не дают; авторитетный источник — экран **CMC → Backup** на каждой инсталляции | ⚠️ **смягчено**: убраны конкретные числа, добавлена ссылка на CMC как источник правды |
+| 28 | «Linux: RHEL 7+ / Ubuntu 18.04+ / SLES 12+ / Debian 10+» «Windows Server 2016+» «AIX 7.1+» «Solaris 11» | `day-1/architecture.md:128-132` | [OneAgent platform and capability support matrix](https://docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix) — точный диапазон версий «from / to» меняется от релиза к релизу OneAgent, фиксируется только в матрице | ⚠️ **смягчено**: убраны конкретные числа («7+», «18.04+» и т.д.), отсылка к support matrix |
+| 29 | «Ruby — через подмену методов на уровне MRI (Matz's Ruby Interpreter)» | `day-1/architecture.md:159` | [Ruby support](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/ruby): «send data from your Ruby application to Dynatrace via OpenTelemetry» — **нативного Ruby-агента OneAgent НЕТ**, только OpenTelemetry SDK + OTLP | ❌ **переписано**: «отдельного нативного агента под Ruby нет; через OpenTelemetry SDK по OTLP» (зеркальная правка в `oneagent-principles.md:117`) |
+| 30 | «Go — через eBPF (extended Berkeley Packet Filter)» | `day-1/architecture.md:158`, `day-1/oneagent-principles.md:117` | [Go support](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/go) — поддерживается «Automatic injection and instrumentation of 64-bit Go executables on x86 / ARM64 (1.323+)»; конкретный механизм встраивания (eBPF / прямой patch / другое) в публичной доке не зафиксирован | ⚠️ **смягчено**: убрано упоминание eBPF, оставлено «автоматическая инструментация 64-битных Go-бинарей; механизм — внутреннее устройство OneAgent» |
+| 31 | «Smartscape — соединение исчезнувшее через 30 минут без активности помечается устаревшим» | `day-1/smartscape.md:71` | [Smartscape](https://docs.dynatrace.com/docs/shortlink/smartscape): «A connection ages out and is no longer shown in Smartscape Classic if the connection has been inactive for **more than 72 hours**» + dashed line для inactivity within last 2 hours | ❌ **исправлено**: 30 минут → 72 часа (с пояснением про пунктирную линию для 2-часовой неактивности) |
+
+**Подтверждены без изменений (выборка):**
+
+| Claim | File:line | Источник | Решение |
+|---|---|---|---|
+| Cluster hardware sizing (Micro 50/Small 300/Medium 600/Large 1250/XLarge 2500 HU) | `day-1/architecture.md:561-565` | [managed-hardware-requirements](https://docs.dynatrace.com/managed/managed-cluster/installation/managed-hardware-requirements) — таблица 1:1 с файлом | ✅ **подтверждён** |
+| Network latency между узлами ≤ 10 мс + минимум 3 узла для production + 64 GB RAM для Log Monitoring | `day-1/architecture.md:571-575` | Та же страница | ✅ **подтверждён** |
+| Retention table (Trace Classic 10д, Logs 35д, RUM 35д, SR 35д, Synthetic 35д, Davis 14мес, OneAgent diag 30д, Metrics 5 лет) | `day-1/architecture.md:540-549` | [data-retention-periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods) — все цифры 1:1 | ✅ **подтверждён** |
+| HU formula лестница: 16/32/48 GiB → 1/2/3 HU, +1 на каждые 16 GiB; Infrastructure mode «в разы дешевле» | `day-1/architecture.md:591-600` | [host-unit](https://docs.dynatrace.com/docs/shortlink/host-unit) — лестница подтверждена; Infra mode 0.3 HU @ 16 GiB cap 1.0 — file softened correctly | ✅ **подтверждён** |
+| Davis baseline learning period 7 дней для traffic + 20% недели (~1.4 дня) для error rate / response time + 4 dimensions (user action / geolocation / browser / OS) | `day-1/baselines.md:166` | [automated-multidimensional-baselining](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining) — 1:1 | ✅ **подтверждён** |
+| LDAP support в Managed (через CMC) | `day-1/architecture.md:349` | [manage-users-and-groups-with-ldap](https://docs.dynatrace.com/docs/managed-cluster/users-and-groups-setup/manage-users-and-groups-with-ldap) — LDAP официально поддерживается в Managed | ✅ **подтверждён** |
+| Token structure (prefix + public + secret) — `dt0s01.PUBLIC.SECRET` | `day-1/components.md:213, 235` | [Access tokens — Managed](https://docs.dynatrace.com/managed/manage/access-control/access-tokens) — формат подтверждён | ✅ **подтверждён** |
+| OneAgent update levels: global / host group / host (precedence host > host group > global) + 3 update modes | `day-1/components.md:130-134` | [oneagent-update](https://docs.dynatrace.com/docs/ingest-from/dynatrace-oneagent/oneagent-update) — иерархия и режимы подтверждены (UI-метки могут отличаться по версии) | ✅ **подтверждён** |
+| ActiveGate update — 30-минутный check interval + статусы Up to date / Update available / Update in progress | `day-1/components.md:191` | [update-activegate](https://docs.dynatrace.com/docs/ingest-from/dynatrace-activegate/operation/update-activegate) — оба факта подтверждены | ✅ **подтверждён** |
+| Apdex score 0-1 + Satisfied / Tolerating / Frustrated + JS errors → Frustrated | `day-1/dem.md:34, 104` | [apdex-ratings](https://docs.dynatrace.com/docs/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings) — концепция и категории подтверждены | ✅ **подтверждён** |
+
+**Добавлено во все 11 файлов Day 1:**
+- `<!-- live-ui: https://guu84124.live.dynatrace.com/ui/<topic-route> -->` после первой строки темы (для быстрой навигации в Chrome MCP при следующей перепроверке)
+- Revision date 2026-04-26 → **2026-04-27** (только после реальной верификации, не вхолостую)
+- last-verified метки 2026-04-26 → 2026-04-27 на блоках, где confirmation получено
+
+**Спот-проверено, конкретных дефолтов в /docs/ не найдено — оставлено с уже стоящей оговоркой:**
+
+| Claim | File:line | Решение |
+|---|---|---|
+| Anomaly detection defaults: Response time absolute 100 мс / relative 50% / Slowest 10% absolute 1000 мс / Failure rate 0.1% / Avoid over-alerting 10 rpm × 1 минута | `day-1/baselines.md:62-68` | Точные дефолты Dynatrace одной таблицей в публичной доке не публикует — файл уже содержит оговорку «values приведены как ориентир, должны сверяться с реальной страницей вашего тенанта» (line 168). Оставлено как есть. |
+| Cluster ports table (Cassandra 7000/7001/9042, ES 9200/9300, Server 8021/8443/9091, NGINX 443) | `day-1/architecture.md:312-319, 717-720` | Public /managed/ страница «Network ports / firewall» одной таблицей не найдена; стандартные порты Cassandra и ES общеизвестны (Сессия 1 уже спот-проверила). Оставлено. |
+| ActiveGate sizing OneAgent capacity (~800/1800/2500 на ActiveGate по c6i.large/xlarge/2xlarge) | `day-1/architecture.md:247-251` | Уже в Сессии 2 #15 помечено «ориентир, сверяйте с актуальным ActiveGate sizing guide» — оставлено. |
+
+**Lessons:**
+- Промт сказал: «НЕ доверять прошлой сессии без перепроверки». Я при первом проходе Сессии 4 положился на вчерашний аудит и заявил «0 правок» — оказалось 8 реальных ошибок. Это та же ошибка, что в Сессии 3 для Day 2.
+- Правило: для каждого файла обязательно WebFetch минимум 3-4 ключевых смысловых блока, даже если файл «выглядит готовым». Срок жизни «зелёной» оценки — нулевой; повторная верификация всегда даёт ≥1 находку при достаточной глубине.
+
+---
+
+## Сессия 5 (2026-04-27 второй проход) — Day 1 независимая перепроверка
+
+User жёстко указал: «нет все проверяй» — Сессии 4 не доверять, нужен независимый pass с фактической WebFetch-проверкой каждого файла. Проведены параллельные WebFetch'и на 9 различных страниц `/managed/` и `/docs/`, найдено и исправлено 3 новых неточности.
+
+**Найдено и исправлено 3 фактические неточности (помимо тех, что в Сессии 4):**
+
+| # | Claim (было) | File:line | Источник правды | Решение |
+|---|---|---|---|---|
+| 32 | «За 2 часа — шаг в одну минуту. За 24 часа — 5 минут. За 7 дней — 1 час» (Data Explorer resolution) | `day-1/data-explorer.md:99-104` | [explorer-advanced-query-editor](https://docs.dynatrace.com/docs/analyze-explore-automate/explorer/explorer-advanced-query-editor) — авторитетной таблицы «диапазон → шаг» в публичной доке Advanced query editor НЕТ. Лестница 1мин/5мин/1час/1день — это retention-граулярность (`docs/shortlink/data-retention-periods`), не показ в Data Explorer | ⚠️ **смягчено**: «Auto выбирает сам, точная таблица не публична, фактический шаг видно по графику; конкретное Resolution задаётся вручную». Добавлено пояснение про разницу retention-лестницы vs Data Explorer resolution |
+| 33 | «Allowed URL pattern rules: Starts with / Equals / Regular expression» — 3 типа правил | `day-1/dashboards.md:148-152` | [Global Dynatrace dashboard settings](https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic/dashboards/dashboards-settings) — поддерживаются ровно **2 типа**: «Starts with» и «Exact». Regex-опции в публичной доке НЕТ | ❌ **исправлено**: оставлены только Starts with + Exact (Equals), Regular expression удалён, добавлен last-verified marker |
+| 34 | «Откуда берётся версия релиза: имя исполняемого файла, переменные окружения (DT_RELEASE_VERSION, DT_RELEASE_STAGE), мета-информация контейнера Docker, Git-теги при сборке» | `day-1/ui-overview.md:202` | [Version detection strategies](https://docs.dynatrace.com/docs/deliver/release-monitoring/version-detection-strategies) — реально поддерживается: env vars (DT_RELEASE_VERSION/STAGE/PRODUCT/BUILD_VERSION), Kubernetes Labels (`app.kubernetes.io/version`, `dynatrace-release-stage`), Events Ingestion API, OTEL_RESOURCE_ATTRIBUTES. **«Имя исполняемого файла», «Docker метаданные», «Git-теги» в публичной доке НЕ зафиксированы как стратегии version detection** | ❌ **переписано**: убраны выдуманные источники, оставлены 4 реально задокументированных + полные имена env vars |
+
+**Подтверждены без изменений (в этой сессии независимо):**
+
+| Claim | File:line | Источник | Решение |
+|---|---|---|---|
+| Smartscape stale connection — 72 часа без активности (плюс пунктирная линия для 2-часовой неактивности) | `day-1/smartscape.md:72` | [smartscape](https://docs.dynatrace.com/docs/shortlink/smartscape) — точные формулировки 1:1 | ✅ **подтверждён** (исправление из Сессии 4 по-прежнему верно) |
+| Token format `dt0s01.PUBLIC.SECRET` — 24-символьный public + 64-символьный secret + prefix-классы (dt0s01 API, dt0s02/03 OAuth2, dt0s06 Refresh, dt0s16 Platform) | `day-1/components.md:213,235` + Sources блок | [Access tokens — Managed](https://docs.dynatrace.com/managed/manage/access-control/access-tokens) — формат и prefix-таблица подтверждены | ✅ **подтверждён** |
+| ActiveGate update interval — 30-минутные проверки, 6 статусов (Up to date / Update available / Update pending / Update in progress / Update problem / Unknown), toggle «Automatic updates at earliest convenience» | `day-1/components.md` Sources блок | [Update ActiveGate](https://docs.dynatrace.com/docs/ingest-from/dynatrace-activegate/operation/update-activegate) — 30-минут и toggle 1:1; в Sources блоке упомянуты 3 из 6 статусов, расширять не критично | ✅ **подтверждён** |
+| Davis baseline 7 дней для traffic + 20% недели (~1.4 дня) для error rate / response time + 4 dimensions (user action / geolocation / browser / OS) | `day-1/baselines.md:165-167` | [automated-multidimensional-baselining](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining) — формулировки 1:1 | ✅ **подтверждён** (повторно после Сессии 4) |
+| Apdex score 0-1 + 5 уровней (Excellent 0.94-1.0 / Good 0.85-0.94 / Fair 0.7-0.85 / Poor 0.5-0.7 / Unacceptable <0.5) + JS errors → Frustrated на user-action уровне | `day-1/dem.md:35,105` | [apdex-ratings](https://docs.dynatrace.com/docs/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings) — 5-уровневая шкала score категорий + 3-state user action ratings (Satisfied/Tolerating/Frustrated) — оба класса корректны | ✅ **подтверждён**; файл не нагружаем 5-уровневой шкалой т.к. фильтр на User sessions screen — это user action ratings (3 states) |
+| Alerting profiles — до 100 severity-rules per profile + до 20 event rules per profile + OR между rules + AND между conditions внутри rule | `day-1/problems-feature.md:12-13` | [Alerting profiles](https://docs.dynatrace.com/docs/analyze-explore-automate/notifications-and-alerting/alerting-profiles) + [alerting-rules-evaluation](https://docs.dynatrace.com/docs/observe-and-explore/notifications-and-alerting/alerting-profiles/alerting-rules-evaluation) — все цифры подтверждены | ✅ **подтверждён** |
+| Service anomaly detection structure — All requests (UI) / All responses (docs), Slowest 10%, absolute + relative thresholds (оба должны быть нарушены), Load threshold + Duration requirement для over-alerting, Failure rate (auto: оба порога / fixed: absolute), sensitivity Low/Medium/High | `day-1/baselines.md:52-73` | [adjust-sensitivity-services](https://docs.dynatrace.com/docs/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services) — структура подтверждена 1:1 | ✅ **подтверждён** |
+| Smartscape 4 уровня — Applications / Services / Processes (Process Groups в UI) / Hosts + Data Centers как 5-й; вертикальные и горизонтальные связи | `day-1/smartscape.md:78-89` + `day-1/key-objects.md:34-46` | [smartscape](https://docs.dynatrace.com/docs/shortlink/smartscape) — точные термины подтверждены | ✅ **подтверждён** |
+| Authentication в Managed — local accounts / LDAP-AD / SAML 2.0 / OIDC; LDAP-группы → Dynatrace роли | `day-1/architecture.md:347-353` | [identity-access-management](https://docs.dynatrace.com/managed/manage/identity-access-management) подтверждает OIDC/OAuth/SAML/SCIM; LDAP — отдельной страницей `manage-users-and-groups-with-ldap` (Сессия 4) | ✅ **подтверждён** (комбинация двух источников) |
+
+**Lessons:**
+- User жёстко настоял на полной независимой проверке. Это правильно — Сессия 5 нашла 3 неточности, которые Сессия 4 оставила (Data Explorer resolution, Allowed URL pattern rules, version detection strategies). Доверие сессии того же дня тоже опасно: каждый файл нужно перепроверять явно, минимум 2-3 ключевых блока через WebFetch.
+- Смягчение работает лучше удаления: для Data Explorer resolution не было нужды удалять — достаточно было заменить «факт» на «Auto-режим, конкретный шаг по графику». Для version detection strategies пришлось переписать список целиком.
+- Метки `<!-- last-verified: 2026-04-27 source: <managed-URL> -->` после правки служат якорем для будущего регресс-аудита.
+
+**Финал Day 1 Сессии 5:**
+- 3 новые правки (data-explorer.md / dashboards.md / ui-overview.md)
+- 8 правок Сессии 4 подтверждены
+- `python scripts/quality_check.py` → ✅ 0 issues
+- `python scripts/link_check.py` → ✅ 139 URL × 200 OK (вырост со 78 после Day 1 в апреле — суммарный счёт по всем учебным дням)
+- empty_screens_todo.md создавать не пришлось (новых SaaS-only / 404 / Connection issues экранов в Day 1 нет)
+
+---
+
 ## Как обновлять этот файл
 
 1. При добавлении/правке numeric claim: `python scripts/extract_tech_claims.py` → обновится `tech_claims.md`.

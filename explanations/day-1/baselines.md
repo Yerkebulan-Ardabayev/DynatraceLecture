@@ -1,6 +1,7 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 9 из 11: «Построение базовых линий и работа с порогами»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:anomaly-detection.services -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с docs.dynatrace.com (Davis AI baseline / anomaly detection — общие концепции для Managed и SaaS, реализация 1:1; в air-gapped Managed работает без выхода в интернет, holiday-list поставляется в сборке кластера). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с docs.dynatrace.com (Davis AI baseline / anomaly detection — общие концепции для Managed и SaaS, реализация 1:1; в air-gapped Managed работает без выхода в интернет, holiday-list поставляется в сборке кластера). 7-дневный learning period для traffic + 20%-недели (~1.4 дня) для error rate / response time подтверждены через WebFetch. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
 > 📚 **Источники (официальная документация Dynatrace):**
 >
@@ -161,9 +162,11 @@
 
 **Baseline учитывает сезонность.** Модель знает: утром в понедельник нагрузка такая-то, в пятницу вечером другая, в субботу ночью почти нулевая. Если сервис обычно отвечает за 50 мс утром и 120 мс в пик-часы, для Davis это два разных эталона — вечерние 120 мс не аномалия.
 
-**Baseline многомерный.** Для одной метрики ведутся несколько разрезов: общая по сервису, по endpoint (URL), по версии приложения, по клиенту. Аномалия может засечься в одном разрезе, не затронув общую картину. Пример: общее время отклика сервиса в норме, но для одного конкретного endpoint `/api/heavy-report` выросло на 200%. Многомерный baseline это увидит.
+**Baseline многомерный.** Для одной метрики ведутся несколько разрезов одновременно. Согласно [Automated multidimensional baselining](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining), Davis для frontend RUM комбинирует разрезы по **user action / endpoint** (например, `login.jsp`), **geolocation** (континент / страна / регион / город), **browser** (семейство и версия) и **operating system** (тип и версия). Для backend сервисов аналогично — отдельные baselines по типам запросов и характеристикам клиента. Аномалия может засечься в одном разрезе, не затронув общую картину. Пример: общее время отклика сервиса в норме, но для конкретного endpoint `/api/heavy-report` выросло на 200% — многомерный baseline это увидит.
 
-**Период обучения — 7 дней.** Меняется в Reference period. После значительного архитектурного изменения имеет смысл сбросить baseline вручную или подождать 7 дней, пока модель пересчитается естественным путём.
+**Период обучения — 7 дней.** Меняется в Reference period. По [официальной формулировке](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining): «alerting on traffic spikes and drops begins after a learning period of one week because baselining requires a full week's worth of traffic to learn daily and weekly patterns» — для срабатывания алертов на skoki/drop трафика нужна полная неделя истории; для error rate и response time пороги активизируются раньше — после 20% недели (около 1.5 дней). После значительного архитектурного изменения имеет смысл сбросить baseline вручную или подождать 7 дней, пока модель пересчитается естественным путём. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining -->
+
+**Defaults на странице Settings → Anomaly detection → Services.** Точные числовые дефолты (Absolute / Relative / Avoid over-alerting) Dynatrace не публикует одной общей таблицей в публичной доке — значения, видимые в самой странице Settings, считаются authoritative для конкретной сборки кластера. Цифры выше («100 мс / 50% / 0.1% / 10 rpm / 1 минута») приведены как ориентир для типичной свежей инсталляции и должны сверяться с реальной страницей вашего тенанта перед использованием в SLA или интеграциях.
 
 **Adaptive vs Static.** Адаптивный baseline — основной инструмент, его хватает для 80% задач. Static thresholds применяются поверх адаптивных в двух случаях:
 - **Compliance.** SLA требует «тревога строго при CPU выше 85%» независимо от baseline.

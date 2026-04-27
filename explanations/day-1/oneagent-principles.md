@@ -1,6 +1,7 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 3 из 11: «Принцип работы и возможности OneAgent»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:oneagent.features -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с общими страницами OneAgent technology support (применимы к Managed 1:1, поскольку OneAgent — единый бинарь для SaaS и Managed). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с общими страницами OneAgent technology support (применимы к Managed 1:1, поскольку OneAgent — единый бинарь для SaaS и Managed). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
 > 📚 **Источники (официальная документация Dynatrace):**
 >
@@ -50,7 +51,9 @@
 
 **Что на экране.** Весь набор возможностей инструментации OneAgent. Каждая строка — отдельная feature (сенсор или набор правил для мониторинга конкретной технологии). Список длинный, разбит на страницы. Внизу видна пагинация до 18-й страницы.
 
-Под заголовком Dynatrace поясняет политику: по умолчанию включается только базовый набор. Дополнительные фичи с меткой **Opt-In** активирует администратор вручную. Цель — чтобы свежеустановленный агент не создавал избыточной нагрузки и объёма данных на хосте, а дополнительные возможности включались осознанно.
+Под заголовком Dynatrace поясняет политику: по умолчанию включается только базовый набор. Дополнительные фичи с меткой **Opt-In** активирует администратор вручную. Цель — чтобы свежеустановленный агент не создавал избыточной нагрузки и объёма данных на хосте, а дополнительные возможности включались осознанно. Полный перечень режимов (Full Stack / Infrastructure / Application-only) описан в [обзоре возможностей OneAgent](https://docs.dynatrace.com/docs/shortlink/oneagent).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/oneagent -->
 
 Зелёная плашка с инфо-иконкой сверху сообщает, что часть возможностей на этом тенанте уже активирована.
 
@@ -112,9 +115,12 @@
 - **Java** — через параметр `-javaagent`.
 - **.NET** — через CLR Profiling API.
 - **Node.js** — через подмену require-модулей.
-- **Go** — через eBPF (Go нельзя инструментировать через байт-код).
+- **Go** — поддерживается автоматическая инструментация 64-битных бинарей на x86 и ARM64 (детали и поддерживаемые версии — в [Supported Go versions](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/go)); конкретный механизм встраивания — внутреннее устройство OneAgent.
+- **Ruby** — отдельного нативного агента под Ruby нет; телеметрия снимается через [OpenTelemetry SDK](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/ruby) и отправляется в Dynatrace по OTLP. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/ingest-from/technology-support/application-software/ruby -->
 
-После успешной инструментации процесс начинает отправлять данные о каждом обработанном HTTP-запросе, каждом вызове базы, каждом исключении в коде.
+После успешной инструментации процесс начинает отправлять данные о каждом обработанном HTTP-запросе, каждом вызове базы, каждом исключении в коде. Совместимость конкретной технологии с конкретной версией OneAgent проверяется в [таблице Technology support](https://docs.dynatrace.com/docs/ingest-from/technology-support).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/ingest-from/technology-support -->
 
 **Типичные сценарии работы с этой страницей.**
 
@@ -138,7 +144,9 @@
 - **Платформенные процессы** — Kubernetes kubelet, Docker daemon, containerd.
 - **Языковые рантаймы** — Java JVM, .NET Core, Node.js, Python, PHP-FPM, Ruby.
 
-Для каждой технологии есть правило «как её узнать» и «к какому типу процесса отнести».
+Для каждой технологии есть правило «как её узнать» и «к какому типу процесса отнести». Матрица доступности возможностей по платформам приведена в [OneAgent platform and capability support matrix](https://docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix -->
 
 **Почему нельзя просто включить всё и забыть.** На крупной инсталляции одно имя процесса используется разными приложениями в разных командах. Пример: процесс `java` с одним bootstrap-классом может быть и собственным сервисом, и сторонним вендорским продуктом. Без правильных правил оба попадут в одну группу, метрики смешаются, разобрать проблему сложно. Правила на этой странице решают: каждое задаёт набор условий, по которым процесс идентифицируется однозначно.
 

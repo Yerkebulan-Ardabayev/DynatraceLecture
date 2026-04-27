@@ -1,6 +1,7 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 5 из 11: «Обзор интерфейса и навигации»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/dashboards -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с docs.dynatrace.com (Classic-разделы интерфейса, актуальные для air-gapped Managed: Apps-интерфейс / Notebooks / Workflows / Davis Problems app в Managed не активирован). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с docs.dynatrace.com (Classic-разделы интерфейса, актуальные для air-gapped Managed: Apps-интерфейс / Notebooks / Workflows / Davis Problems app в Managed не активирован). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
 > 📚 **Источники (официальная документация Dynatrace):**
 >
@@ -69,7 +70,7 @@
 
 **Таблица.** Колонки: **Favorite** (звёздочка для закрепления), **Name** (имя), **Popularity** (полоска частоты использования — видно, что реально применяется), **Modified at** (дата последнего изменения), **Owner** (автор). На этом демо видны реальные имена: Monitoring Overview, Hyper-V Overview, Agency Overview Dashboard, APDEX, Neoload Testing.
 
-**Зачем дашборды.** Набор виджетов (график, таблица, SLO-индикатор, карта Smartscape) собирается на одной странице и сохраняется. Типичный банк делит дашборды на три слоя:
+**Зачем дашборды.** Набор виджетов (график, таблица, SLO-индикатор, карта Smartscape) собирается на одной странице и сохраняется. Управление панелями — создание, редактирование, импорт JSON — описано в [Manage Dynatrace classic dashboards](https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic/dashboards). Типичный банк делит дашборды на три слоя:
 - **Оперативные** — для дежурной смены. Инфраструктура в реальном времени, активные инциденты, ключевые SLI.
 - **Бизнесовые** — для руководства. Доступность ключевых систем, конверсия, объёмы транзакций.
 - **Инженерные** — для отдельных команд. Метрики конкретного сервиса, логи, ошибки.
@@ -77,6 +78,8 @@
 Дашборды поддерживают Management zones. Выбранная в верхнем фильтре зона автоматически сужает все виджеты на дашборде — один дашборд может обслуживать несколько команд без дублирования.
 
 Подробнее дашборды разбираются в Теме 11.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic/dashboards -->
 
 ### Шаг 2 — Services / сервисы
 
@@ -86,7 +89,9 @@
 
 **Что на экране.** Все сервисы, которые OneAgent распознал на хостах окружения. На этом демо-тенанте — **244 Services**.
 
-**Что такое сервис.** Логическая единица backend, обслуживающая запросы одного типа: REST, SOAP, gRPC, очередь сообщений, вызов базы данных. Определение задают правила Service Detection, OneAgent применяет их автоматически. Один Java-процесс может содержать несколько сервисов (три REST-эндпоинта в одном Tomcat). Несколько процессов могут быть одним сервисом (инстансы одной логической единицы).
+**Что такое сервис.** Логическая единица backend, обслуживающая запросы одного типа: REST, SOAP, gRPC, очередь сообщений, вызов базы данных. Определение задают правила Service Detection, OneAgent применяет их автоматически. Один Java-процесс может содержать несколько сервисов (три REST-эндпоинта в одном Tomcat). Несколько процессов могут быть одним сервисом (инстансы одной логической единицы). Подробнее о концепции и типах — в разделе [Services](https://docs.dynatrace.com/docs/observe/application-observability/services) документации.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/observe/application-observability/services -->
 
 **Фильтры слева.**
 - **Service type** — Web service, Web request service, Custom service, Messaging service, Background activity и ещё 6 опций (Queue listener, Database service и другие).
@@ -139,7 +144,9 @@
 
 **Таблица.** Колонки: **Name**, **Response time median**, **Slowest 10%**, **Failure rate**, **Requests**, **Actions**. На этом демо видны реальные имена: `[eks-live][easytrade-live-debugger] TradeManagement`, `[eks-live][unguard] likeDb`, `BB2-apache-tomcatjms-iis`. Имя формируется из контекста окружения и обращения.
 
-**Ключевое свойство.** Данные снимаются **со стороны клиента базы**, не с самой базы. OneAgent инструментирует драйвер JDBC / ODBC и видит каждый запрос: какой SQL отправлен, сколько база на него отвечала, был ли ответ успешным. На самой базе OneAgent ставить не обязательно — работает и для unmanaged-хостов (облачная Managed-база типа AWS RDS). Проблемы «база отвечает медленно» видны всё равно.
+**Ключевое свойство.** Данные снимаются **со стороны клиента базы**, не с самой базы. OneAgent инструментирует драйвер JDBC / ODBC и видит каждый запрос: какой SQL отправлен, сколько база на него отвечала, был ли ответ успешным. На самой базе OneAgent ставить не обязательно — работает и для unmanaged-хостов (облачная Managed-база типа AWS RDS). Проблемы «база отвечает медленно» видны всё равно. Механика инструментации JDBC/ODBC описана в [Database services — how database activity is monitored](https://docs.dynatrace.com/docs/observe/applications-and-microservices/databases/database-services-classic/how-database-activity-is-monitored).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/observe/applications-and-microservices/databases/database-services-classic/how-database-activity-is-monitored -->
 
 ### Шаг 5 — Problems / инциденты
 
@@ -159,11 +166,13 @@
 
 **Таблица.** Колонки: **Problem** (заголовок и идентификатор `P-NNNNNNNN`), **Impacted** (число сущностей), **Affected** (главная сущность), **Root cause** (корневая причина), **Start date**, **Duration**, **Alerting profiles** (какие профили сработали — сразу видно, в какие интеграции ушла проблема).
 
-**Особенность Problems в Dynatrace.** Это не отдельные метрики, а целостные инциденты. Если одновременно стали медленными web-сервер, база и все зависящие сервисы, Davis не создаст шесть проблем — создаст одну с корневой причиной «медленная база» и свяжет с ней остальные симптомы. Такой подход резко снижает шум оповещений и даёт начинать разбор с корня, а не разбираться между десятью алертами.
+**Особенность Problems в Dynatrace.** Это не отдельные метрики, а целостные инциденты. Если одновременно стали медленными web-сервер, база и все зависящие сервисы, [Davis AI](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai) не создаст шесть проблем — создаст одну с корневой причиной «медленная база» и свяжет с ней остальные симптомы. Такой подход резко снижает шум оповещений и даёт начинать разбор с корня, а не разбираться между десятью алертами.
 
 **Карточка проблемы.** Клик по строке. В ней: полная хронология событий, какие объекты в какой момент были затронуты, вывод Davis о корневой причине. Прямые переходы к графикам метрик, трейсам, логам, затронутым сервисам.
 
 Подробнее Problems разбираются в Теме 10.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai -->
 
 ### Шаг 6 — Releases / релизы
 
@@ -190,7 +199,16 @@
 - **Release events** — графики событий релизов по времени. Зелёный столбик = новая версия выкатилась. Быстро видно, когда был последний деплой.
 - **Tracked issues** — привязанные issues из внешних трекеров (Jira, GitHub), если настроена интеграция. Колонки Time, Issue tracker, Issue count.
 
-**Откуда берётся версия.** Из нескольких источников: имя исполняемого файла, переменные окружения (`DT_RELEASE_VERSION`, `DT_RELEASE_STAGE`), мета-информация контейнера Docker, Git-теги при сборке. Команда разработки может настроить пайплайн так, чтобы перед деплоем в Dynatrace появилось событие «release» с версией и ссылкой на change-ticket.
+**Откуда берётся версия.** Полный перечень стратегий описан в [Version detection strategies](https://docs.dynatrace.com/docs/deliver/release-monitoring/version-detection-strategies). По публичной документации поддерживаются:
+
+- **Переменные окружения** — `DT_RELEASE_VERSION` (версия), `DT_RELEASE_STAGE` (этап — production / staging / dev), `DT_RELEASE_PRODUCT` (продукт), `DT_RELEASE_BUILD_VERSION` (номер сборки). Самый простой и универсальный способ.
+- **Метки Kubernetes pods** — рекомендованные `app.kubernetes.io/version` и кастомная `dynatrace-release-stage`. Удобно для контейнеризованных деплоев.
+- **События Dynatrace Events API** — pipeline CI/CD отправляет в Dynatrace deployment-event с метаданными версии и ссылкой на change-ticket.
+- **OpenTelemetry resource attributes** — переменная `OTEL_RESOURCE_ATTRIBUTES` с deployment-метаданными, обогащает трейсы и логи.
+
+Команда разработки выбирает любой из этих способов; в банке часто комбинируют переменные окружения для сред без Kubernetes и события Events API для централизованного pipeline.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/deliver/release-monitoring/version-detection-strategies -->
 
 **Типичный сценарий в банке.** Разбор инцидента после релиза. Смотрим Problems → фиксируем время начала → Releases → что выкатывалось в этот промежуток → по change-ticket узнаём, какие изменения были. Если новое приложение вызвало проблему, откат на предыдущую версию делается с того же change-ticket.
 

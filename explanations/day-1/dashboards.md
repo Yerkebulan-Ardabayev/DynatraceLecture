@@ -1,6 +1,7 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 11 из 11: «Системные и пользовательские дашборды»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/dashboards -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с docs.dynatrace.com (Classic Dashboards — основной формат для air-gapped Managed; новый Apps-формат «Dashboards new» в Managed не активирован, поэтому в курсе разбираем именно Classic). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с docs.dynatrace.com (Classic Dashboards — основной формат для air-gapped Managed; новый Apps-формат «Dashboards new» в Managed не активирован, поэтому в курсе разбираем именно Classic). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
 > 📚 **Источники (официальная документация Dynatrace):**
 >
@@ -144,10 +145,11 @@
 
 *На экране.* Таблица **List of URL pattern matchers**. На этом демо одно правило: `Starts with 'https://www.dropbox.com/s/eyp7x72fyohmqyq/'` — остаток от какого-то демо-сценария, в боевом окружении это уберут.
 
-*Добавление правила.* Кнопка **+ Add rule** (в read-only режиме скрыта). Форма:
-- **Starts with / начинается с** — URL должен начинаться с шаблона.
-- **Equals / точное совпадение** — URL равен шаблону.
-- **Regular expression / регулярное выражение** — URL соответствует regex.
+*Добавление правила.* Кнопка **+ Add rule** (в read-only режиме скрыта). По публичной документации [Global Dynatrace dashboard settings](https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic/dashboards/dashboards-settings) поддерживаются два типа правил:
+- **Starts with / начинается с** — URL должен начинаться со строки-шаблона.
+- **Exact (Equals) / точное совпадение** — URL равен шаблону целиком.
+
+<!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic/dashboards/dashboards-settings -->
 
 ---
 
@@ -155,15 +157,18 @@
 
 ### Три слоя дашбордов
 
+В [Dashboards Classic](https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic) — основном формате для Managed — принято делить панели на три слоя по аудитории.
+
 **Оперативные.** Один-два дашборда для дежурной смены. На них ключевые метрики инфраструктуры, статус критичных сервисов (Response time / время отклика, Failure rate / процент ошибок, Throughput / нагрузка), активные проблемы, состояние Synthetic. Висят на больших мониторах в диспетчерской, автообновление раз в минуту. В норме всё зелёное — любая красная полоса сразу ловит глаз.
 
 **Бизнесовые.** Для руководства. Доступность ключевых систем за день и за месяц, конверсия (сколько пользователей успешно провели ключевую операцию), объёмы транзакций, SLA-индикаторы. Технических деталей минимум — цвет индикаторов и динамика во времени.
 
 **Инженерные.** По одному на команду разработки. Детализация по своим сервисам: ключевые метрики, топ ошибок, топ-10 медленных запросов, потребление ресурсов, события деплоев. Плотно набиты виджетами — их смотрят разработчики и SRE.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic -->
 
 ### Dashboard as code / дашборд как код
 
-Зрелый подход. Дашборды не рисуют мышкой в UI, а хранят в Git как JSON. Накатывают через API при деплое.
+Зрелый подход. Дашборды не рисуют мышкой в UI, а хранят в Git как JSON. Накатывают через API при деплое. Подробнее о создании и редактировании — [Create and edit Dynatrace dashboards](https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic/dashboards/create-dashboards).
 
 *Что это даёт.*
 - Версионирование — видно, кто и когда менял.
@@ -171,16 +176,19 @@
 - Одинаковые дашборды в dev / test / prod — не надо руками переносить.
 
 В банке это требование compliance. Любое изменение в production должно быть прослежено через change-management. Ручные правки в UI боевого окружения — нарушение процесса.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic/dashboards/create-dashboards -->
 
 ### Management Zone и дашборды
 
-**Management Zone / зона управления** — способ поделить данные Dynatrace на куски по принадлежности (команде, сервису, бизнес-линии). Выбрал в верхнем фильтре zone «Retail Banking» — все виджеты всех дашбордов автоматически показывают только данные этой зоны.
+**[Management Zone](https://docs.dynatrace.com/docs/shortlink/management-zones) / зона управления** — способ поделить данные Dynatrace на куски по принадлежности (команде, сервису, бизнес-линии). Выбрал в верхнем фильтре zone «Retail Banking» — все виджеты всех дашбордов автоматически показывают только данные этой зоны.
 
 *Полезная практика — один дашборд на несколько команд.* Команда retail переключает zone «Retail» и видит своё. Команда corporate переключает «Corporate» и видит своё. Дашборд один, контекст у каждого свой. Меньше дублирования, проще поддерживать.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/management-zones -->
 
 ### Air-gapped контекст
 
-Всё работает одинаково, особенностей нет. Дашборды хранятся в кластере, данные приходят с агентов внутри контура. Единственное — в **Allowed URL pattern rules** не имеет смысла класть внешние домены: интернет всё равно недоступен, а внутренние ресурсы (Confluence, файловое хранилище) доступны напрямую.
+Всё работает одинаково, особенностей нет. Дашборды хранятся в кластере, данные приходят с агентов внутри контура. Единственное — в **[Allowed URL pattern rules](https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic/dashboards/dashboards-settings)** не имеет смысла класть внешние домены: интернет всё равно недоступен, а внутренние ресурсы (Confluence, файловое хранилище) доступны напрямую.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/analyze-explore-automate/dashboards-classic/dashboards/dashboards-settings -->
 
 ### Ключевые термины
 

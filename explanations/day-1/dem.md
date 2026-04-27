@@ -1,6 +1,7 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 4 из 11: «Цифровой опыт (Digital Experience Monitoring): основные принципы»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/applications -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с общими страницами DEM (применимы к Managed: классический RUM/Synthetic/Session Replay в Managed работает идентично — Apps-интерфейс «Users & Sessions» в air-gapped Managed не активирован, поэтому используется Classic UI). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с общими страницами DEM (применимы к Managed: классический RUM/Synthetic/Session Replay в Managed работает идентично — Apps-интерфейс «Users & Sessions» в air-gapped Managed не активирован, поэтому используется Classic UI). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
 > 📚 **Источники (официальная документация Dynatrace):**
 >
@@ -64,8 +65,10 @@
 
 **Как приложение попадает сюда.** Нужно три условия:
 1. OneAgent установлен на веб-сервере или reverse-proxy, через который идут пользовательские запросы (Nginx / Apache на DMZ-серверах).
-2. В **Settings → Web and mobile monitoring → Application settings** создано приложение — указан домен, под которым оно доступно.
-3. RUM включён. OneAgent автоматически добавляет в HTML-ответы ссылку на JavaScript-сниппет. Сниппет загружается в браузере пользователя, собирает данные и шлёт их через ActiveGate в кластер.
+2. В **Settings → Web and mobile monitoring → Application settings** создано приложение — указан домен, под которым оно доступно. Правила сопоставления URL настраиваются через [Application detection rules](https://docs.dynatrace.com/docs/observe/digital-experience/web-applications/additional-configuration/application-detection-rules) (URL starts with / contains / equals).
+3. RUM ([Real User Monitoring](https://docs.dynatrace.com/docs/shortlink/rum)) включён. OneAgent автоматически добавляет в HTML-ответы ссылку на JavaScript-сниппет. Сниппет загружается в браузере пользователя, собирает данные и шлёт их через ActiveGate в кластер.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/rum -->
 
 **Разница между приложением и сервисом.**
 
@@ -108,7 +111,9 @@
 - **Operating systems** — ОС устройства.
 - **Locations** — страна и город.
 
-**Пример расследования.** Жалоба: «пользователи с Safari на iPhone не могут войти в интернет-банк». Фильтры: **Browser = Safari** + **Operating system = iOS** + **Errors and annoyances = Yes**. В таблице остаются только такие сессии — открываем карточку, смотрим, что именно ломалось.
+**Пример расследования.** Жалоба: «пользователи с Safari на iPhone не могут войти в интернет-банк». Фильтры: **Browser = Safari** + **Operating system = iOS** + **Errors and annoyances = Yes**. В таблице остаются только такие сессии — открываем карточку, смотрим, что именно ломалось. Для воспроизведения конкретного визита используется [Session Replay](https://docs.dynatrace.com/docs/shortlink/session-replay) — запись DOM-состояния экрана, доступная по кнопке **Play** в карточке сессии.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/session-replay -->
 
 **Таблица справа.** Колонки:
 

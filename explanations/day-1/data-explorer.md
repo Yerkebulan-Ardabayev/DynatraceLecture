@@ -1,6 +1,7 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 8 из 11: «Встроенные метрики, Data Explorer»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/data-explorer?gf=all -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с docs.dynatrace.com. **Важно для Managed:** Data Explorer Advanced mode использует **Metrics Selector** (синтаксис Dynatrace), DQL — это SaaS-only для Grail и в air-gapped Managed недоступен. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с docs.dynatrace.com. **Важно для Managed:** Data Explorer Advanced mode использует **Metrics Selector** (синтаксис Dynatrace), DQL — это SaaS-only для Grail и в air-gapped Managed недоступен. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
 > 📚 **Источники (официальная документация Dynatrace):**
 >
@@ -95,12 +96,11 @@
 
 **Закрепление на дашборд.** Кнопка **Pin to dashboard** в правом верхнем углу добавляет график виджетом на выбранный дашборд. Ключевой приём построения дашбордов — не собирать виджеты внутри дашборда, а отточить их в Data Explorer и закрепить готовыми.
 
-**Разрешение по времени и диапазон.** Временной диапазон задаётся в верхней панели (Last 2 hours / Last 24 hours / Last 7 days / Custom). Разрешение меняется автоматически:
-- За 2 часа — шаг в одну минуту.
-- За 24 часа — шаг в 5 минут.
-- За 7 дней — шаг в 1 час.
+**Разрешение по времени и диапазон.** Временной диапазон задаётся в верхней панели (Last 2 hours / Last 24 hours / Last 7 days / Custom). Разрешение в дефолтном режиме **Auto** Dynatrace выбирает сам — короткому окну ставит более частые точки, длинному окну — более редкие, чтобы запрос не тянулся минутами и UI оставался отзывчивым. Точное соответствие «диапазон → шаг» одной авторитетной таблицы в публичной документации Advanced query editor [Dynatrace не даёт](https://docs.dynatrace.com/docs/analyze-explore-automate/explorer/explorer-advanced-query-editor) — фактический шаг видно по самому графику в момент построения. При желании конкретное разрешение задаётся вручную в правой панели Settings (поле Resolution) — независимо от диапазона.
 
-Это компромисс между детальностью и объёмом. За долгие периоды Dynatrace подгружает свёрнутые агрегаты — иначе запрос тянулся бы минутами.
+Это компромисс между детальностью и объёмом. За долгие периоды Dynatrace подгружает свёрнутые агрегаты — иначе запрос тянулся бы минутами. Лестница прореживания метрик (1 мин → 5 мин → 1 час → 1 день) — отдельный механизм retention, описан на странице [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods); это про хранение, не про показ в Data Explorer.
+
+<!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/analyze-explore-automate/explorer/explorer-advanced-query-editor -->
 
 ### Шаг 2 — Metrics / каталог всех метрик
 
@@ -146,19 +146,23 @@
 
 ### Три источника метрик в Dynatrace
 
+Полный обзор способов подачи метрик описан в разделе [Extend metric observability](https://docs.dynatrace.com/docs/ingest-from/extend-dynatrace/extend-metrics).
+
 **Встроенные.** OneAgent собирает автоматически, без настройки — хосты, процессы, сервисы, RUM. Никаких конфигов.
 
 **Extensions.** Плагины на ActiveGate, опрашивающие внешние системы через SNMP, JMX, JDBC, Prometheus, REST. Данные приходят в кластер как обычные метрики с префиксом `ext:`. Разбирали в Дне 1, Тема 1.
 
 **Custom ingest.** Метрики из приложений или внешних систем, отправленные через:
 - **OneAgent SDK** — приложение само шлёт метрики через API агента.
-- **API** `POST /api/v2/metrics/ingest` — приём метрик в формате Line Protocol (похож на InfluxDB).
+- **API** `POST /api/v2/metrics/ingest` — приём метрик в формате [Metric ingestion protocol](https://docs.dynatrace.com/docs/ingest-from/extend-dynatrace/extend-metrics/reference/metric-ingestion-protocol) (Line Protocol, похож на InfluxDB).
 
 Во всех трёх случаях данные остаются внутри контура — в интернет ничего не уходит.
 
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/ingest-from/extend-dynatrace/extend-metrics -->
+
 ### Metrics Selector в Advanced mode
 
-В простом режиме — выбор метрики и измерения. В Advanced mode пишутся сложные выражения на **Metrics Selector** (синтаксис Dynatrace для работы с метриками):
+В простом режиме — выбор метрики и измерения. В [Advanced mode](https://docs.dynatrace.com/docs/analyze-explore-automate/explorer/explorer-advanced-query-editor) пишутся сложные выражения на **Metrics Selector** (синтаксис Dynatrace для работы с метриками):
 
 - `(builtin:service.response.time:avg) / 1000` — перевод из микросекунд в миллисекунды.
 - `builtin:host.cpu.usage / builtin:host.mem.usage` — соотношение CPU к памяти.
@@ -172,19 +176,23 @@
 - «Какое соотношение между числом запросов и числом ошибок».
 - «Топ-5 самых медленных сервисов по 95-му перцентилю отклика».
 
-*Нюанс терминологии.* Metrics Selector часто путают с DQL. DQL — новый язык для Grail (облачное хранилище Dynatrace), доступен только на SaaS. В Managed работает Metrics Selector — язык старше и ограничен метриками (не покрывает логи и трейсы так, как DQL).
+*Нюанс терминологии.* Metrics Selector часто путают с DQL. DQL — новый язык для Grail (облачное хранилище Dynatrace), доступен только на SaaS. В Managed работает Metrics Selector — язык старше и ограничен метриками (не покрывает логи и трейсы так, как DQL). Полный референс операторов Metrics Selector: [Metrics API — Metric selector](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/metric-v2/metric-selector).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/analyze-explore-automate/explorer/explorer-advanced-query-editor -->
 
 ### Кастомные метрики в air-gapped
 
 В air-gapped Managed любые кастомные метрики работают без особенностей. Ограничения только такие:
 
-- **Квота DDU (Davis Data Units)**. Каждая кастомная метрика со своими dimensions потребляет DDU. На боевой инсталляции следить за потреблением через метрики `builtin:billing.custom_metrics_classic.*`.
+- **Квота DDU (Davis Data Units)**. Каждая кастомная метрика со своими dimensions потребляет DDU. Подробнее — [Davis Data Units (DDU)](https://docs.dynatrace.com/docs/shortlink/davis-data-units). На боевой инсталляции следить за потреблением через метрики `builtin:billing.custom_metrics_classic.*`.
 - **Ограничение числа dimensions**. Слишком много dimensions на одной метрике приводят к cardinality explosion — десятки тысяч отдельных временных рядов, замедление UI, перерасход DDU.
 
 ### Связка двух экранов в ежедневной работе
 
-1. **Metrics** — найти нужную метрику, скопировать Key.
+1. **Metrics** — найти нужную метрику, скопировать Key. Пример быстрого старта — [Data Explorer quick start](https://docs.dynatrace.com/docs/observe-and-explore/explorer/explorer-quick-start).
 2. **Data Explorer** — построить график, настроить split by, применить фильтры.
 3. **Pin to dashboard** — закрепить на общем дашборде, если график полезен команде.
 
 Если график нужен разово — остался в Data Explorer, не сохранён. Если постоянный показатель — попадает на дашборд и обновляется в реальном времени.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/davis-data-units -->
