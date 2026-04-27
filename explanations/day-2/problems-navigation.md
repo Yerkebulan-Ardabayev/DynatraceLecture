@@ -1,23 +1,18 @@
 > 📅 **День 2: Инфраструктура, контейнеры, базы данных, сети** → Тема 9 из 9: «Переход к сервисам и хостам из карточки Problems»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/problems -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами Davis AI / Root cause analysis / Alerting profiles (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Все тех-факты сверены свежими WebFetch'ами на `docs.dynatrace.com/managed/` в текущей сессии. Ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (только Dynatrace Managed):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Observe — Dynatrace Managed](https://docs.dynatrace.com/managed/observe) — раздел Observe (включая Problems, Davis, Alerting) в Managed-документации
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Davis AI — overview](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai) — концепция Davis AI, события и проблемы
-> - [Anomaly detection — overview](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection) — как Davis обнаруживает аномалии и порождает события
-> - [Root cause analysis](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis) — корневая страница про RCA в Dynatrace
-> - [Root cause analysis — concepts](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis/concepts) — Affected vs Root cause, причинно-следственная топология
-> - [Event analysis and correlation](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis/concepts/events) — корреляция событий в одну проблему
-> - [Alerting profiles](https://docs.dynatrace.com/docs/observe-and-explore/notifications-and-alerting/alerting-profiles) — фильтрация и маршрутизация уведомлений
-> - [Alerting rules evaluation](https://docs.dynatrace.com/docs/observe-and-explore/notifications-and-alerting/alerting-profiles/alerting-rules-evaluation) — как Dynatrace применяет alerting profiles к проблемам
-> - [Alerting profile — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-alerting-profile) — формальная схема страницы Alerting profiles
-> - [Metric events — параметрический shortlink](https://docs.dynatrace.com/docs/shortlink/metric-events) — каноническая точка входа для темы Metric events / условий формирования problems
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
+> - [Davis AI — Managed](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai) — Davis AI causation engine: anomaly detection / root cause analysis / problem retracing
+> - [Anomaly detection — Managed](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/anomaly-detection) — auto-adaptive / static thresholds / sensitivity, contextual baselining
+> - [Root cause analysis — Managed](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis) — RCA автоматически выделяет entities в causal topology
+> - [Root cause analysis — concepts — Managed](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis/concepts) — Affected vs Root cause, causal topology, vertical/horizontal зависимости
+> - [Event analysis and correlation — Managed](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis/concepts/events) — ingestion / normalization / topology / dedup (by source / over time / by causal relationship)
+> - [Problem alerting profiles — Managed](https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/alerting-profiles) — Default profile нельзя удалить; AND-логика трёх scope: Management zones + Severity rules (≤100, OR) + Event filters (≤20)
+> - [Alerting rules evaluation — Managed](https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/alerting-profiles/alerting-rules-evaluation) — AND-логика scope, OR между severity rules
 
 ## 📍 КАРТА — откуда стартует расследование инцидента
 
@@ -115,8 +110,10 @@
 
 В простых случаях совпадают (проблема локальна). В сложных различаются: Affected — сервис платежей, Root cause — хост, на котором живёт БД, используемая этим сервисом. Причину ищут в Root cause, эффект — в Affected.
 
+Davis для определения Root cause использует **context-aware** подход (а не простую корреляцию по времени): применяет всю доступную топологию, distributed traces и code-level информацию, чтобы связать события одного и того же корня в одну Problem. Анализируются и **вертикальные** (application → service → process → host), и **горизонтальные** (service ↔ service) зависимости; влияние ранжируется по силе. Дословно из Managed-документации: «detects interdependent Davis events across time, processes, hosts, services, applications, and both vertical and horizontal topological monitoring perspectives». <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis/concepts -->
+
 **Когда Davis не смог определить Root cause.** Колонка остаётся пустой. Это не ошибка, а честное «недостаточно данных». В таких случаях инженер опирается на граф сущностей и определяет причину экспертно. Обычно это проблемы на инфраструктуре без OneAgent (чистое сетевое железо, внешние SaaS) или новые технологии без накопленного baseline.
 
-**Alerting profiles в списке.** Колонка функциональная, не декоративная. Видно, в какие интеграции (Email / Jira / ServiceNow / Teams) ушла проблема. Если проблема критичная, а Alerting profiles пусто — она не попала ни в одну интеграцию, дежурный о ней не знает. Это сигнал проверить настройки профилей. Ревью: фильтр «высокий Impact level + пустые Alerting profiles» → разобраться, почему не рассылается.
+**Alerting profiles в списке.** Колонка функциональная, не декоративная. Видно, в какие интеграции (Email / Jira / ServiceNow / Slack / Opsgenie / PagerDuty / Teams) ушла проблема. Профиль фильтрует problems по трём scope-компонентам, объединённым AND: Management zones + Severity rules (до 100, между ними OR) + Event filters (до 20). Каждое окружение содержит неудаляемый профиль `Default`. Если проблема критичная, а Alerting profiles пусто — она не попала ни в одну интеграцию, дежурный о ней не знает. Ревью: фильтр «высокий Impact level + пустые Alerting profiles» → разобраться, почему не рассылается. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/alerting-profiles -->
 
 **Air-gapped контекст.** Workflow одинаков в облачном Dynatrace и в изолированном Managed. Данные переходов полностью локальные, наружу ничего не уходит. Если интеграция уведомлений настроена на внутренний Jira или Slack — Alerting profiles шлют туда, переход из письма/чата в интерфейс Dynatrace идёт по внутренней ссылке.

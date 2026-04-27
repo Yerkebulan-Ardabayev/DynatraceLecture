@@ -1,17 +1,17 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 3 из 11: «Принцип работы и возможности OneAgent»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:oneagent.features -->
 >
-> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с общими страницами OneAgent technology support (применимы к Managed 1:1, поскольку OneAgent — единый бинарь для SaaS и Managed). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
+> 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: ссылки на /docs/ убраны, оставлены только страницы из раздела `/managed/`. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (Dynatrace Managed — air-gapped):**
 >
-> **Общая (одинаково для Managed и SaaS — OneAgent — единый бинарь):**
-> - [OneAgent — capabilities и monitoring modes](https://docs.dynatrace.com/docs/shortlink/oneagent) — обзорная страница про режимы Full Stack / Infrastructure / Application-only
-> - [OneAgent platform and capability support matrix](https://docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix) — таблица «какая фича доступна на какой ОС / архитектуре» (применяется когда тумблер на странице OneAgent features есть, но не работает)
-> - [Technology support](https://docs.dynatrace.com/docs/ingest-from/technology-support) — корневая страница для проверки совместимости конкретной технологии (Java / .NET / Node.js / Python / Go / PHP / Ruby) с конкретной версией OneAgent
-> - [.NET support](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/dotnet) — пример детальной страницы поддержки (First / Last supported OneAgent version, EOL)
-> - [Application Protection — supported technologies](https://docs.dynatrace.com/docs/secure/application-security/application-protection) — таблица «какая защита доступна для какой технологии» (используется на той же странице OneAgent features через фильтр «code-level attack evaluation»)
-> - [Host Units (HU)](https://docs.dynatrace.com/docs/shortlink/host-unit) — дополнение про Full Stack vs Infrastructure лицензирование
+> - [Welcome to Dynatrace Managed Documentation](https://docs.dynatrace.com/managed) — корень раздела Managed для air-gapped инсталляций
+> - [OneAgent overview](https://docs.dynatrace.com/managed/shortlink/oneagent) — корневая страница OneAgent: monitoring modes, deployment options для всех платформ
+> - [Host Units (HU)](https://docs.dynatrace.com/managed/shortlink/host-unit) — лицензирование Full-Stack vs Infrastructure mode (16 GiB → 1 HU vs 0.3 HU)
+> - [Service Detection v1](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1) — типы сервисов, распознаваемых OneAgent (Web/Database/Messaging/Background activity/Custom)
+> - [Observe](https://docs.dynatrace.com/managed/observe) — корневой раздел, в котором живут страницы Hosts/Services/Process Groups
+> - [Manage your Dynatrace Managed](https://docs.dynatrace.com/managed/manage) — раздел администрирования: IAM, Settings 2.0 framework, network zones, Hub
+> - [Access tokens — Dynatrace Managed](https://docs.dynatrace.com/managed/manage/access-control/access-tokens) — токены, через которые OneAgent регистрируется в кластере
 
 ## 📍 КАРТА — где настраиваются принципы работы OneAgent
 
@@ -51,9 +51,7 @@
 
 **Что на экране.** Весь набор возможностей инструментации OneAgent. Каждая строка — отдельная feature (сенсор или набор правил для мониторинга конкретной технологии). Список длинный, разбит на страницы. Внизу видна пагинация до 18-й страницы.
 
-Под заголовком Dynatrace поясняет политику: по умолчанию включается только базовый набор. Дополнительные фичи с меткой **Opt-In** активирует администратор вручную. Цель — чтобы свежеустановленный агент не создавал избыточной нагрузки и объёма данных на хосте, а дополнительные возможности включались осознанно. Полный перечень режимов (Full Stack / Infrastructure / Application-only) описан в [обзоре возможностей OneAgent](https://docs.dynatrace.com/docs/shortlink/oneagent).
-
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/oneagent -->
+Под заголовком Dynatrace поясняет политику: по умолчанию включается только базовый набор. Дополнительные фичи с меткой **Opt-In** активирует администратор вручную. Цель — чтобы свежеустановленный агент не создавал избыточной нагрузки и объёма данных на хосте, а дополнительные возможности включались осознанно. Полный перечень режимов (Full Stack / Infrastructure / Application-only) описан в [OneAgent overview](https://docs.dynatrace.com/managed/shortlink/oneagent). <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/shortlink/oneagent -->
 
 Зелёная плашка с инфо-иконкой сверху сообщает, что часть возможностей на этом тенанте уже активирована.
 
@@ -115,12 +113,10 @@
 - **Java** — через параметр `-javaagent`.
 - **.NET** — через CLR Profiling API.
 - **Node.js** — через подмену require-модулей.
-- **Go** — поддерживается автоматическая инструментация 64-битных бинарей на x86 и ARM64 (детали и поддерживаемые версии — в [Supported Go versions](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/go)); конкретный механизм встраивания — внутреннее устройство OneAgent.
-- **Ruby** — отдельного нативного агента под Ruby нет; телеметрия снимается через [OpenTelemetry SDK](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/ruby) и отправляется в Dynatrace по OTLP. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/ingest-from/technology-support/application-software/ruby -->
+- **Go** — поддерживается автоматическая инструментация 64-битных бинарей на x86 и ARM64; конкретный механизм встраивания — внутреннее устройство OneAgent (детали и поддерживаемые версии — в разделе Technology support документации Dynatrace для вашей версии).
+- **Ruby** — отдельного нативного агента под Ruby нет; телеметрия снимается через OpenTelemetry SDK и отправляется в Dynatrace по OTLP.
 
-После успешной инструментации процесс начинает отправлять данные о каждом обработанном HTTP-запросе, каждом вызове базы, каждом исключении в коде. Совместимость конкретной технологии с конкретной версией OneAgent проверяется в [таблице Technology support](https://docs.dynatrace.com/docs/ingest-from/technology-support).
-
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/ingest-from/technology-support -->
+После успешной инструментации процесс начинает отправлять данные о каждом обработанном HTTP-запросе, каждом вызове базы, каждом исключении в коде. Совместимость конкретной технологии с конкретной версией OneAgent проверяется в матрице Technology support в документации Dynatrace.
 
 **Типичные сценарии работы с этой страницей.**
 
@@ -144,9 +140,7 @@
 - **Платформенные процессы** — Kubernetes kubelet, Docker daemon, containerd.
 - **Языковые рантаймы** — Java JVM, .NET Core, Node.js, Python, PHP-FPM, Ruby.
 
-Для каждой технологии есть правило «как её узнать» и «к какому типу процесса отнести». Матрица доступности возможностей по платформам приведена в [OneAgent platform and capability support matrix](https://docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix).
-
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix -->
+Для каждой технологии есть правило «как её узнать» и «к какому типу процесса отнести». Матрица доступности возможностей по платформам приведена в OneAgent platform and capability support matrix в документации Dynatrace для вашей версии.
 
 **Почему нельзя просто включить всё и забыть.** На крупной инсталляции одно имя процесса используется разными приложениями в разных командах. Пример: процесс `java` с одним bootstrap-классом может быть и собственным сервисом, и сторонним вендорским продуктом. Без правильных правил оба попадут в одну группу, метрики смешаются, разобрать проблему сложно. Правила на этой странице решают: каждое задаёт набор условий, по которым процесс идентифицируется однозначно.
 

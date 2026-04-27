@@ -1,18 +1,17 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 7 из 11: «Хосты, процессы, сервисы, приложения — обзор ключевых объектов»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/entity/list/HOST -->
 >
-> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с docs.dynatrace.com (концепция entities — общая для Managed и SaaS, типизированные списки в UI Managed работают идентично). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
+> 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: ссылки на /docs/ удалены, оставлены только страницы из раздела `/managed/`. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (Dynatrace Managed — air-gapped):**
 >
-> **Общая (Managed + SaaS):**
-> - [Smartscape — топология сущностей](https://docs.dynatrace.com/docs/shortlink/smartscape) — иерархия Applications → Services → Process Groups → Hosts → Data Centers
-> - [Hosts](https://docs.dynatrace.com/docs/shortlink/hosts) — Host-уровень: списки, фильтры, OneAgent state
-> - [Services](https://docs.dynatrace.com/docs/observe/application-observability/services) — Service-уровень: типы, response time, failure rate
-> - [Web applications](https://docs.dynatrace.com/docs/observe/digital-experience/web-applications) — Application-уровень (frontend), детектирование по домену
-> - [Process group detection](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/pg-detection) — Process Groups: правила детектирования и группировки процессов
-> - [Management zones](https://docs.dynatrace.com/docs/shortlink/management-zones) — сегментация сущностей по зонам ответственности (работает на всех уровнях)
-> - [Distributed traces](https://docs.dynatrace.com/docs/observe/application-observability/distributed-traces) — горизонтальные связи между Services через PurePath
+> - [Welcome to Dynatrace Managed Documentation](https://docs.dynatrace.com/managed) — корень раздела для air-gapped инсталляций
+> - [Smartscape](https://docs.dynatrace.com/managed/shortlink/smartscape) — иерархия 5 уровней (Apps / Services / Processes / Hosts / Data Centers), вертикальные и горизонтальные связи
+> - [Observe](https://docs.dynatrace.com/managed/observe) — корень раздела с экранами Hosts / Services / Process Groups / Applications
+> - [Service Detection v1](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1) — типы сервисов (Web request services, Web services WSDL, Database, Messaging, Remoting, Background activity, Custom services), правила Service detection
+> - [Digital Experience](https://docs.dynatrace.com/managed/observe/digital-experience) — Application-уровень (frontend), Web/Mobile RUM, Session segmentation
+> - [Management zones](https://docs.dynatrace.com/managed/shortlink/management-zones) — сегментация сущностей по зонам ответственности, до 5 000 MZ на окружение
+> - [Manage your Dynatrace Managed](https://docs.dynatrace.com/managed/manage) — администрирование, где живут Settings 2.0 для Process Group detection и Service Detection
 
 ## 📍 КАРТА — четыре типа ключевых объектов
 
@@ -136,14 +135,12 @@ Data Center (ДЦ или облачный регион)
 
 ## 🎓 ТЕОРИЯ — зачем знать иерархию сущностей
 
-Иерархия сущностей описана в разделе [Smartscape — топология сущностей](https://docs.dynatrace.com/docs/shortlink/smartscape): четыре уровня (Applications / Services / Process Groups / Hosts) плюс Data Centers как логическая группировка.
+Иерархия сущностей описана в разделе Smartscape (топология сущностей) документации Dynatrace для вашей версии: четыре уровня (Applications / Services / Process Groups / Hosts) плюс Data Centers как логическая группировка.
 
 **Сквозной анализ инцидента.** При падении сервиса важно быстро ответить: какие приложения пострадали (уровень вверх), на каких хостах проблема (уровень вниз). Иерархия Application → Service → Process Group → Host — это и есть цепочка анализа.
 
-**Правильный scope алертов.** Alert profile с фильтром `type(SERVICE)` включает только сервисные проблемы, `type(HOST)` — только хостовые. Разные команды отвечают за разные уровни: SRE — за хосты, разработчики — за сервисы. Сегментация алертов по типу сущности важна для правильной маршрутизации. [Process group detection](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/pg-detection) объясняет, по каким правилам OneAgent объединяет процессы в одну группу и как это влияет на алерты на уровне Process Group.
+**Правильный scope алертов.** Alert profile с фильтром `type(SERVICE)` включает только сервисные проблемы, `type(HOST)` — только хостовые. Разные команды отвечают за разные уровни: SRE — за хосты, разработчики — за сервисы. Сегментация алертов по типу сущности важна для правильной маршрутизации. Раздел Process group detection в документации Dynatrace объясняет, по каким правилам OneAgent объединяет процессы в одну группу и как это влияет на алерты на уровне Process Group.
 
 **Правильный выбор метрик.** Метрики разных уровней разные. `builtin:host.cpu.usage` — это метрика хоста. `builtin:service.response.time` — метрика сервиса. `builtin:apps.web.actionDuration` — метрика приложения. Путать их нельзя — они живут в разных measurement scope.
 
-**Management Zones.** [Management zones](https://docs.dynatrace.com/docs/shortlink/management-zones) — сегментация сущностей по зонам ответственности (Retail Banking, Corporate Banking, Treasury) — работает на всех уровнях одновременно. Выбрал в верхнем фильтре zone «Retail» — видны только хосты, процессы, сервисы, приложения этой зоны.
-
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/management-zones -->
+**Management Zones.** [Management zones](https://docs.dynatrace.com/managed/shortlink/management-zones) — сегментация сущностей по зонам ответственности (Retail Banking, Corporate Banking, Treasury) — работает на всех уровнях одновременно. Выбрал в верхнем фильтре zone «Retail» — видны только хосты, процессы, сервисы, приложения этой зоны. По умолчанию в окружении можно создать до **5 000 management zones**; правила задаются через UI или текстом через entity selector Environment API v2. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/shortlink/management-zones -->

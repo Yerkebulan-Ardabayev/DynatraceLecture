@@ -1,20 +1,16 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 4 из 11: «Цифровой опыт (Digital Experience Monitoring): основные принципы»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/applications -->
 >
-> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с общими страницами DEM (применимы к Managed: классический RUM/Synthetic/Session Replay в Managed работает идентично — Apps-интерфейс «Users & Sessions» в air-gapped Managed не активирован, поэтому используется Classic UI). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
+> 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: все ссылки на /docs/, /platform/ удалены, оставлены только страницы из раздела `/managed/`. В air-gapped Managed Apps-интерфейс «Users & Sessions» не активирован — используется Classic UI. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (Dynatrace Managed — air-gapped):**
 >
-> **Общая (Managed Classic + SaaS):**
-> - [Digital Experience Monitoring (DEM)](https://docs.dynatrace.com/docs/observe/digital-experience) — корневой раздел: RUM, Mobile RUM, Synthetic, Session Replay
-> - [Real User Monitoring (RUM)](https://docs.dynatrace.com/docs/shortlink/rum) — JavaScript-сниппет, beacon-эндпоинт через ActiveGate, классический UI
-> - [Synthetic Monitoring](https://docs.dynatrace.com/docs/shortlink/synthetic-monitoring) — HTTP- и Browser-мониторы, Private Synthetic Locations
-> - [Session Replay](https://docs.dynatrace.com/docs/shortlink/session-replay) — воспроизведение DOM пользовательской сессии (Player в карточке сессии)
-> - [Apdex ratings](https://docs.dynatrace.com/docs/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings) — концепция Apdex, формула, рейтинги Satisfied / Tolerating / Frustrated
-> - [Adjust Apdex settings for web applications](https://docs.dynatrace.com/docs/observe/digital-experience/web-applications/additional-configuration/configure-apdex-web) — настройка порогов через More → Edit → General settings → Key performance metric thresholds
-> - [Web applications](https://docs.dynatrace.com/docs/observe/digital-experience/web-applications) — корневой раздел про веб-приложения в DEM
-> - [Application detection rules](https://docs.dynatrace.com/docs/observe/digital-experience/web-applications/additional-configuration/application-detection-rules) — правила детектирования веб-приложений по URL/домену (URL starts with / contains / equals)
-> - [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods) — RUM-сессии и Session Replay в Managed Classic хранятся 35 дней (фиксированно, в SaaS Grail настраивается до 10 лет)
+> - [Welcome to Dynatrace Managed Documentation](https://docs.dynatrace.com/managed) — корень раздела для air-gapped инсталляций
+> - [Digital Experience](https://docs.dynatrace.com/managed/observe/digital-experience) — корневой раздел DEM в Managed: RUM-концепции, Web/Mobile/Custom apps, Session segmentation, Session Replay, Synthetic
+> - [Apdex ratings](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings) — 5-уровневая Apdex-шкала (Excellent 0.94-1.0 / Good 0.85-0.94 / Fair 0.7-0.85 / Poor 0.5-0.7 / Unacceptable <0.5) и 3-state user-action ratings (Satisfied / Tolerating / Frustrated)
+> - [Session Replay](https://docs.dynatrace.com/managed/shortlink/session-replay) — захват и воспроизведение сессий пользователя; поддержка Web, Android, iOS (за исключением Cordova / React Native / Flutter / Xamarin / .NET MAUI)
+> - [Synthetic Monitoring](https://docs.dynatrace.com/managed/shortlink/synthetic-monitoring) — 4 типа: single-URL browser monitor, browser clickpath, HTTP monitor, NAM monitor
+> - [Data retention periods](https://docs.dynatrace.com/managed/shortlink/data-retention-periods) — RUM 35 дней, Session Replay configurable max 35 дней, Synthetic max 35 дней (Classic)
 
 ## 📍 КАРТА — где живут данные цифрового опыта
 
@@ -65,10 +61,8 @@
 
 **Как приложение попадает сюда.** Нужно три условия:
 1. OneAgent установлен на веб-сервере или reverse-proxy, через который идут пользовательские запросы (Nginx / Apache на DMZ-серверах).
-2. В **Settings → Web and mobile monitoring → Application settings** создано приложение — указан домен, под которым оно доступно. Правила сопоставления URL настраиваются через [Application detection rules](https://docs.dynatrace.com/docs/observe/digital-experience/web-applications/additional-configuration/application-detection-rules) (URL starts with / contains / equals).
-3. RUM ([Real User Monitoring](https://docs.dynatrace.com/docs/shortlink/rum)) включён. OneAgent автоматически добавляет в HTML-ответы ссылку на JavaScript-сниппет. Сниппет загружается в браузере пользователя, собирает данные и шлёт их через ActiveGate в кластер.
-
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/rum -->
+2. В **Settings → Web and mobile monitoring → Application settings** создано приложение — указан домен, под которым оно доступно. Правила сопоставления URL настраиваются через Application detection rules (URL starts with / contains / equals) — раздел Web and mobile monitoring в документации Dynatrace для вашей версии.
+3. RUM (Real User Monitoring) включён. OneAgent автоматически добавляет в HTML-ответы ссылку на JavaScript-сниппет. Сниппет загружается в браузере пользователя, собирает данные и шлёт их через ActiveGate в кластер.
 
 **Разница между приложением и сервисом.**
 
@@ -102,7 +96,7 @@
 - **Application type** — веб, мобильное.
 - **Application versions** — конкретная версия приложения. Полезно при разборе проблем в новом релизе.
 - **Applications** — конкретное приложение, если их несколько.
-- **User experience score** — Satisfied / Tolerating / Frustrated по Apdex.
+- **User experience score** — Satisfied / Tolerating / Frustrated по Apdex (3-state user-action ratings; общая шкала Apdex от 0 до 1 имеет 5 уровней: Excellent / Good / Fair / Poor / Unacceptable). <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings -->
 - **Errors and annoyances** — только сессии с ошибками или поведенческими раздражителями (rage clicks, навязчивые перезагрузки).
 - **Conversions and bounces** — сессии с бизнес-конверсией (успешный платёж) или отказом (ушёл с первой страницы).
 - **Users** — фильтр по User ID (если в RUM настроен).
@@ -111,9 +105,7 @@
 - **Operating systems** — ОС устройства.
 - **Locations** — страна и город.
 
-**Пример расследования.** Жалоба: «пользователи с Safari на iPhone не могут войти в интернет-банк». Фильтры: **Browser = Safari** + **Operating system = iOS** + **Errors and annoyances = Yes**. В таблице остаются только такие сессии — открываем карточку, смотрим, что именно ломалось. Для воспроизведения конкретного визита используется [Session Replay](https://docs.dynatrace.com/docs/shortlink/session-replay) — запись DOM-состояния экрана, доступная по кнопке **Play** в карточке сессии.
-
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/session-replay -->
+**Пример расследования.** Жалоба: «пользователи с Safari на iPhone не могут войти в интернет-банк». Фильтры: **Browser = Safari** + **Operating system = iOS** + **Errors and annoyances = Yes**. В таблице остаются только такие сессии — открываем карточку, смотрим, что именно ломалось. Для воспроизведения конкретного визита используется Session Replay — запись DOM-состояния экрана, доступная по кнопке **Play** в карточке сессии (требует включённого Session Replay в настройках приложения).
 
 **Таблица справа.** Колонки:
 

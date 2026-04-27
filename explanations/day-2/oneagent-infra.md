@@ -1,23 +1,19 @@
 > 📅 **День 2: Инфраструктура, контейнеры, базы данных, сети** → Тема 2 из 9: «Как OneAgent собирает инфраструктурные метрики»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:oneagent.features -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами OneAgent / Infrastructure monitoring modes (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Все тех-факты сверены свежими WebFetch'ами на `docs.dynatrace.com/managed/` в текущей сессии. Ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (только Dynatrace Managed):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Dynatrace OneAgent — Dynatrace Managed](https://docs.dynatrace.com/managed/ingest-from/dynatrace-oneagent) — раздел OneAgent в Managed-документации (точка входа для air-gapped инсталляций)
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Dynatrace OneAgent — overview](https://docs.dynatrace.com/docs/ingest-from/dynatrace-oneagent) — корневая страница про OneAgent (модули, режимы, поддержка платформ)
-> - [OneAgent — параметрический shortlink](https://docs.dynatrace.com/docs/shortlink/oneagent) — каноническая точка входа для темы OneAgent
-> - [OneAgent installation and operation](https://docs.dynatrace.com/docs/ingest-from/dynatrace-oneagent/installation-and-operation) — установка, обновление, диагностика OneAgent на хосте
-> - [Infrastructure and Discovery monitoring modes](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/monitoring-modes) — Full-Stack / Infrastructure / Discovery — что собирается в каждом режиме
-> - [Process deep monitoring](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/pg-monitoring) — глубокая инструментация процессов и правила её включения
-> - [OneAgent platform and capability support matrix](https://docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix) — какие ОС, какие фичи, какие версии поддерживаются
-> - [Technology support — overview](https://docs.dynatrace.com/docs/ingest-from/technology-support) — поддерживаемые технологии и сенсоры
-> - [Extensions 2.0](https://docs.dynatrace.com/docs/extend-dynatrace/extensions20) — фреймворк расширений (SNMP, JMX, REST) для нестандартного железа
-> - [Extend metrics](https://docs.dynatrace.com/docs/ingest-from/extend-dynatrace/extend-metrics) — способы добавить пользовательские метрики через OneAgent
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
+> - [Dynatrace OneAgent — Managed](https://docs.dynatrace.com/managed/ingest-from/dynatrace-oneagent) — раздел OneAgent в Managed (точка входа для air-gapped инсталляций)
+> - [Install OneAgent on a server — Managed](https://docs.dynatrace.com/managed/ingest-from/dynatrace-oneagent/installation-and-operation) — prerequisites, OS-specific guide (Linux, Windows, AIX, Solaris, zOS)
+> - [Infrastructure and Discovery monitoring modes — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring-modes) — Full-Stack / Infrastructure / Discovery — что собирается в каждом режиме
+> - [Host-level settings — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/configuration) — host-level параметры (Disk options, Anomaly detection, OS services monitoring, EEC и др.)
+> - [OneAgent platform and capability support matrix — Managed](https://docs.dynatrace.com/managed/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix) — поддерживаемые ОС / фичи / версии OneAgent
+> - [Extensions framework — Managed](https://docs.dynatrace.com/managed/extend-dynatrace/extensions) — расширения для нестандартных источников данных
+> - [Extensions 2.0 (shortlink) — Managed](https://docs.dynatrace.com/managed/shortlink/extensions20) — модульные пакеты, EEC, YAML/Python extensions, SNMP/SQL/Prometheus/WMI/JMX
+> - [Data retention periods — Managed](https://docs.dynatrace.com/managed/shortlink/data-retention-periods) — сроки хранения метрик / трейсов / RUM / логов / problems
 
 ## 📍 КАРТА — где управлять сбором инфраструктурных метрик
 
@@ -51,7 +47,7 @@
 
 **Инфраструктурные фичи на этой странице:**
 
-- **eBPF network tracing.** Механизм в ядре Linux, перехватывающий сетевые соединения процессов без модификации приложения. OneAgent видит каждое TCP/UDP-соединение: кто, к кому, на какой порт, с каким трафиком. Из этих данных строится сетевая карта Smartscape. Требуется OneAgent нужной версии и поддержка eBPF в ядре (Linux 4.9+).
+- **eBPF network tracing.** Механизм в ядре Linux, перехватывающий сетевые соединения процессов без модификации приложения. OneAgent видит каждое TCP/UDP-соединение: кто, к кому, на какой порт, с каким трафиком. Из этих данных строится сетевая карта Smartscape. Требуется OneAgent совместимой версии и достаточно свежее Linux-ядро с поддержкой eBPF; конкретные версии указаны в Managed-матрице поддержки OneAgent. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix -->
 
 - **OpenTelemetry ingest.** Приём OTLP-потоков от приложений, инструментированных OpenTelemetry. Альтернатива OneAgent-инструментации для языков, которые OneAgent не поддерживает напрямую. ActiveGate принимает OTLP на специальном endpoint, превращает в Dynatrace-спаны и метрики.
 
@@ -109,9 +105,9 @@
 - **Process observer** (`oneagentwatchdog`) — наблюдение за процессами, группировка, старт инструментации для сервисов.
 - **Code module (loader)** — загрузчик инструментации в адресное пространство приложений (`-javaagent` в JVM, CLR Profiling API в .NET).
 
-**Периодичность сбора и отправки.** OneAgent агрегирует метрики ОС на агенте и публикует их в кластер с **минутной гранулярностью** — это базовая publication-частота для built-in метрик. Внутри агента дискретизация для целей anomaly detection может выполняться чаще (для отдельных метрик хоста — до 10 секунд), но в Data Explorer и в metric events точки с интервалом меньше минуты не видны.
+**Периодичность сбора и отправки.** OneAgent непрерывно собирает базовые ОС-метрики и отправляет их в кластер. Гранулярность точек, которую видно в Data Explorer и в metric events, привязана к timeframe запроса: ближайшие 14 дней — 1 минута, 14–28 дней — 5 минут, 28–400 дней — 1 час, дальше — 1 день (см. лестницу Metrics Classic ниже). <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/data-retention-periods -->
 
-**Адаптивный приоритет.** Если на хосте высокая нагрузка, OneAgent может **снижать** интенсивность собственного сбора, чтобы не добавлять overhead. Поведение саморегулирующееся: в момент стресса агент шлёт меньше деталей, но базовый минутный publication остаётся. По окончании стресса детализация возвращается к норме.
+**Адаптивная нагрузка.** Сам OneAgent спроектирован минимально нагружать хост: собственное потребление CPU/RAM agent держит низким и регулирует интенсивность инструментации в зависимости от нагрузки приложения, чтобы не давать заметного overhead. Базовый publication ОС-метрик от этого не страдает.
 
 ### Что отличает OneAgent от традиционных агентов
 
@@ -150,12 +146,18 @@ prod получает логи, dev нет.
 
 ### Хранение на стороне кластера
 
-- **Distributed traces Classic** — полные детали каждой транзакции хранятся **10 дней** (после 10 дней детализация падает, остаются агрегированные code-level insights). Источник: [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods).
-- **Services Classic / Request attributes** — короткосрочное хранение метрик сервиса для multidimensional-анализа: **35 дней**. Гранулярность зависит от timeframe (от 10 секунд для < 20 минут до 1 минуты для > 1 часа).
-- **RUM Classic** — user actions / user sessions / Session Replay / mobile crashes — все по **35 дней**.
-- **Log Monitoring Classic** — логи хранятся в Elastic File System в зоне кластера. Размер дискового хранилища настраивается в лицензии, фиксированного дефолтного срока в публичной документации не указано.
-- **Metrics Classic** — единый ряд с прореживанием, ретеншн до **5 лет**. Гранулярность по timeframe: 0–14 дней → 1 минута, 14–28 дней → 5 минут, 28–400 дней → 1 час, 400 дней–5 лет → 1 день.
-- **События и Problems** — хранятся в Cassandra, длительный срок. Проблемы остаются доступными для пост-фактум разбора на месяцы и годы (точный дефолт зависит от настроек кластера).
+- **Distributed traces** — конфигурируется, **до 365 дней** максимум. Code-level insights детальные сохраняются **10 дней (фикс)**, дальше остаются агрегаты.
+- **Services: Requests and request attributes** — конфигурируется, **до 365 дней** максимум.
+- **RUM: User action data** — конфигурируется, **до 35 дней** максимум.
+- **RUM: User sessions** — **35 дней (фикс)**.
+- **RUM: Mobile crashes** — **35 дней (фикс)**.
+- **RUM: Session Replay** — конфигурируется, **до 35 дней** максимум.
+- **Log Monitoring Classic** — **35 дней**. Хранятся в Elasticsearch в зоне кластера, размер дискового хранилища задаётся лицензией.
+- **Metrics Classic** — **5 лет** с лестницей гранулярности: 0–14 дней → 1 минута, 14–28 дней → 5 минут, 28–400 дней → 1 час, 400 дней – 5 лет → 1 день.
+- **Davis problems и events** — **14 месяцев**.
+- **OneAgent diagnostics (support archives)** — конфигурируется, по умолчанию **30 дней**.
+
+Все цифры подтверждены: [Data retention periods — Managed](https://docs.dynatrace.com/managed/shortlink/data-retention-periods). <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/data-retention-periods -->
 
 ### Air-gapped нюансы инфраструктурного сбора
 

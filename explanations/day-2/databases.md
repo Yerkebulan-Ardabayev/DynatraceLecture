@@ -1,22 +1,19 @@
 > 📅 **День 2: Инфраструктура, контейнеры, базы данных, сети** → Тема 6 из 9: «Мониторинг БД: Oracle, PostgreSQL, MS SQL, MongoDB»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/databases -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами Database services classic / anomaly detection (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Все тех-факты сверены свежими WebFetch'ами на `docs.dynatrace.com/managed/` в текущей сессии. Ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (только Dynatrace Managed):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Applications and microservices — Dynatrace Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices) — раздел про сервисы (включая БД) в Managed-документации
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Databases — overview](https://docs.dynatrace.com/docs/observe/applications-and-microservices/databases) — корневая страница темы Databases
-> - [Database services classic](https://docs.dynatrace.com/docs/observe/applications-and-microservices/databases/database-services-classic) — классический интерфейс мониторинга БД (используется в Managed)
-> - [How database activity is monitored](https://docs.dynatrace.com/docs/observe/applications-and-microservices/databases/database-services-classic/how-database-activity-is-monitored) — почему клиентская инструментация, как работает перехват SQL-запросов
-> - [Analyze database services (classic page)](https://docs.dynatrace.com/docs/observe/applications-and-microservices/databases/database-services-classic/analyze-database-services) — карточка БД, hotspots, failed statements
-> - [Top database statements](https://docs.dynatrace.com/docs/observe/applications-and-microservices/multidimensional-analysis/top-database-statements) — топ SQL по Total time / Average time
-> - [Database insights](https://docs.dynatrace.com/docs/observe/applications-and-microservices/databases/database-services-classic/database-insights) — расширенная диагностика, включая Oracle insights
-> - [Adjust sensitivity of anomaly detection for database services](https://docs.dynatrace.com/docs/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services-database) — пороги response time, failure rate, failed connects
-> - [Anomaly detection — databases — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-anomaly-detection-databases) — формальная схема страницы Database anomaly detection
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
+> - [Applications and microservices — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices) — раздел про сервисы (включая БД)
+> - [Databases — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases) — корневая страница темы Databases в Managed
+> - [Database services classic — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases/database-services-classic) — классический интерфейс мониторинга БД, automatic detection / analysis / SQL bind variables
+> - [How database activity is monitored — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases/database-services-classic/how-database-activity-is-monitored) — Java/.NET/PHP/Node.js процессы, frameworks JDBC/ADO.NET/PDO
+> - [Analyze database services — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases/database-services-classic/analyze-database-services) — карточка БД, current hotspots, failed statements
+> - [Top database statements — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/multidimensional-analysis/top-database-statements) — топ SQL: fetch count / response time / row count
+> - [Database insights — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases/database-services-classic/database-insights) — Oracle Database Insights (1.173+) через Environment ActiveGate
+> - [Adjust sensitivity of anomaly detection for database services — Managed](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services-database) — Reference period 7 дней, response time / failure rate / failed connects
 
 ## 📍 КАРТА — где смотреть и настраивать базы данных
 
@@ -91,7 +88,7 @@
 
 Страница — глобальные пороги обнаружения проблем для всех БД окружения. Устройство такое же, как `/ui/settings/builtin:anomaly-detection.services` (разобрана в Дне 1, Тема 9). Отличие — один блок, специфичный для баз.
 
-В captured-хедингах виден только заголовок **Reference period**. Это окно истории для построения baseline / базовой линии. По умолчанию Last 7 days. Davis AI анализирует семь дней поведения БД с учётом времени суток и дня недели.
+В captured-хедингах виден только заголовок **Reference period**. Это окно истории для построения baseline / базовой линии. **По умолчанию — past 7 days** (дословная цитата из Managed-документации). Davis AI анализирует семь дней поведения БД с учётом времени суток и дня недели. Reference period можно сбросить и перенабрать заново, если baseline скомпрометирован миграцией или сменой нагрузки. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services-database -->
 
 *Риск:* если за эти семь дней была миграция, новый индекс или резкая смена нагрузки — baseline будет ложно срабатывать несколько дней, пока модель пересчитается.
 
@@ -148,13 +145,14 @@
 - **Anomaly detection.** Дефолтные пороги.
 - **Slowest 10%.** В MSSQL долгие запросы часто указывают на блокировки. Рост этого показателя ловить быстрее обычного.
 
-### Redis
+### MongoDB
 
-*Типичное применение:* кэш, сессии, очереди. Латентность — микросекунды, обычные запросы укладываются в 1 мс.
+*Типичное применение:* документоориентированные данные — каталоги продуктов, контент-сторейджи, события, логи приложений, профили пользователей.
 
-- **OneAgent.** Инструментирует клиентов Redis автоматически — Jedis / Lettuce / StackExchange.Redis и другие популярные драйверы.
-- **Slowest 10%.** Порог понизить. Redis всегда отвечает быстро, рост до миллисекунд — уже деградация.
-- **Failed connects.** Оставить дефолт. Redis очень чувствителен к сетевым проблемам, обычно падает первым в цепочке инцидентов.
+- **OneAgent.** Инструментирует клиентов MongoDB автоматически через стандартные драйверы Java MongoDB Driver, Node.js mongodb, .NET MongoDB.Driver, Python pymongo и др. Каждая операция (find/insert/update/aggregate) попадает в Top Database Statements в виде нормализованного запроса. Если MongoDB развёрнута на отдельных серверах с собственным железом — поставить OneAgent и туда, получим метрики ОС хоста (CPU / Memory / Disk I/O), на которых живёт `mongod`.
+- **Anomaly detection.** Дефолтные пороги обычно подходят для типовых OLTP-нагрузок. Для аналитических agg-запросов на больших коллекциях Slowest 10% поднять — тяжёлые aggregation pipeline могут давать секунды-десятки секунд естественно.
+- **Failed connects.** Оставить дефолт. Replica set с переключением primary при failover нормально вызывает короткие всплески ошибок подключения у клиентов; долгий рост — сигнал реальной сетевой проблемы или развалившегося кворума.
+- **Top Database Statements.** Полезно для поиска тяжёлых aggregation pipeline и full collection scan'ов без индексов. В нормализованном виде запрос вида `{ "find": "orders", "filter": { "status": ? } }` группирует все варианты значения статуса в одну запись.
 
 ---
 
@@ -162,12 +160,12 @@
 
 **Database Service vs Database Host.** Два термина, которые путают. `Database Service / сервис БД` — это БД с точки зрения клиента. Её видит OneAgent через JDBC/ODBC-драйвер приложения. Метрики — время ответа на запрос клиента. `Database Host / хост БД` — физический или виртуальный хост, где живёт процесс БД. Метрики — CPU, Memory, Disk I/O операционной системы. Связаны через Smartscape (Service → Process → Host), но сущности разные. Список `/ui/databases` — это Database Services. На хосты смотреть — Infrastructure → Hosts или drilldown из карточки БД.
 
-**Почему клиентская инструментация.** Dynatrace не подключается к административному интерфейсу БД, не делает `SELECT FROM pg_stat_statements`. Вместо этого — перехват каждого запроса в клиенте. Преимущества:
+**Почему клиентская инструментация.** Dynatrace перехватывает каждый запрос в клиенте: вызовы Java/.NET/PHP/Node.js процессов через стандартные frameworks (JDBC, ADO.NET, PDO) автоматически попадают в мониторинг. Вместо подключения к административному интерфейсу БД (`SELECT FROM pg_stat_statements`) — наблюдение через сам драйвер приложения. Преимущества:
 
 - Нет отдельных учётных записей для мониторинга в каждой БД. Никаких `GRANT SELECT`, `CREATE USER`.
 - Работает с managed-БД в облаке, где административный доступ закрыт (AWS RDS, Azure Database).
 - Видно именно то, что видит приложение — тот же SQL, то же время, те же ошибки.
-- Нулевая нагрузка на саму БД. OneAgent работает на стороне клиента.
+- Нулевая нагрузка на саму БД. OneAgent работает на стороне клиента. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases/database-services-classic/how-database-activity-is-monitored -->
 
 **Ограничение клиентской инструментации.** Видны только запросы инструментированных клиентов. Ночной cron со скриптом на чистом psql — не инструментирован, его запросы не видны. Решения: обернуть в Python/Java с OneAgent или использовать Extensions с прямым опросом БД (JMX, SQL-плагин).
 
@@ -183,6 +181,6 @@ Dynatrace показывает обе метрики отдельно: **Total t
 
 *Особенность:* эта Problem появляется быстрее, чем проблема по времени отклика. Failed connects ловятся за минуту плохих попыток. Для response time нужно несколько минут устойчивого ухудшения. Поэтому Failed connects — самый чувствительный индикатор «БД недоступна» и первым попадает в ServiceNow при сетевых или конфигурационных инцидентах.
 
-**Air-gapped контекст.** Мониторинг БД полностью локален. OneAgent на сервере приложения собирает метрики, отправляет через ActiveGate в кластер, данные живут в Cassandra. Никаких внешних вызовов — ни к облачным сервисам Dynatrace, ни к БД напрямую от кластера. Контур изолирован, мониторинг не создаёт новых каналов связи.
+**Air-gapped контекст.** Мониторинг БД полностью локален. OneAgent на сервере приложения собирает метрики, отправляет через ActiveGate в кластер, данные хранятся внутри кластера. Никаких внешних вызовов — ни к облачным сервисам Dynatrace, ни к БД напрямую от кластера. Контур изолирован, мониторинг не создаёт новых каналов связи. Исключение для Oracle Database Insights — он опрашивает БД с **Environment ActiveGate** (доступен начиная с OneAgent/AG версии 1.173); этот канал внутренний и не выходит за пределы контура. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases/database-services-classic/database-insights -->
 
 **Связь с другими темами.** Проблемы в БД часто идут рука об руку с проблемами хостов (Темы 1 и 3 Дня 2) и ошибками бизнес-сервисов (Темы 7-8 Дня 2). Маршрут расследования: жалоба на сервис → в карточке сервиса блок Database calls → карточка конкретной БД → Top Statements для поиска проблемного SQL → при необходимости хост БД для проверки ресурсов.

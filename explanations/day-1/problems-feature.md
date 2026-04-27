@@ -1,22 +1,16 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 10 из 11: «Функционал Problems: автоматическая детекция инцидентов»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/problems -->
 >
-> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с docs.dynatrace.com (Davis AI Problems / Alerting profiles / Problem notifications — общие концепции для Managed и SaaS, в air-gapped контуре уведомления уходят во внутренние ITSM/SMTP/Teams/Slack без выхода в интернет). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
+> 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: ссылки на /docs/, /platform/, /apps/, /workflows/ удалены, оставлены только страницы из раздела `/managed/`. В air-gapped контуре уведомления уходят во внутренние ITSM/SMTP/Teams/Slack без выхода в интернет. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (Dynatrace Managed — air-gapped):**
 >
-> **Общая (Managed + SaaS):**
-> - [Davis AI](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai) — engine группировки симптомов в Problem
-> - [Davis AI — Root cause analysis](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis) — как Davis определяет корневую причину через Smartscape граф зависимостей
-> - [Notifications and alerting](https://docs.dynatrace.com/docs/analyze-explore-automate/notifications-and-alerting) — корневая страница раздела
-> - [Problem alerting profiles](https://docs.dynatrace.com/docs/analyze-explore-automate/notifications-and-alerting/alerting-profiles) — фильтры по management zone + до 100 severity-rules per profile
-> - [Alerting rules evaluation](https://docs.dynatrace.com/docs/observe-and-explore/notifications-and-alerting/alerting-profiles/alerting-rules-evaluation) — порядок применения правил, OR-логика
-> - [Alerting profiles — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-alerting-profile) — формальная схема страницы Settings → Alerting → Alerting profiles
-> - [Webhook integration for problem notifications](https://docs.dynatrace.com/docs/analyze-explore-automate/notifications-and-alerting/problem-notifications/webhook-integration) — кастомный webhook + плейсхолдеры `{ProblemTitle}`, `{State}` и др.
-> - [Slack integration](https://docs.dynatrace.com/docs/analyze-explore-automate/notifications-and-alerting/problem-notifications/slack-integration)
-> - [Microsoft Teams Connector (Workflows)](https://docs.dynatrace.com/docs/analyze-explore-automate/workflows/actions/microsoft-teams) — отправка уведомлений в MS Teams через Workflows
-> - [Metric events](https://docs.dynatrace.com/docs/shortlink/metric-events) — Davis-движок алертов на метрики через Metrics Selector
-> - [Monitoring unavailable events](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis/concepts/events/event-types/monitoring-unavailable-events) — категория Severity «Monitoring unavailable»
+> - [Welcome to Dynatrace Managed Documentation](https://docs.dynatrace.com/managed) — корень раздела для air-gapped инсталляций
+> - [Davis AI](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai) — корневая страница про anomaly detection, root cause analysis, AI-модели baseline
+> - [Root cause analysis](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis) — context-aware RCA через causal topology, ранжирование аномалий, объединение связанных в Problem
+> - [Manage your Dynatrace Managed](https://docs.dynatrace.com/managed/manage) — администрирование, в котором живут Settings 2.0 для Alerting profiles, Problem notifications и Maintenance windows
+> - [Identity & access management](https://docs.dynatrace.com/managed/manage/identity-access-management) — RBAC для управления Alerting profiles и Problem notifications
+> - [Access tokens — Dynatrace Managed](https://docs.dynatrace.com/managed/manage/access-control/access-tokens) — токены, которыми внешние ITSM (Jira, ServiceNow) опрашивают Problems API
 
 ## 📍 КАРТА — где живут Problems и их настройки
 
@@ -133,15 +127,13 @@
 
 Пример — деградация времени отклика сервиса платежей.
 
-**Фаза 1. Детекция.** В 14:03 медиана времени отклика `payment-service` растёт со 120 мс до 800 мс. [Davis AI](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai), опираясь на baseline с учётом времени дня и дня недели, определяет это как аномалию. Превышает абсолютный и относительный пороги Response time на странице Anomaly detection for services.
+**Фаза 1. Детекция.** В 14:03 медиана времени отклика `payment-service` растёт со 120 мс до 800 мс. Davis AI, опираясь на baseline с учётом времени дня и дня недели, определяет это как аномалию. Превышает абсолютный и относительный пороги Response time на странице Anomaly detection for services.
 
 **Фаза 2. Агрегация.** Davis замечает ту же деградацию на трёх зависимых сервисах — они ждут ответа от `payment-service`. На хосте, где живёт `payment-service`, вырос iowait. Все наблюдения Davis складывает в одну Problem.
 
-**Фаза 3. Определение корневой причины.** Davis анализирует граф зависимостей Smartscape и временные корреляции через механизм [Root cause analysis](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis). Видит: хост, на котором живёт `payment-service`, начал страдать от iowait за минуту до того, как сервис стал медленным. Устанавливает корневую причину — «проблема с диском на хосте `payment-host-03`».
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis -->
+**Фаза 3. Определение корневой причины.** Davis анализирует граф зависимостей Smartscape и временные корреляции через механизм [Root cause analysis](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis) — context-aware подход, использующий причинную топологию для определения коренных причин. Видит: хост, на котором живёт `payment-service`, начал страдать от iowait за минуту до того, как сервис стал медленным. Устанавливает корневую причину — «проблема с диском на хосте `payment-host-03`». <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis -->
 
-**Фаза 4. Уведомление.** Davis создаёт Problem, отправляет в активные проблемы. Привязанные [Alerting profiles](https://docs.dynatrace.com/docs/analyze-explore-automate/notifications-and-alerting/alerting-profiles) срабатывают. В профиль `prod-high-priority` (сервис Production, Impact Application) попадает эта проблема. Все интеграции профиля — email дежурному, Teams в канал `#prod-incidents`, Jira-тикет в проект `DEVOPS` — получают уведомление. Одно на всю проблему, а не пять на разные симптомы.
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/analyze-explore-automate/notifications-and-alerting/alerting-profiles -->
+**Фаза 4. Уведомление.** Davis создаёт Problem, отправляет в активные проблемы. Привязанные Alerting profiles срабатывают. В профиль `prod-high-priority` (сервис Production, Impact Application) попадает эта проблема. Все интеграции профиля — email дежурному, Teams в канал `#prod-incidents`, Jira-тикет в проект `DEVOPS` — получают уведомление. Одно на всю проблему, а не пять на разные симптомы.
 
 **Фаза 5. Работа оператора.** Дежурный получает уведомление, открывает карточку проблемы. Видит: корневая причина — диск на `payment-host-03`. Проваливается в карточку хоста, смотрит метрики диска, замечает заполнение 99%. Логинится на хост, очищает временные файлы. В 14:28 iowait спадает, сервис возвращается к нормальному отклику.
 
@@ -150,7 +142,6 @@
 **Автоматизация.** Вся цепочка работает сама. Администратор один раз настроил:
 - **Anomaly detection** — пороги.
 - **Alerting profiles** — кому и о чём сообщать.
-- **[Problem notifications](https://docs.dynatrace.com/docs/analyze-explore-automate/notifications-and-alerting)** — куда слать.
+- **Problem notifications** — куда слать (раздел Notifications and alerting документации Dynatrace для вашей версии).
 
 Дальше система работает без вмешательства. В air-gapped банковском контуре весь цикл локальный — интеграции ходят во внутренние системы банка (SMTP, внутренний Jira, корпоративный Slack/Teams).
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/analyze-explore-automate/notifications-and-alerting -->

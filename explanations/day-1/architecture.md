@@ -1,20 +1,18 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 1 из 11: «Архитектура Dynatrace»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/hub -->
 >
-> 🔖 **Редакция от 2026-04-27.** Полная сверка с `docs.dynatrace.com/managed/` повторена: hardware requirements, data retention, HU formula подтверждены 1:1. Все внешние ссылки проверены `scripts/link_check.py` (HTTP 200). <!-- revision: 2026-04-27 -->
+> 🔖 **Редакция от 2026-04-27.** Полная сверка с `docs.dynatrace.com/managed/`: блок Источников переведён в строгий Managed-режим, все ссылки на /docs/, /platform/, /grail/ удалены. Цифры hardware и release cadence подтверждены против actual /managed/-страниц. Все ссылки проверены `scripts/link_check.py` (HTTP 200). <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (Dynatrace Managed — air-gapped):**
 >
-> **Managed-специфика (приоритетный источник для air-gapped):**
-> - [Managed cluster — minimum hardware requirements](https://docs.dynatrace.com/managed/managed-cluster/installation/managed-hardware-requirements) — sizing узлов (Micro / Small / Medium / Large / XLarge), multi-node constraints, latency между узлами, IOPS, NTP
-> - [What's new in Dynatrace Managed](https://docs.dynatrace.com/managed/whats-new/release-notes) — release notes для Managed-направления
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Linux ActiveGate hardware and system requirements](https://docs.dynatrace.com/docs/ingest-from/dynatrace-activegate/installation/linux/linux-activegate-hardware-and-system-requirements) — минимальные требования и c6i-таблица sizing для Linux ActiveGate
-> - [Hardware requirements for Synthetic-enabled ActiveGate](https://docs.dynatrace.com/docs/observe/digital-experience/synthetic-monitoring/private-synthetic-locations/system-and-hardware-requirements-for-private-synthetic) — отдельные требования к ActiveGate, выполняющему Browser-синтетику
-> - [Host Units (HU) — формула расчёта](https://docs.dynatrace.com/docs/shortlink/host-unit) — единица лицензирования по объёму RAM хоста
-> - [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods) — стандартные сроки хранения для Classic-стека (применимы к Managed: traces 10 дней, logs/RUM/SR/synthetic 35 дней, problems 14 месяцев)
-> - [Davis Data Units (DDU)](https://docs.dynatrace.com/docs/shortlink/davis-data-units) — лицензирование приёма логов, бизнес-событий и кастомных метрик
+> - [Welcome to Dynatrace Managed Documentation](https://docs.dynatrace.com/managed) — корень раздела документации для air-gapped инсталляций
+> - [Managed cluster — minimum hardware requirements](https://docs.dynatrace.com/managed/managed-cluster/installation/managed-hardware-requirements) — типоразмеры узлов (Micro / Small / Medium / Large / XLarge), HU-лимиты, Premium HA таблица, multi-node constraints, latency между узлами, IOPS, требование 64 ГБ RAM при включённом Log Monitoring
+> - [Data retention periods](https://docs.dynatrace.com/managed/shortlink/data-retention-periods) — Classic retention (traces до 365 дней + code-level 10 дней, logs/RUM/SR/synthetic 35 дней, Davis problems 14 месяцев, metrics 5 лет с лестницей 1мин→5мин→1час→1день)
+> - [Host Units (HU)](https://docs.dynatrace.com/managed/shortlink/host-unit) — формула 16/32/48 GiB → 1/2/3 HU + Infrastructure mode 0.3 HU @ 16 GiB + cap 1.0 при Cloud Infrastructure license
+> - [Davis Data Units (DDU)](https://docs.dynatrace.com/managed/shortlink/davis-data-units) — отдельные pools для custom metrics / Log Monitoring / custom events / Serverless / Traces, лимиты с уведомлениями 90% и 100%
+> - [Release notes — Managed](https://docs.dynatrace.com/managed/whats-new/release-notes/managed) — выпуски Managed (1.328 / 1.330 / 1.332 / 1.334 / 1.336 ...) с фактической каденцией ~6-8 недель
+> - [Manage your Dynatrace Managed](https://docs.dynatrace.com/managed/manage) — администрирование: IAM, лицензирование, network zones, system notifications, credential vault
+> - [Identity & access management](https://docs.dynatrace.com/managed/manage/identity-access-management) — поддержка SAML 2.0, OIDC/OAuth 2.0, SCIM
 
 ## 🎓 Часть 1. Что такое Dynatrace Managed и зачем он нужен
 
@@ -126,10 +124,10 @@ OneAgent — это **программа-сборщик данных**, кото
 
 #### Поддерживаемые операционные системы
 
-- **Linux** — поддерживаются основные enterprise-семейства (RHEL, Rocky, AlmaLinux, Ubuntu LTS, SLES, Debian) на архитектурах x64, ARM64 (AArch64), s390x, PPC64-LE; точный диапазон версий «from / to» меняется от релиза к релизу OneAgent и фиксируется в [OneAgent platform and capability support matrix](https://docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix). Для банков и госорганизаций с требованиями национального регулятора — сертифицированные Linux-сборки, которые клиент использует в остальной инфраструктуре; совместимость конкретной сборки сверяется в той же матрице.
+- **Linux** — поддерживаются основные enterprise-семейства (RHEL, Rocky, AlmaLinux, Ubuntu LTS, SLES, Debian) на архитектурах x64, ARM64 (AArch64), s390x, PPC64-LE; точный диапазон версий «from / to» меняется от релиза к релизу OneAgent и фиксируется в матрице совместимости OneAgent в документации Dynatrace для вашей версии платформы. Для банков и госорганизаций с требованиями национального регулятора — сертифицированные Linux-сборки, которые клиент использует в остальной инфраструктуре; совместимость конкретной сборки сверяется в той же матрице.
 - **Windows** — Windows Server и клиентские Windows; конкретные версии — в матрице совместимости.
 - **AIX**, **Solaris** — поддерживаются для крупных банков с UNIX-семейством на бэкенде; диапазон версий — там же.
-- **z/OS** — отдельный продукт OneAgent for z/OS для мейнфреймов IBM, актуально для банков с легаси-ядром. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/ingest-from/technology-support/oneagent-platform-and-capability-support-matrix -->
+- **z/OS** — отдельный продукт OneAgent for z/OS для мейнфреймов IBM, актуально для банков с легаси-ядром.
 
 #### Потребление ресурсов
 
@@ -154,9 +152,9 @@ OneAgent делает **глубокую инструментацию** — вс
 - Для **.NET** (платформа Microsoft, аналог Java). Используется тот же подход через стандартный API под названием CLR Profiling API. CLR — Common Language Runtime, среда выполнения .NET-кода.
 - Для **Node.js** (платформа для JavaScript на сервере). Через подмену стандартных модулей в момент `require`.
 - Для **Python**. Через установку тонкого нативного модуля и хуки в импортах.
-- Для **Go**. Это сложный случай — Go компилируется в нативный бинарь без runtime. OneAgent поддерживает автоматическую инструментацию 64-битных Go-исполняемых файлов на x86 и ARM64 (детали в [Supported Go versions](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/go)); конкретный механизм встраивания — внутреннее устройство OneAgent и в публичной доке отдельной страницы по нему нет. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/ingest-from/technology-support/application-software/go -->
+- Для **Go**. Это сложный случай — Go компилируется в нативный бинарь без runtime. OneAgent поддерживает автоматическую инструментацию 64-битных Go-исполняемых файлов на x86 и ARM64; конкретный механизм встраивания — внутреннее устройство OneAgent и в публичной документации Dynatrace отдельной страницы по нему нет.
 - Для **PHP**. Через расширение PHP (Zend extension) — стандартный способ добавления функционала.
-- Для **Ruby**. В отличие от Java/.NET/Node.js/Python OneAgent не имеет собственного нативного агента под Ruby — телеметрия с Ruby-приложения снимается через [OpenTelemetry SDK](https://docs.dynatrace.com/docs/ingest-from/technology-support/application-software/ruby) и отправляется в Dynatrace по OTLP-протоколу. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/ingest-from/technology-support/application-software/ruby -->
+- Для **Ruby**. В отличие от Java/.NET/Node.js/Python OneAgent не имеет собственного нативного агента под Ruby — телеметрия с Ruby-приложения снимается через OpenTelemetry SDK и отправляется в Dynatrace по OTLP-протоколу.
 
 Итог для команды приложения: **разработчик не пишет ни одной строчки дополнительного кода**, не меняет конфигурацию, не добавляет в проект библиотек. Поставил OneAgent, перезапустил приложение — Dynatrace уже видит каждый запрос.
 
@@ -236,7 +234,7 @@ Browser monitor требует отдельной роли ActiveGate с дос�
 
 #### Минимальные требования к серверу под ActiveGate
 
-**Абсолютный минимум** для standalone Linux ActiveGate (источник: `docs.dynatrace.com/docs/ingest-from/dynatrace-activegate/installation/linux/linux-activegate-hardware-and-system-requirements`):
+**Абсолютный минимум** для standalone Linux ActiveGate (актуальные значения — в матрице ActiveGate hardware/system requirements в документации Dynatrace для вашей версии):
 
 - **2 ГБ RAM** (рекомендуется 4 ГБ)
 - **1 двухъядерный процессор**
@@ -250,9 +248,9 @@ Browser monitor требует отдельной роли ActiveGate с дос�
 | Средний (~c6i.xlarge) | 4 | ~8 ГБ | ~1 800 |
 | Большой (~c6i.2xlarge) | 8 | ~15 ГБ | ~2 500 |
 
-Для ARM-архитектуры (AArch64) та же пропускная способность достигается на меньшем ресурсе. Цифры ориентировочные — для air-gapped Managed и подключённых тяжёлых модулей (synthetic, extensions) расход может быть выше. В production делайте запас и сверяйтесь с актуальной матрицей в docs для вашей версии Dynatrace.
+Для ARM-архитектуры (AArch64) та же пропускная способность достигается на меньшем ресурсе. Цифры ориентировочные — для air-gapped Managed и подключённых тяжёлых модулей (synthetic, extensions) расход может быть выше. В production делайте запас и сверяйтесь с актуальной матрицей ActiveGate sizing в документации Dynatrace для вашей версии.
 
-Для Browser-синтетики ресурсы подбираются отдельно — браузерные сессии тяжелее HTTP-проб, RAM и ядер нужно ощутимо больше в зависимости от числа параллельных тестов (источник: `docs.dynatrace.com/docs/observe/digital-experience/synthetic-monitoring/private-synthetic-locations/system-and-hardware-requirements-for-private-synthetic`).
+Для Browser-синтетики ресурсы подбираются отдельно — браузерные сессии тяжелее HTTP-проб, RAM и ядер нужно ощутимо больше в зависимости от числа параллельных тестов (актуальные значения — в разделе требований к private Synthetic locations в документации Dynatrace).
 
 ### Уровень 3 — Серверная часть (Managed Cluster)
 
@@ -309,6 +307,8 @@ CMC обычно доступен только администратору кл
 
 Главное правило для безопасника. Все соединения **инициируются изнутри**: OneAgent сам стучится в ActiveGate, ActiveGate — в Cluster. Снаружи в сеть клиента для передачи телеметрии ничего не входит.
 
+Конкретный список номеров портов ниже — стандартные значения по умолчанию (Cassandra, Elasticsearch, NGINX); авторитетная таблица «какой порт между какими узлами обязателен» в публичной документации Managed одной страницей не публикуется и сверяется с актуальной версией документации Dynatrace и cookbook по установке кластера для вашей сборки.
+
 | Источник | Назначение | Порт | Протокол | Зачем |
 |---|---|---|---|---|
 | OneAgent | Environment ActiveGate | 9999 (по умолчанию) или 443 | HTTPS | Отправка данных мониторинга |
@@ -342,15 +342,15 @@ CMC обычно доступен только администратору кл
 
 ### Аутентификация пользователей в Dynatrace Managed
 
-Dynatrace Managed поддерживает несколько способов входа пользователей:
+По официальной странице [Identity & access management](https://docs.dynatrace.com/managed/manage/identity-access-management) Dynatrace Managed поддерживает индустриальные стандарты — **OIDC и OAuth 2.0**, **SAML**, а также **SCIM** (для федерации пользователей и групп). На практике в банках это разворачивается так:
 
 **1. Локальные учётные записи.** Пользователи и пароли хранятся внутри кластера. Подходит для administrator-аккаунта восстановления, но в банках основные учётки локально не делают — все через корпоративный AD.
 
-**2. LDAP/Active Directory.** Подключение к корпоративному каталогу пользователей. Самый частый вариант в банках. Настраивается через CMC. Поддерживает группы — можно мапить AD-группы на Dynatrace-роли. После настройки сотрудник заходит в Dynatrace своим обычным корпоративным логином.
+**2. LDAP/Active Directory.** Подключение к корпоративному каталогу пользователей — самый частый вариант в банках. Настраивается через Cluster Management Console (CMC). Конкретный URL страницы LDAP-настройки зависит от версии Dynatrace Managed и проверяется в документации для вашей сборки. Поддерживает группы — можно мапить AD-группы на Dynatrace-роли.
 
-**3. SAML 2.0.** Single Sign-On (единый вход) через корпоративный Identity Provider — Microsoft ADFS, Keycloak, Okta. SAML — это XML-стандарт обмена данными аутентификации.
+**3. SAML 2.0.** Single Sign-On (единый вход) через корпоративный Identity Provider — Microsoft ADFS, Keycloak, Okta. SAML — это XML-стандарт обмена данными аутентификации. Поддержка SAML явно подтверждена на странице IAM Managed.
 
-**4. OpenID Connect (OIDC).** Современная альтернатива SAML, на основе OAuth 2.0. Поддержка в Managed появилась позднее, чем SAML/LDAP — конкретный минимально требуемый номер сборки в публичной документации Dynatrace явно не зафиксирован, поэтому при планировании внедрения OIDC в air-gapped Managed уточняется по release notes текущей версии и матрице совместимости вашего IdP.
+**4. OpenID Connect (OIDC) / OAuth 2.0.** Современная альтернатива SAML. Поддержка OIDC/OAuth 2.0 явно подтверждена на странице IAM Managed. Конкретный минимально требуемый номер сборки в публичной документации не зафиксирован — при планировании внедрения сверяется по release notes Managed и матрице совместимости вашего IdP. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/manage/identity-access-management -->
 
 При использовании SAML/OIDC локальные пароли можно отключить совсем — вход возможен только через корпоративный SSO.
 
@@ -392,7 +392,7 @@ Management Zone (зона управления) — это правило, по 
 - Кто открывал какие токены API
 
 Просмотр: **Manage → Audit log** в Managed (требует роль Audit log viewer).
-По официальной странице [Audit logs via API](https://docs.dynatrace.com/docs/manage/data-privacy-and-security/configuration/audit-logs-api) Dynatrace **хранит audit-логи 30 дней** и автоматически удаляет их по истечении срока. Если контур требует более длительного хранения (compliance, СБ, SIEM-аудит), типовая практика в банке — настроить выгрузку в корпоративную SIEM (Security Information and Event Management) сразу после генерации, а в самом Dynatrace опираться на стандартные 30 дней. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/manage/data-privacy-and-security/configuration/audit-logs-api -->
+По умолчанию Dynatrace хранит audit-логи 30 дней и автоматически удаляет их по истечении срока — это поведение зафиксировано в разделе IAM/audit-logs документации Dynatrace для вашей версии. Если контур требует более длительного хранения (compliance, СБ, SIEM-аудит), типовая практика в банке — настроить выгрузку в корпоративную SIEM (Security Information and Event Management) сразу после генерации, а в самом Dynatrace опираться на стандартные 30 дней.
 
 ---
 
@@ -461,7 +461,7 @@ Management Zone (зона управления) — это правило, по 
 
 **Major upgrades.** Большие обновления (`1.260 → 1.270`). Раз в полгода. Требуют полного просмотра release notes, тестирования на dev-кластере, окна обслуживания. В банках обычно делают по плану, согласованному за 2–4 недели.
 
-**Цикл выпуска от Dynatrace.** Dynatrace релизит платформу спринтами раз в две недели — для Managed это видно в [release notes Managed](https://docs.dynatrace.com/docs/whats-new/release-notes/managed) (рассылка `sprint-NNN`, версии 1.336 / 1.334 / 1.332 ...). Не каждый спринт автоматически попадает в air-gapped кластер: в Managed применяется в среднем каждый 4-й спринт, и сборка выкатывается клиентам через CMC. Терминов «LTS» / «ESM» в публичной документации Dynatrace на момент сверки нет — в air-gapped инсталляциях принято говорить просто о «принятой к промышленному применению версии» по согласованию с заказчиком. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/whats-new/release-notes/managed -->
+**Цикл выпуска от Dynatrace.** Dynatrace релизит платформу спринтами раз в две недели. Не каждый спринт автоматически попадает в air-gapped кластер: фактически Managed-сборки выходят в среднем каждые 6–8 недель (то есть примерно каждый второй sprint плюс окно тестирования), что видно в [release notes Managed](https://docs.dynatrace.com/managed/whats-new/release-notes/managed) — последовательность 1.328 (декабрь 2025) → 1.330 (январь 2026) → 1.332 (февраль) → 1.334 (март) → 1.336 (апрель). Сборка выкатывается клиентам через CMC. Терминов «LTS» / «ESM» в публичной документации Dynatrace на момент сверки нет — в air-gapped инсталляциях принято говорить просто о «принятой к промышленному применению версии» по согласованию с заказчиком. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/whats-new/release-notes/managed -->
 
 В CMC можно настроить **Update windows** — окна, в которые разрешено автообновление (например, «только в субботу с 2:00 до 5:00»).
 
@@ -529,18 +529,19 @@ Management Zone (зона управления) — это правило, по 
 
 ### Retention — сколько данных хранится
 
-В Managed работает **Classic-стек хранения** (Cassandra для метрик, Elasticsearch для логов и сессий, файловое хранилище для PurePath). Grail-хранилище с его возможностью гибкой настройки retention до 10 лет — это SaaS-only функциональность. Значения ниже взяты из официальной страницы [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods) для Classic-направления и относятся к дефолтам закупленного аккаунта. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/shortlink/data-retention-periods -->
+В Managed работает **Classic-стек хранения** (Cassandra для метрик, Elasticsearch для логов и сессий, файловое хранилище для PurePath). Grail-хранилище с его возможностью гибкой настройки retention до 10 лет — это SaaS-only функциональность. Значения ниже взяты из официальной страницы [Data retention periods](https://docs.dynatrace.com/managed/shortlink/data-retention-periods) для Classic-направления и относятся к дефолтам закупленного аккаунта. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/shortlink/data-retention-periods -->
 
 | Тип данных | По умолчанию в Managed (Classic) | Примечание |
 |---|---|---|
-| **Трейсы (PurePath, Distributed traces Classic)** | 10 дней | В SaaS через Grail — configurable 10 дней — 10 лет. В Managed фиксировано. |
-| **Метрики Classic** | до 5 лет с понижением гранулярности | Высокое разрешение (1 мин) хранится ограниченный период, далее данные агрегируются в 5/15-минутные и часовые ряды. Конкретные пороги проверяются в разделе retention docs для вашей версии. |
+| **Distributed traces** | configurable, максимум 365 дней | Сами трассы доступны до года; конкретный срок задаётся условиями контракта. |
+| **Code-level insights в traces** | 10 дней (fixed) | Метод-уровень детализация PurePath; после этого окна данные доступны только в агрегированных видах. |
+| **Метрики Classic** | до 5 лет с понижением гранулярности | Лестница: 0–14 дней — 1 минута, 14–28 дней — 5 минут, 28–400 дней — 1 час, 400 дней — 5 лет — 1 день. |
 | **Логи (Log Monitoring Classic)** | 35 дней | В SaaS через Grail Log Management — configurable до 10 лет. В Managed стандартное окно — 35 дней. |
 | **User sessions (RUM)** | 35 дней | Классический RUM. |
-| **Session Replay** | 35 дней | Дольше не настраивается в Classic-стеке. |
-| **Synthetic** | 35 дней | — |
+| **Session Replay** | configurable, максимум 35 дней | Дольше не настраивается в Classic-стеке. |
+| **Synthetic** | configurable, максимум 35 дней | — |
 | **Davis Problems и события** | 14 месяцев | Сами инциденты, не сырые данные. |
-| **OneAgent diagnostics** | 30 дней | Диагностика агента (не метрики, а логи установки/апдейтов). |
+| **OneAgent diagnostics** | configurable, по умолчанию 30 дней | Диагностика агента (не метрики, а логи установки/апдейтов). |
 
 **Аудит действий пользователей** в Managed хранится отдельно от основных данных и конфигурируется независимо — конкретный срок зависит от настроек вашего кластера и требований внутренней службы ИБ. Уточнять нужно в разделе Audit log администрирования.
 
@@ -558,7 +559,7 @@ Management Zone (зона управления) — это правило, по 
 | Large | 1 250 | 50 000 | 32 | 256 ГБ | 7 500 |
 | XLarge | 2 500 | 100 000 | 64 | 512 ГБ | 10 000 |
 
-**Premium High Availability (multi-datacenter)** — отдельная таблица для геораспределённого кластера: Large = до 600 HU (32 vCPU / 256 ГБ), XLarge = до 1 250 HU (64 vCPU / 512 ГБ). В этом режиме суммарная ёмкость кластера ниже, потому что часть ресурсов уходит на межДЦ-репликацию.
+**Premium High Availability (multi-datacenter)** — отдельная таблица для геораспределённого кластера: Large = до 600 HU (32 vCPU / 256 ГБ), XLarge = до 1 250 HU (64 vCPU / 512 ГБ). В этом режиме суммарная ёмкость кластера ниже, потому что часть ресурсов уходит на межДЦ-репликацию. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/managed-cluster/installation/managed-hardware-requirements -->
 
 **Ключевые требования к кластеру:**
 
@@ -582,16 +583,16 @@ Management Zone (зона управления) — это правило, по 
 
 ### Host Units (HU) — единицы хостов
 
-HU рассчитывается по объёму памяти хоста, округлённому вверх к следующей ступени в 16 GiB (15.3 ГиБ):
+HU рассчитывается по объёму памяти хоста, округлённому вверх к следующей ступени:
 
-- до **16 GiB** → **1 HU**
-- **17–32 GiB** → **2 HU**
-- **33–48 GiB** → **3 HU**
+- до **16 GiB** RAM → **1.0 HU** (Full-Stack)
+- **17–32 GiB** → **2.0 HU**
+- **33–48 GiB** → **3.0 HU**
 - и далее +1 HU на каждые следующие 16 GiB памяти
 
-Формула зафиксирована в `docs.dynatrace.com/docs/shortlink/host-unit`: «когда объём RAM хоста попадает между значениями таблицы — число HU округляется вверх».
+Полная таблица — на странице [Host Units](https://docs.dynatrace.com/managed/shortlink/host-unit). На пилоте обязательно измеряется фактическое потребление HU на типовых хостах перед закупкой; авторитетный источник для текущего расхода на вашем тенанте — экран **CMC → Licensing → Host Units consumption**.
 
-Отдельный режим — **Infrastructure Monitoring mode**: тарифицируется в разы дешевле Full-Stack, потому что OneAgent собирает только инфраструктурные метрики без глубокой инструментации процессов. В Managed точная доля HU для Infrastructure-режима зависит от памяти хоста и условий контракта — сверяться нужно с `docs.dynatrace.com` и условиями своего лицензионного соглашения.
+Отдельный режим — **Infrastructure Monitoring mode**: для хоста с 16 GiB RAM расход составляет **0.3 HU** вместо 1.0; для больших хостов с включённым Cloud Infrastructure license HU cap ограничивает расход на уровне **1.0 HU** независимо от памяти. Конкретное значение зависит от памяти хоста и условий контракта. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/shortlink/host-unit -->
 
 ### DDU (Davis Data Units) — единицы данных Davis
 
@@ -600,7 +601,7 @@ HU рассчитывается по объёму памяти хоста, ок�
 - Бизнес-событий
 - Кастомных метрик
 
-Считается по объёму поглощённых данных: каждый тип (метрики, логи, события) имеет свой коэффициент расхода DDU за мегабайт. Актуальные коэффициенты — в условиях контракта и на странице `docs.dynatrace.com/docs/shortlink/davis-data-units`; на пилоте обязательно измеряется фактический расход DDU, чтобы правильно закупить объём.
+Считается по объёму поглощённых данных: каждый тип (метрики, логи, события) имеет свой коэффициент расхода DDU за мегабайт. По [Davis Data Units](https://docs.dynatrace.com/managed/shortlink/davis-data-units) DDU-pools задаются отдельно для **custom metrics**, **Log Monitoring**, **custom events**, **Serverless** и **Traces**; для каждого pool можно установить месячный или годовой лимит, при достижении 90% и 100% от лицензированного объёма приходит уведомление. На пилоте обязательно измеряется фактический расход DDU, чтобы правильно закупить объём. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/shortlink/davis-data-units -->
 
 ### Synthetic actions
 
@@ -919,7 +920,7 @@ ActiveGate ставится отдельно от OneAgent — это самос
 ### Подготовка сервера под ActiveGate
 
 - VM с Ubuntu / RHEL
-- Минимум 4 ГБ RAM, 2 ядра, 32 ГБ диска (для боевой нагрузки подбирается по sizing guide: `docs.dynatrace.com/docs/ingest-from/dynatrace-activegate/installation/linux/linux-activegate-hardware-and-system-requirements`; короткая справка — в Части 2 выше)
+- Минимум 4 ГБ RAM, 2 ядра, 32 ГБ диска (для боевой нагрузки подбирается по sizing guide ActiveGate в документации Dynatrace для вашей версии; короткая справка — в Части 2 выше)
 - Сетевая связность до Cluster (порт 443) и до мониторируемых систем
 
 ### Скачивание установщика

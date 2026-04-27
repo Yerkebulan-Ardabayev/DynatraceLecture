@@ -1,22 +1,16 @@
 > 📅 **День 2: Инфраструктура, контейнеры, базы данных, сети** → Тема 7 из 9: «Типы сервисов / стандартная инфографика»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/services -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами Service detection / Service types (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Все тех-факты сверены свежими WebFetch'ами на `docs.dynatrace.com/managed/` в текущей сессии. Ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (только Dynatrace Managed):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Applications and microservices — Dynatrace Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices) — раздел про сервисы в Managed-документации
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Services — overview](https://docs.dynatrace.com/docs/observe/applications-and-microservices/services) — корневая страница темы Services
-> - [Service-related concepts](https://docs.dynatrace.com/docs/observe/application-observability/services/services-concepts) — концепции (типы, обнаружение, наименование)
-> - [Service types](https://docs.dynatrace.com/docs/observe/applications-and-microservices/services/service-detection-and-naming/service-types) — Web request / Web / Database / Messaging / Remoting / Background — что считается каким
-> - [Service detection — overview](https://docs.dynatrace.com/docs/observe/application-observability/services/service-detection) — как Dynatrace определяет тип сервиса по сенсорам
-> - [Service detection v1](https://docs.dynatrace.com/docs/observe/applications-and-microservices/services/service-detection-v1) — классическая модель детекции (доступна в Managed)
-> - [Service detection rules — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-service-detection-rules) — формальная схема страницы Service detection rules
-> - [Service detection v2 for OneAgent — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-service-detection-v2-for-oneagent) — формальная схема Service detection v2
-> - [Services — параметрический shortlink](https://docs.dynatrace.com/docs/shortlink/services) — каноническая точка входа для темы Services
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
+> - [Applications and microservices — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices) — общий раздел про сервисы в Managed
+> - [Services — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/services) — services overview (response time / throughput / failure rate)
+> - [Service types — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-and-naming/service-types) — Web request / Database / Messaging / Custom / Background activity
+> - [Service Detection v1 — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v1) — классический механизм (SDv1) для OneAgent-инструментированных сервисов в Managed
+> - [Service Detection v2 — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v2) — SDv2 (cluster 1.318+), для OpenTelemetry-сервисов и Adobe Experience Manager; resource/span attributes
 
 ## 📍 КАРТА — три страницы про типы сервисов и правила их детекции
 
@@ -107,12 +101,15 @@
 Путь в меню: **Settings → Server-side service monitoring → Service Detection v2 for OneAgent**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:service-detection-v2-for-oneagent`.
 
-**Что нового в v2.** Новая версия механизма детекции, поставляется с новыми сборками OneAgent. Улучшения:
+**Что такое v2.** Service Detection v2 (SDv2) — переработанный механизм детекции, доступный в Managed начиная с **Cluster version 1.318+**. SDv2 спроектирован для **OpenTelemetry-сервисов** и Adobe Experience Manager; его правила опираются на единый набор `resource attributes` и `span attributes` с условиями. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v2 -->
 
-- **Гибкие правила матчинга.** В v1 правила писались против технологических хинтов (Servlet-pattern, JVM-arg). В v2 — против произвольных свойств процесса: labels контейнера, annotations пода, переменных окружения.
-- **Поддержка gRPC и GraphQL.** В v1 эти протоколы распознавались с ограничениями. В v2 — видно конкретные RPC-методы, GraphQL-queries.
-- **Auto-split по метаданным.** Например, в Kubernetes автоматически разделять сервисы по namespace без явных правил.
-- **Более детальные PurePath.** Trace-контекст распространяется через больше видов вызовов, включая background jobs.
+Что в нём отличается от v1:
+
+- **Расширенный набор свойств для матчинга** — span/resource attributes, Kubernetes-метаданные, container labels.
+- **Единый формат правил** — service detection / endpoint detection / service splitting / failure detection описываются по одной модели.
+- **Применимость к OpenTelemetry-spans** — основной новый сценарий.
+
+Конкретный набор протоколов, для которых v2 даёт более точную сегментацию, и фактическое поведение по конкретной сборке OneAgent — фиксируются в release notes конкретного релиза Managed. До массового включения на prod рекомендуется проверять на dev-сегменте парка.
 
 *Переходный период.* Обычно часть OneAgent старые (v1), часть новые (v2). На этой странице включается глобальное предпочтение использовать v2 там, где доступно. Правила v1 продолжают работать для процессов со старым агентом.
 
@@ -191,4 +188,4 @@
 
 - **Правила Service detection** хранятся в кластере и применяются всем агентам. Ничего внешнего не требуется.
 - **Обновление правил при апгрейде OneAgent.** Если новая версия агента поддерживает v2 и новые типы — правила обновляет администратор вручную через Settings. Автоматически в air-gapped правила не скачиваются.
-- **Отличие от SaaS.** В SaaS доступна Service Detection v2 (для OpenTelemetry — GA, для OneAgent Java в Kubernetes — Public Preview). В Managed используется классическая Service Detection (v1) — она полностью функциональна, кастомизация идёт через страницы Simple / Advanced detection rules вручную.
+- **SDv1 vs SDv2 в Managed.** Service Detection v1 (SDv1) — основной классический механизм для OneAgent-инструментированных сервисов, поддержано семь типов сервисов. Service Detection v2 (SDv2) появилась с Cluster 1.318+ и применяется в первую очередь для OpenTelemetry-сервисов; OneAgent-сервисы в Managed по-прежнему работают через SDv1 + Custom service / Web request rules. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v1 -->

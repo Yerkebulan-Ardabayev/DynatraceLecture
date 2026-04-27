@@ -1,22 +1,19 @@
 > 📅 **День 2: Инфраструктура, контейнеры, базы данных, сети** → Тема 1 из 9: «Мониторинг ОС: CPU, RAM, IO, процессы в Dynatrace»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/entity/list/HOST -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами Hosts / OS services monitoring (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Все тех-факты сверены свежими WebFetch'ами на `docs.dynatrace.com/managed/` в текущей сессии. Ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (только Dynatrace Managed):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Hosts — Dynatrace Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts) — раздел Hosts в Managed-документации (точка входа)
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Host monitoring with Dynatrace](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/monitoring/host-monitoring) — концепция инфраструктурного мониторинга, метрики хоста и интервалы сбора
-> - [OS services monitoring](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/monitoring/os-services) — мониторинг Windows-служб и Linux systemd units, политики, требования systemd 230+
-> - [Classic Windows services monitoring](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/monitoring/windows-services) — расширенная конфигурация мониторинга Windows-служб
-> - [Host-level settings](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/configuration) — глобальные/per-host параметры, включая Disk options
-> - [Host anomaly detection](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/configuration/anomaly-detection) — пороги CPU/Memory/Disk + Custom disk-detection rules
-> - [Hosts — параметрический shortlink](https://docs.dynatrace.com/docs/shortlink/hosts) — каноническая точка входа для темы Hosts
-> - [Host Units (HU) — формула лицензирования](https://docs.dynatrace.com/docs/shortlink/host-unit) — единица лицензирования и лестница 16 GiB
-> - [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods) — сроки хранения метрик и логов в Managed Classic
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
+> - [Hosts — Dynatrace Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts) — раздел Hosts в Managed (точка входа)
+> - [Host monitoring with Dynatrace — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/host-monitoring) — концепция инфраструктурного мониторинга и метрики хоста (`builtin:host.disk.*`, throughput, read/write latency)
+> - [OS services monitoring — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/os-services) — мониторинг Windows-служб и Linux systemd units, требования systemd 230+ / 250+
+> - [Host-level settings — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/configuration) — host-level параметры, включая Disk options, Anomaly detection, OS services monitoring
+> - [Host anomaly detection — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/configuration/anomaly-detection) — пороги CPU/Memory/Disk + Custom disk-detection rules (Metric / Threshold / Sample Count / Disk Name Pattern / Host Tags)
+> - [Exclude disks and network traffic — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/configuration/exclude-disks-and-network-traffic) — список ФС, исключаемых по умолчанию (autofs, proc, cgroup, tmpfs), wildcards в путях
+> - [Host Units (HU) — формула лицензирования](https://docs.dynatrace.com/managed/shortlink/host-unit) — единица лицензирования и лестница 16 GiB
+> - [Data retention periods — Managed](https://docs.dynatrace.com/managed/shortlink/data-retention-periods) — сроки хранения метрик и логов (Metrics Classic 5 лет, Log Monitoring Classic 35 дней)
 
 ## 📍 КАРТА — где настраивается и где смотрится мониторинг ОС
 
@@ -81,7 +78,9 @@
 
 *Зачем отдельно.* Критичные компоненты часто регистрируются как службы: СУБД, службы очередей, антивирус, агенты интеграций, драйверы ключей. Если такая служба упала — её процесс не запущен, мониторинг процессов данных не имеет. А сам факт «служба была, сейчас не Running» — важный сигнал.
 
-*Как работает.* OneAgent периодически опрашивает менеджер сервисов и фиксирует статус: Running / Stopped / Paused / Starting / Stopping. Статусы уходят в кластер как метрики.
+*Как работает.* OneAgent периодически опрашивает менеджер сервисов и фиксирует статус. На Windows состояния — Running / Stopped / Paused / Start pending / Stop pending / Continue pending / Pause pending. На Linux (через systemd) — Active / Inactive / Failed / Activating / Deactivating / Reloading. Статусы уходят в кластер как метрика OS service availability. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/os-services -->
+
+*Требование к Linux.* Для связки процессов с сервисами OS требуется `systemd 230+` на хосте; для улучшенной производительности детекции — `systemd 250+`. На более старых дистрибутивах статус сервисов виден, но привязка процесс↔сервис ограничена. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/os-services -->
 
 На странице управление — какие службы мониторить, какие считать критичными (Problem при остановке), какие игнорировать (служебные Windows-сервисы, которые стартуют и падают штатно — `wuauserv`, `bits` и подобные).
 
@@ -107,13 +106,13 @@
 
 **Типовые параметры:**
 
-- **Игнорирование типов файловых систем.** По умолчанию не собираются метрики с сетевых ФС (NFS, SMB/CIFS, Gluster), временных (tmpfs) и служебных (procfs, sysfs). Причина: tmpfs — это память, не диск; NFS может зависнуть при опросе и блокировать агент. Whitelist — если критичные данные лежат на специфичной ФС.
+- **Игнорирование типов файловых систем.** По умолчанию исключаются `autofs`, `proc`, `cgroup`, `tmpfs` — мониторить их бесполезно. Сетевые и специфичные ФС добавляются в exclude-правила вручную при необходимости. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/configuration/exclude-disks-and-network-traffic -->
 
-- **Игнорирование точек монтирования по пути.** Шаблоны `/proc/*`, `/sys/*`, `/var/lib/docker/*`. Скрывают технические монтирования из Smartscape и списков дисков.
+- **Игнорирование точек монтирования по пути.** Можно задавать пути и wildcard'ы: `/disk*` означает «все mount-points, начинающиеся на `/disk`» (`/disk1`, `/disk99`, `/diskabc`); `/staff/*` — все child-папки `/staff`. Правила задаются на уровне environment, host group или host (нижний уровень переопределяет верхний). <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/configuration/exclude-disks-and-network-traffic -->
 
-- **Политика расчёта свободного места.** По умолчанию `available for non-root` — с учётом процента, зарезервированного root под ext3/ext4. Для СУБД на выделенных дисках иногда переключают на `total free`, чтобы точнее видеть запас.
+- **Политика расчёта свободного места.** Для СУБД на выделенных дисках иногда переключают расчёт «свободно» в сторону учёта зарезервированных блоков root, чтобы точнее видеть запас.
 
-- **Частота сбора и отправки метрик.** OneAgent отправляет агрегированные метрики хоста в кластер с минутной гранулярностью — это базовая (publication) частота. Внутри агента дискретизация для целей anomaly detection может идти чаще (до 10 секунд для отдельных метрик), но это не меняет интервал точек, видимых в Data Explorer.
+- **Частота сбора метрик хоста.** OneAgent непрерывно собирает базовые метрики хоста (CPU, memory, disk, network) и публикует их в кластер; гранулярность точек, видимых в Data Explorer, привязана к timeframe запроса. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/host-monitoring -->
 
 Обычно страница трогается один раз при развёртывании: добавляется корпоративный шаблон монтирований для скрытия внутренних путей. Дальше — только при изменениях в инфраструктуре.
 
@@ -130,9 +129,14 @@
 
 **Структура правила:**
 
-- **Scope** — охват: по имени хоста, по хост-группе, по тегам, по точке монтирования (`/backup`, `/var/log`).
-- **Condition** — условие: низкое свободное место (процент или абсолют), низкая скорость записи/чтения, высокое число ошибок I/O, высокая очередь к диску.
-- **Action** — что делать: создать Problem с таким-то Severity, использовать такой-то alerting profile.
+- **Metric** — какую метрику диска контролировать: Available disk space (% или MiB), Available inodes (% или count), Read-only file system (флаг), Read time (мс), Write time (мс).
+- **Rule name** — осмысленное имя правила.
+- **Threshold** — конкретное значение порога.
+- **Sample count** — сколько последовательных замеров должны нарушить порог, чтобы сработал алерт.
+- **Disk name pattern** (опционально) — фильтр по имени диска / точке монтирования (`/backup`, `/var/log`).
+- **Host tags** (опционально) — ограничить правило хостами с заданным тегом.
+
+Правила применяются независимо друг от друга — нельзя комбинировать несколько условий через AND/OR в одном правиле, для разных проверок создаются отдельные правила. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/configuration/anomaly-detection -->
 
 **Типовые правила в практике:**
 
@@ -158,7 +162,7 @@
 
 **На AIX** это чтение аналогов proc и sys через AIX API, взаимодействие с System Resource Controller для сервисов.
 
-**Все эти данные** OneAgent агрегирует и отправляет в кластер через ActiveGate с минутной гранулярностью (это базовая частота publication для built-in метрик). В кластере данные попадают в Cassandra (недавние временные ряды) и в метрики-store для долговременного хранения с прореживанием. Гранулярность точек, видимых в Data Explorer, привязана к timeframe запроса (см. таблицу гранулярности в теме «Как OneAgent собирает инфраструктурные метрики»).
+**Все эти данные** OneAgent агрегирует и отправляет в кластер через ActiveGate. В кластере метрики уходят в долговременное хранение с прореживанием по времени; срок хранения для Metrics Classic — 5 лет с понижением гранулярности. Гранулярность точек, видимых в Data Explorer, привязана к timeframe запроса (см. таблицу гранулярности в теме «Как OneAgent собирает инфраструктурные метрики»). <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/data-retention-periods -->
 
 ### Базовые метрики хоста, которые всегда доступны
 
@@ -174,7 +178,7 @@
 
 **OS Services.** Per-service: name, status (Running/Stopped), start type (Auto/Manual/Disabled), executable path, description.
 
-Все эти метрики доступны в Data Explorer по именам `builtin:host.cpu.*`, `builtin:host.mem.*`, `builtin:host.disk.*`, `builtin:host.net.*`, `builtin:tech.*`, `builtin:os-services.*`.
+Все эти метрики доступны в Data Explorer по именам `builtin:host.cpu.*`, `builtin:host.mem.*`, `builtin:host.disk.*` (например `builtin:host.disk.throughput.read`, `builtin:host.disk.bytesRead`), `builtin:host.net.*`, `builtin:tech.*`, `builtin:os-services.*`. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/host-monitoring -->
 
 ### Сравнение с классическими мониторингами
 
@@ -188,7 +192,7 @@
 
 **Ничего не меняется в механике сбора.** OneAgent опрашивает свою ОС, ActiveGate пересылает в кластер, кластер хранит. Никаких внешних вызовов (к Dynatrace-облаку, в интернет, к внешним API) не происходит.
 
-**Одно ограничение.** AWS/Azure/GCP метаданные хостов (теги EC2, идентификаторы VPC, AZ) требуют облачного API. В air-gapped контуре банковские облачные хосты внутри VPC без NAT в интернет — эти метаданные не прилетают. Если банк хочет видеть их в Dynatrace, нужно настроить ActiveGate с ролью Cloud (`--set-cloud-metadata=true`), стоящий в DMZ с ограниченным доступом к API облака, и он забирает метаданные и пересылает в кластер.
+**Одно ограничение.** AWS/Azure/GCP метаданные хостов (теги EC2, идентификаторы VPC, AZ) требуют доступа к API соответствующего облака. В air-gapped контуре, где облачные хосты внутри VPC без NAT в интернет, эти метаданные не прилетают. ActiveGate, имеющий доступ к API облачного провайдера, способен опрашивать его и передавать метаданные в кластер — конкретные роли и параметры настройки описаны в Managed-документации ActiveGate.
 
 ### Типовые сценарии работы
 

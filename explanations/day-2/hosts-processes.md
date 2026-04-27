@@ -1,22 +1,18 @@
 > 📅 **День 2: Инфраструктура, контейнеры, базы данных, сети** → Тема 3 из 9: «Хосты и процессы: взаимосвязи, показатели, атрибуты»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/entity/list/HOST -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами Process groups / detection rules (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Все тех-факты сверены свежими WebFetch'ами на `docs.dynatrace.com/managed/` в текущей сессии. Ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (только Dynatrace Managed):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Infrastructure observability — Dynatrace Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability) — раздел Hosts/Processes/Containers в Managed-документации
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Process groups — overview](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups) — концепция Process Group и место в иерархии Smartscape
-> - [Process group detection](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/pg-detection) — как Dynatrace формирует Process Groups, простые и расширенные правила
-> - [Declarative process grouping](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/declarative-process-grouping) — современный формат правил, миграция со старого custom-grouping
-> - [Process deep monitoring](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/pg-monitoring) — глубокая инструментация процессов и Process Visibility
-> - [Simple detection rules — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-process-group-simple-detection-rule) — формальная схема страницы Simple detection rules
-> - [Advanced detection rules — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-process-group-advanced-detection-rule) — формальная схема Advanced detection rules
-> - [Organize your environment using host groups](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/configuration/organize-your-environment-using-host-groups) — host group как объект привязки правил
-> - [Hosts — параметрический shortlink](https://docs.dynatrace.com/docs/shortlink/hosts) — каноническая точка входа для темы Hosts
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
+> - [Infrastructure observability — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability) — раздел Hosts / Processes / Containers / Message queues / VMware
+> - [Hosts — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts) — раздел Hosts (точка входа)
+> - [Host monitoring with Dynatrace — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/host-monitoring) — host metrics, process instance snapshots (20 минут окна, 60 мин/день, 100 процессов), trigger при ≥1% CPU/RAM/network
+> - [Organize your environment using host groups — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/configuration/organize-your-environment-using-host-groups) — host groups, `--set-host-group`, влияние на process group detection, лимит 100 символов
+> - [Process groups — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups) — концепция Process Group, авто-merge на основе технологических маркеров (`CATALINA_HOME`, `JBOSS_HOME` и т.п.)
+> - [Process group detection — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/pg-detection) — Simple (только split, Java system property / env variable) vs Advanced (split + merge, составные условия, delimiter-extraction)
+> - [Declarative process grouping — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/declarative-process-grouping) — Settings 2.0 формат, операторы `$prefix`/`$suffix`/`$eq`/`$contains`, OneAgent 1.259+ для Report process group option
 
 ## 📍 КАРТА — семь страниц про хосты, процессы и их группировку
 
@@ -100,9 +96,9 @@
 **Поля правила:**
 
 - Имя правила.
-- **Match condition** — что ищем: substring в command line, prefix в executable path, значение environment variable, открытый TCP-порт.
+- **Match condition** — что ищем: значение environment variable либо Java system property (для JVM-процессов). Это два основных источника, поддерживаемых Simple-формой.
 - **Match value** — конкретное значение.
-- **Action** — имя Process Group, технология, какие метрики снимать.
+- **Action** — выделить новую Process Group по совпадению (Simple умеет только split — это явно подтверждено в Managed-документации; merge — на странице Advanced detection rules). <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/pg-detection -->
 
 **Simple vs Advanced.** Simple закрывает большинство случаев: распознать приложение по одному признаку. Advanced нужен для логических выражений `(path contains "myapp") AND (env DT_STAGE = prod) AND (port == 8080)`. Рекомендация: начинать с Simple, переходить на Advanced, когда Simple не хватает.
 
@@ -189,18 +185,18 @@
 
 Страница — про **сбор детальных снимков состояния процесса** для углублённой диагностики.
 
-Когда включено, OneAgent периодически (раз в несколько минут) делает «фотографию» процесса: список открытых файлов, сетевых соединений, загруженных библиотек, JVM thread dump (для Java), переменных среды, агрегированный stack trace главных потоков.
+Снимки делаются **по триггеру**, не по расписанию. OneAgent активирует сбор детальных метрик процесса автоматически, когда процесс превышает 1% потребления CPU, памяти или сети, а также при ручном запросе через меню «Request process snapshot now» (данные появляются после reload в течение 90 секунд). Один снимок содержит **20 минут данных: 10 минут до триггера и 10 минут после**. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/host-monitoring -->
 
-*Зачем.* В критический момент расследования «сервис подвис, не отвечает» — админ проваливается в карточку процесса, открывает Instance snapshots. Видит: какие потоки в Blocked, на какие файловые блокировки ждут, какие сокеты открыты но не читаются. Это ответ на «почему процесс не работает», когда стандартных CPU / Memory недостаточно.
+*Что попадает в снимок.* Для каждого процесса — счётчики CPU / памяти / сети, открытые файлы и сокеты, загруженные библиотеки. Для JVM-процессов дополнительно — thread dump главных потоков. Эти данные позволяют ответить на «почему процесс не отвечает», когда стандартных хостовых метрик недостаточно.
 
 **Настройки:**
 
-- **Enable process instance snapshots** — главный тумблер.
-- **Frequency** — каждую минуту / каждые 5 минут / каждые 10 минут. Чаще — больше данных для диагностики и больше нагрузки.
-- **Scope** — какие хосты / процессы. По умолчанию все сервисные процессы. В крупных инсталляциях ограничивают критичными.
-- **Retention** — сколько дней хранятся снимки. По умолчанию до 7 дней.
+- **enabled** — главный тумблер активации фичи.
+- **Maximum/default — 100 процессов** в одном снимке (можно понизить).
 
-**Типовое применение.** Включают для production-хостов с критичными сервисами. Для dev и test выключают — экономия ресурсов. Ревью списка «какие процессы снимаются» раз в квартал, чтобы отсекать устаревшие правила.
+**Лимит на хост:** каждый хост шлёт суммарно **до 60 минут** таких метрик в сутки. Метрики собираются с минутным интервалом внутри окон вокруг триггеров. Когда суточный лимит исчерпан — новые снимки в этот день не пишутся. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/host-monitoring -->
+
+**Типовое применение.** Включают для production-хостов с критичными сервисами. Для dev и test выключают — экономия квоты 60 мин/день. Ревью списка процессов раз в квартал.
 
 ---
 

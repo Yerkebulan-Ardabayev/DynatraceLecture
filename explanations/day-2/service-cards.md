@@ -1,24 +1,17 @@
 > 📅 **День 2: Инфраструктура, контейнеры, базы данных, сети** → Тема 8 из 9: «Сравнение периодов, анализ времени отклика, ключевые запросы»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/services -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами Services-classic / Service flow / PurePath (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Все тех-факты сверены свежими WebFetch'ами на `docs.dynatrace.com/managed/` в текущей сессии. Ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (только Dynatrace Managed):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Applications and microservices — Dynatrace Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices) — раздел про сервисы в Managed-документации
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Services — overview](https://docs.dynatrace.com/docs/observe/applications-and-microservices/services) — корневая страница темы Services
-> - [Services classic — overview](https://docs.dynatrace.com/docs/observe/application-observability/services-classic) — классическая карточка сервиса (используется в Managed)
-> - [Service analysis timings](https://docs.dynatrace.com/docs/observe/application-observability/services-classic/service-analysis-timing) — Distributed traces / Response time / Service flow — какой timing откуда берётся
-> - [Service flow](https://docs.dynatrace.com/docs/observe/application-observability/services-classic/service-flow) — построение цепочек вызовов из PurePath, агрегация по парам сервисов
-> - [Distributed traces — overview](https://docs.dynatrace.com/docs/observe/application-observability/distributed-traces) — концепция распределённой трассировки PurePath
-> - [Get started with Distributed Traces](https://docs.dynatrace.com/docs/observe/application-observability/distributed-traces/analysis/get-started) — точка входа в анализ трейсов
-> - [Adjust sensitivity of anomaly detection for services](https://docs.dynatrace.com/docs/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services) — пороги response time, failure rate, throughput
-> - [Anomaly detection — services — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-anomaly-detection-services) — формальная схема страницы Service anomaly detection
-> - [Unified services endpoint metrics — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-unified-services-endpoint-metrics) — формальная схема endpoint-level метрик
-> - [Services — параметрический shortlink](https://docs.dynatrace.com/docs/shortlink/services) — каноническая точка входа для темы Services
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
+> - [Applications and microservices — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices) — общий раздел про сервисы в Managed
+> - [Services — Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/services) — services overview (response time / throughput / failure rate)
+> - [Service analysis timings — Managed](https://docs.dynatrace.com/managed/observe/application-observability/services-classic/service-analysis-timing) — типы timing'а: response time / processing time / execution time / suspension / wait / lock / network I/O / disk I/O / CPU / self time; в каких analysis-типах какие появляются
+> - [Service flow — Managed](https://docs.dynatrace.com/managed/observe/application-observability/services-classic/service-flow) — последовательность service calls для каждого запроса, dynamic aggregation минорных сервисов
+> - [Adjust sensitivity of anomaly detection for services — Managed](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services) — пороги response time / failure rate / throughput
+> - [Data retention periods — Managed](https://docs.dynatrace.com/managed/shortlink/data-retention-periods) — Distributed traces 365 (cfg) / Services 365 (cfg) / Metrics Classic 5 лет с лестницей
 
 ## 📍 КАРТА — три страницы про детальный анализ сервиса
 
@@ -170,7 +163,7 @@
 
 ### Какие данные агрегируются
 
-**Response time.** Время от прихода запроса в сервис до отправки ответа. Включает все backend-вызовы рекурсивно. OneAgent измеряет на уровне инструментационных хуков в начале и конце обработки. Значение агрегируется в Services Classic data store с гранулярностью, зависящей от timeframe запроса (10 секунд для timeframe < 20 минут, до 1 минуты для timeframe > 1 часа), и хранится 35 дней. Долгосрочно метрика идёт также в Metrics Classic с собственной лестницей прореживания (см. тему «Как OneAgent собирает инфраструктурные метрики»).
+**Response time.** Время от прихода запроса в сервис до отправки ответа. Включает все backend-вызовы рекурсивно. OneAgent измеряет на уровне инструментационных хуков в начале и конце обработки. Метрики «Services: Requests and request attributes» хранятся **до 365 дней** (configurable). Долгосрочно метрика идёт также в Metrics Classic с собственной лестницей прореживания: 0–14 дней → 1 минута, 14–28 дней → 5 минут, 28–400 дней → 1 час, 400 дней – 5 лет → 1 день. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/data-retention-periods -->
 
 **Throughput.** Число запросов в минуту. Простой счётчик на стороне OneAgent.
 
@@ -182,7 +175,9 @@
 
 *Основа — распределённые трейсы (PurePath).* Каждый запрос в инструментированном сервисе получает заголовок `x-dynatrace` с trace ID и span ID. Исходящий вызов — OneAgent добавляет этот заголовок в запрос. Принимающий сервис видит trace и связывает свои данные с контекстом вызова.
 
-*Service flow* — агрегация всех таких трейсов за период. Для каждой пары сервисов — число вызовов, среднее время, частота ошибок. Граф строится из этих данных.
+*Service flow* — агрегация всех таких трейсов за период. Для каждой пары сервисов — число вызовов, среднее время, частота ошибок. Граф строится из этих данных. Для читаемости при большом числе участников Dynatrace применяет dynamic aggregation — сервисы с малой долей в общем времени отклика автоматически сворачиваются в группы.
+
+Service flow — самое крупнозернистое представление timing'а сервиса. Более детальные срезы — Response time (на уровне методов внутри сервиса) и Distributed Traces (на уровне отдельных нод трейса с разбивкой processing / suspension / wait / lock / I/O). <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/application-observability/services-classic/service-analysis-timing -->
 
 *Ограничения.* Если сервис не инструментирован (не-OneAgent, legacy), он виден как External service без детализации. Если между сервисами нестандартный протокол (бинарный, кастомный), PurePath может не распространиться, связь в графе теряется.
 
@@ -200,6 +195,6 @@
 
 **Вся механика локальна.** PurePath собирается в кластере, метрики агрегируются в Cassandra, карточка сервиса отрисовывается через API кластера.
 
-**Долгосрочное хранение метрик.** Metrics Classic хранятся до **5 лет** с прореживанием по timeframe (0–14 дней — 1-минутная гранулярность, 14–28 дней — 5 минут, 28–400 дней — 1 час, 400 дней–5 лет — 1 день). Для request attributes / services data — 35 дней с переменной гранулярностью; PurePath-детализация — 10 дней. Точные параметры подтверждены в [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods). Расширения retention в Managed настраиваются в лицензии через CMC, либо через экспорт в отдельную долгосрочную систему через API.
+**Долгосрочное хранение метрик.** Metrics Classic хранятся до **5 лет** с прореживанием по timeframe (0–14 дней — 1-минутная гранулярность, 14–28 дней — 5 минут, 28–400 дней — 1 час, 400 дней–5 лет — 1 день). Distributed traces — конфигурируется, **до 365 дней** максимум; код-уровень insights детально 10 дней (фикс). Services: Requests and request attributes — конфигурируется, **до 365 дней** максимум. Точные параметры — в [Data retention periods — Managed](https://docs.dynatrace.com/managed/shortlink/data-retention-periods). Расширения retention в Managed настраиваются в лицензии через CMC, либо через экспорт в отдельную долгосрочную систему через API. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/data-retention-periods -->
 
 **Метаданные облачных хостов.** Если хост в частном облаке (AWS / Azure / GCP) — Dynatrace видит облачные метаданные только при наличии Cloud ActiveGate с соответствующей ролью. В полностью on-premises контуре ограничение не применяется.

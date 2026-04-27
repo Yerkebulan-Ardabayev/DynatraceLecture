@@ -1,18 +1,16 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 6 из 11: «Топология Smartscape»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/diagnostictools/purepaths -->
 >
-> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с `docs.dynatrace.com/docs/shortlink/smartscape` (Smartscape — общая концепция OneAgent для Managed и SaaS). При перепроверке найдено и исправлено: stale-entity timeout — по docs **72 часа без активности** (плюс пунктирная линия для 2 часов), а не 30 минут. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
+> 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: ссылки на /docs/, /platform/, /apps/ удалены, оставлены только страницы из раздела `/managed/`. Stale-entity timeout 72 часа (с пунктирной линией для 2 часов) подтверждено в Сессии 4. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (Dynatrace Managed — air-gapped):**
 >
-> **Общая (Managed + SaaS):**
-> - [Smartscape — auto-discovered topology](https://docs.dynatrace.com/docs/shortlink/smartscape) — корневая страница про Smartscape: 4 уровня (Applications / Services / Process Groups / Hosts), вертикальные и горизонтальные связи
-> - [Hosts](https://docs.dynatrace.com/docs/shortlink/hosts) — Hosts-уровень Smartscape, перечень и фильтры
-> - [Services](https://docs.dynatrace.com/docs/observe/application-observability/services) — Services-уровень, типы, метрики
-> - [Distributed traces](https://docs.dynatrace.com/docs/observe/application-observability/distributed-traces) — раздел Distributed Traces, где живут PurePath (горизонтальные связи между сервисами)
-> - [Process group detection](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/pg-detection) — Process Groups-уровень: как OneAgent объединяет процессы в одну сущность
-> - [Extensions 2.0](https://docs.dynatrace.com/docs/extend-dynatrace/extensions20) — расширения для систем без OneAgent (SNMP / JMX / JDBC / Prometheus), узлы которых появляются в Smartscape
-> - [Davis AI Root cause analysis](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis) — как Davis использует Smartscape для определения корневой причины
+> - [Welcome to Dynatrace Managed Documentation](https://docs.dynatrace.com/managed) — корень раздела для air-gapped инсталляций
+> - [Smartscape](https://docs.dynatrace.com/managed/shortlink/smartscape) — 5 уровней (Applications/Services/Processes/Hosts/Data Centers), 72ч окно отображения, stale-connection 72ч, 2ч пунктирная линия
+> - [Davis AI — Root cause analysis](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis) — RCA опирается на causal topology Smartscape для определения коренных причин
+> - [Observe](https://docs.dynatrace.com/managed/observe) — корень раздела Observe в Managed-документации (где живут карты Hosts/Services/Process Groups)
+> - [Service Detection v1](https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1) — типы сервисов в Smartscape (Web/Database/Messaging/Background activity)
+> - [Manage your Dynatrace Managed](https://docs.dynatrace.com/managed/manage) — администрирование (где лежит Smartscape Topology в навигации Managed UI)
 
 ## 📍 КАРТА — Smartscape в интерфейсе
 
@@ -62,16 +60,14 @@
 
 ### Принцип
 
-[Smartscape](https://docs.dynatrace.com/docs/shortlink/smartscape) — это **карта зависимостей всей инфраструктуры**, которая обновляется непрерывно на основе данных OneAgent. Никаких конфигурационных файлов, никакой ручной прорисовки связей.
+Smartscape — это **карта зависимостей всей инфраструктуры**, которая обновляется непрерывно на основе данных OneAgent. Никаких конфигурационных файлов, никакой ручной прорисовки связей.
 
 Что OneAgent видит на каждом хосте:
 - **Сетевые соединения процессов** — кто к кому подключается, на какой порт, с какой интенсивностью.
 - **Вызовы внутри приложений** — через инструментацию кода OneAgent фиксирует каждый входящий и исходящий HTTP-запрос, каждый SQL-вызов, каждую отправку в очередь.
 - **Ресурсная топология** — какой процесс на каком хосте, в каком контейнере, в каком Kubernetes-поде, на какой VM.
 
-Эти данные OneAgent отправляет в кластер через ActiveGate. Кластер собирает данные со всех хостов в единый граф и обновляет его постоянно: новое соединение появляется на карте сразу. Если соединение или сервис не получают активности **более 72 часов**, узел исчезает с карты Smartscape Classic; промежуточный сигнал — пунктирная линия для соединений без трафика последние 2 часа. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/shortlink/smartscape -->
-
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/shortlink/smartscape -->
+Эти данные OneAgent отправляет в кластер через ActiveGate. Кластер собирает данные со всех хостов в единый граф и обновляет его постоянно: новое соединение появляется на карте сразу. По [официальной странице Smartscape](https://docs.dynatrace.com/managed/shortlink/smartscape) карта отображает данные за **последние 72 часа** (timeframe selector не применяется); если соединение или сервис не получают активности более **72 часов**, узел или связь исчезает. Промежуточный сигнал — **пунктирная линия** для соединений без запросов более **2 часов**. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/shortlink/smartscape -->
 
 ### Четыре уровня Smartscape
 
@@ -86,11 +82,11 @@
 
 **Вертикальные связи** идут сверху вниз: приложение вызывает сервисы, сервис работает в одной или нескольких группах процессов, группа процессов — на одном или нескольких хостах, хост — в дата-центре.
 
-**Горизонтальные связи** — вызовы между сущностями одного уровня. Самое важное — между сервисами: PaymentService вызывает AccountService, AccountService вызывает CoreBanking-базу. Из таких связей собирается PurePath — сквозная трассировка в разделе [Distributed Traces](https://docs.dynatrace.com/docs/observe/application-observability/distributed-traces).
+**Горизонтальные связи** — вызовы между сущностями одного уровня. Самое важное — между сервисами: PaymentService вызывает AccountService, AccountService вызывает CoreBanking-базу. Из таких связей собирается PurePath — сквозная трассировка в разделе **Application Observability → Distributed Traces** в Managed UI.
 
 ### Зачем Smartscape нужен на практике
 
-[Davis AI Root cause analysis](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis) опирается именно на топологию Smartscape, чтобы в момент аномалии автоматически построить цепочку причин — от симптома на верхнем уровне до сущности-источника внизу.
+[Davis AI Root cause analysis](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis) опирается именно на топологию Smartscape: применяется context-aware подход с causal topology для определения корневых причин, ранжирование аномалий и объединение связанных в одну Problem. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis -->
 
 **Анализ влияния инцидента.** На хосте `app-prod-03` проблема с диском. Открываем карточку хоста → видим список Process Groups → от каждого связи к Services → от Services к Applications. Сразу понятно, какие приложения пострадают и через них — какие команды. Без Smartscape пришлось бы руками разбираться с CMDB.
 
@@ -104,6 +100,4 @@
 
 Smartscape не зависит от интернета. Всё строится на данных OneAgent и ActiveGate внутри контура — работает одинаково с облачной версией.
 
-Единственное ограничение — сущности **без OneAgent** (старые сетевые маршрутизаторы, legacy-системы без поддержки агента). Они видны только как дальний конец соединения («какой-то наш сервис ходит на IP X»), без деталей. Чтобы дополнить картину, используются [Extensions 2.0](https://docs.dynatrace.com/docs/extend-dynatrace/extensions20) — плагины на ActiveGate, снимающие данные через SNMP, JMX, SQL. Данные от Extensions появляются в Smartscape как отдельные узлы, и карта становится полной.
-
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/docs/extend-dynatrace/extensions20 -->
+Единственное ограничение — сущности **без OneAgent** (старые сетевые маршрутизаторы, legacy-системы без поддержки агента). Они видны только как дальний конец соединения («какой-то наш сервис ходит на IP X»), без деталей. Чтобы дополнить картину, используются Extensions 2.0 — плагины на ActiveGate, снимающие данные через SNMP, JMX, SQL (раздел Extend Dynatrace → Extensions 2.0 в документации Dynatrace для вашей версии). Данные от Extensions появляются в Smartscape как отдельные узлы, и карта становится полной.

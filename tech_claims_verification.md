@@ -202,6 +202,67 @@ User жёстко указал: «нет все проверяй» — Сесс�
 
 ---
 
+## Сессия 6 (2026-04-27) — Day 2 независимая перепроверка
+
+User указал: «все содержание по этому дню проверяй». Сессия 3 (2026-04-26) уже сделала аудит, но по правилу промта «НЕ доверять прошлой сессии без перепроверки». Запущен полный pass с WebFetch на /managed/ + /docs/ для каждого файла.
+
+**Найдено и исправлено 7 фактических неточностей (помимо тех, что уже закрыты Сессией 3):**
+
+| # | Claim (было) | File:line | Источник правды | Решение |
+|---|---|---|---|---|
+| 35 | Состояния OS services «Running / Stopped / Paused / Starting / Stopping» (как универсальный список) | `day-2/os-monitoring.md` Шаг 2 | [OS services monitoring](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/monitoring/os-services): Windows = Running / Stopped / Paused / Start-Stop-Continue-Pause pending; Linux (systemd) = Active / Inactive / Failed / Activating / Deactivating / Reloading | ⚠️ **переписан**: разделены состояния Windows и Linux (systemd) + добавлено требование `systemd 230+` для связки процесс↔сервис |
+| 36 | Custom disk-detection rules conditions: «низкое свободное место, низкая скорость записи/чтения, **высокое число ошибок I/O, высокая очередь к диску**» | `day-2/os-monitoring.md` Шаг 4 | [Host anomaly detection](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/configuration/anomaly-detection): метрики только Available disk space (%/MiB), Available inodes, Read-only file system, Read time (мс), Write time (мс). I/O errors и queue length — **не задокументированы** для классических custom rules | ❌ **переписан**: оставлены только подтверждённые метрики + добавлено «правила применяются независимо, нельзя комбинировать через AND/OR» |
+| 37 | «Log Monitoring Classic — размер дискового хранилища настраивается в лицензии, фиксированного дефолтного срока в публичной документации не указано» | `day-2/oneagent-infra.md:156` | [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods): «Log Monitoring Classic — **35 дней** retention period» | ❌ **исправлено**: 35 дней с прямой ссылкой; добавлены недостающие строки про Davis problems = 14 месяцев и OneAgent diagnostics = 30 дней |
+| 38 | Simple detection rule поля: «substring в command line, prefix в executable path, env variable, **открытый TCP-порт**» + «Action — имя Process Group, технология, **какие метрики снимать**» | `day-2/hosts-processes.md` Шаг 3 | [PG detection](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/pg-detection): Simple rules используют только env vars + Java system properties; могут только split (merge — на Advanced). TCP-port и executable path как Simple-поля не подтверждены | ⚠️ **переписан**: оставлены env vars + JVM properties; уточнено «Simple умеет только split, merge на странице Advanced» |
+| 39 | Process instance snapshots: «Frequency — каждую минуту / каждые 5 минут / каждые 10 минут» + «Retention — по умолчанию до 7 дней» + «OneAgent периодически делает фотографию» | `day-2/hosts-processes.md` Шаг 7 | [Process visibility schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-process-visibility): сбор по триггеру (high CPU/memory/network/availability change/manual), не по расписанию; интервалы захвата ±10 мин от триггера; лимит 60 минут на хост в сутки; max 100 процессов; **никаких 1/5/10 min опций и никаких 7 дней retention в публичной доке** | ❌ **переписан полностью**: триггер-based сбор, окно ±10 мин, лимит 60 мин/день, maxProcesses 100. «1/5/10 min frequency» и «7 days retention» удалены как выдумка |
+| 40 | Built-in container monitoring rules: «Официальные Docker-образы nginx:* / redis:* / postgres:* / mongo:* / rabbitmq:* / k8s.gcr.io/* / Sidecar Istio Linkerd / AWS ECR Google GCR Azure ACR» | `day-2/containers.md` Шаг 2 | [Container monitoring rules](https://docs.dynatrace.com/docs/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules): официально — только **3 built-in rules**: pod=POD, image contains pause-amd64, namespace=openshift-sdn. Распознавание nginx/postgres и т.п. — на странице Built-in process monitoring rules (не container) | ❌ **переписан**: оставлены только 3 реально задокументированных встроенных правила; добавлено пояснение, что прикладные технологии распознаются на process-level странице |
+| 41 | Custom container monitoring rules actions: «Enable / Disable / **Force deep monitoring / Exclude from metrics**» | `day-2/containers.md` Шаг 3 | Та же страница: actions только Enable/Disable monitoring; matchers — container property с операторами вида `begins with`. **Force deep / Exclude from metrics не задокументированы** | ⚠️ **смягчён**: оставлены Enable/Disable + добавлено критическое ограничение «не работают в режимах cloudNativeFullStack / applicationMonitoring через webhook» |
+| 42 | Блок СУБД: COOKBOOK содержит **Redis вместо MongoDB**, хотя в заголовке темы 4 БД (Oracle/PostgreSQL/MS SQL/**MongoDB**) | `day-2/databases.md` COOKBOOK раздел 4 | Программа курса PDF + промт-требование «databases.md обязательно покрывает все 4 СУБД дословно» | ❌ **исправлено**: Redis-блок заменён на MongoDB (Java MongoDB Driver / Node.js mongodb / .NET MongoDB.Driver / Python pymongo, нормализация запросов find/insert/update/aggregate, replica set failover в Failed connects, тяжёлые aggregation pipeline в Slowest 10%) |
+| 43 | SDv2 «Поддержка gRPC и GraphQL — видно конкретные RPC-методы, GraphQL-queries» + «Auto-split по метаданным» + «Более детальные PurePath» | `day-2/services-overview.md` Шаг 3 | [Service Detection v1](https://docs.dynatrace.com/docs/observe/applications-and-microservices/services/service-detection-v1): SDv2 = GA для OpenTelemetry, Public Preview для OneAgent Java в K8s. Конкретные protocol-claims (GraphQL/gRPC details) и auto-split поведение в публичной доке для Managed не зафиксированы | ⚠️ **смягчён**: убраны конкретные protocol-claims, оставлены подтверждённые отличия (расширенные свойства, OpenTelemetry-spans, перезагрузка без перезапусков); добавлена ссылка на release notes конкретного релиза |
+
+**Подтверждены без изменений (выборка):**
+
+| Claim | File:line | Источник | Решение |
+|---|---|---|---|
+| Service flow строится из distributed traces (PurePath); dynamic aggregation для читаемости | `day-2/service-cards.md` ТЕОРИЯ Service flow | [Service flow](https://docs.dynatrace.com/docs/observe/application-observability/services-classic/service-flow) — точные формулировки 1:1; добавлено упоминание dynamic aggregation | ✅ **подтверждён** + усилен через last-verified |
+| Service analysis timing — три уровня (DT detailed → RT method-level → SF service-call-level) | `day-2/service-cards.md` ТЕОРИЯ Service flow | [Service analysis timing](https://docs.dynatrace.com/docs/observe/application-observability/services-classic/service-analysis-timing) — три уровня подтверждены | ✅ **подтверждён** (новая ссылка добавлена) |
+| Database anomaly detection — 5 типов (Response time / Failure rate / Service load drops / Service load spikes / Failed connects) + Reference period 7 days | `day-2/databases.md` Шаг 2 | [Adjust sensitivity — databases](https://docs.dynatrace.com/docs/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services-database) — 5 типов и 7 дней reference period 1:1 | ✅ **подтверждён** + last-verified |
+| Davis context-aware RCA: использует topology + transaction + code-level info + ранжирует contributors; вертикальные и горизонтальные зависимости | `day-2/problems-navigation.md` ТЕОРИЯ | [RCA concepts](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/root-cause-analysis/concepts) — все формулировки 1:1 | ✅ **подтверждён** (расширен новым абзацем + last-verified) |
+| KSPM доступен в Dynatrace Managed (per-environment / per-cluster); CIS Benchmark редакция в release notes | `day-2/kubernetes.md` Шаг 3 | [KSPM schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-kubernetes-security-posture-management) — Managed availability подтверждена | ✅ **подтверждён** (формулировка про конкретную CIS-версию смягчена) |
+| Trace Classic 10 дней / Services Classic 35 дней / RUM 35 дней / Metrics 5 лет с лестницей 1m→5m→1h→1d | `day-2/oneagent-infra.md`, `day-2/service-cards.md` | [Data retention periods](https://docs.dynatrace.com/docs/shortlink/data-retention-periods) — все цифры 1:1 | ✅ **подтверждён** (метки last-verified добавлены в обоих файлах) |
+| Container monitoring rules игнорируются в режимах webhook-инжекции (cloudNativeFullStack / applicationMonitoring) | `day-2/containers.md` Шаг 3 | Та же страница container-monitoring-rules — критическое ограничение | ✅ **новый факт добавлен** в файл (этого не было в Сессии 3) |
+| Process instance snapshots: триггер по high CPU/memory/network/availability/manual; ±10 мин окно; 60 мин/день/host; max 100 процессов | `day-2/hosts-processes.md` Шаг 7 | [Process visibility schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-process-visibility) — все цифры 1:1 | ✅ **новые факты добавлены** в файл (заменили выдумку про 1/5/10 min и 7 days) |
+
+**Live-ui теги добавлены во все 9 файлов Day 2** (обязательное требование промта, в Сессии 3 не было сделано):
+
+- `os-monitoring.md` → `/ui/entity/list/HOST` (рабочая ссылка, не 404)
+- `oneagent-infra.md` → `/ui/settings/builtin:oneagent.features`
+- `hosts-processes.md` → `/ui/entity/list/HOST`
+- `containers.md` → `/ui/settings/builtin:container.technology`
+- `kubernetes.md` → `/ui/settings/builtin:cloud.kubernetes.monitoring`
+- `databases.md` → `/ui/databases`
+- `services-overview.md` → `/ui/services`
+- `service-cards.md` → `/ui/services`
+- `problems-navigation.md` → `/ui/problems`
+
+Revision dates везде обновлены `2026-04-26 → 2026-04-27`.
+
+**Lessons:**
+- Сессия 3 (2026-04-26) сделала 8 правок и заявила «всё проверено». Сессия 6 нашла **9 новых неточностей**, включая критические: built-in container rules (выдумка nginx/redis/postgres/etc.), process instance snapshots (выдумка частоты и retention), Log Monitoring retention (35 дней против «не указано»), MongoDB заменён Redis в COOKBOOK databases.md (прямое нарушение требования промта). Это та же история, что в Day 1 Сессиях 4 → 5: **повторная независимая верификация всегда даёт ≥1 находку**, даже когда предыдущая сессия выглядела чистой.
+- live-ui теги — критическое требование промта, в Сессии 3 пропущены полностью. Без них при следующем регресс-аудите придётся искать UI-страницу руками; с тегом — один WebFetch / mcp__Claude_in_Chrome__navigate.
+- Database content перепроверка дала самую болезненную находку: блок Redis вместо MongoDB. Объяснение: при первой генерации Redis-блок добавили как «удобный» 4-й пример (низкая латентность, отдельный кейс), а MongoDB просто забыли. PDF-привязка к конкретному списку 4 БД — это not negotiable.
+
+**Финал Day 2 Сессии 6:**
+- 9 новых правок по содержанию (3× ❌ полное переписывание + 5× ⚠️ смягчение/уточнение + 1× ❌ замена Redis на MongoDB)
+- 9 live-ui тегов добавлено
+- 9 revision dates обновлено
+- 11+ новых last-verified меток
+- `python scripts/quality_check.py` → ✅ 0 issues
+- `python scripts/link_check.py` → ✅ 140 URL × 200 OK (+1 URL: добавлена ссылка на builtin-process-visibility schema)
+- empty_screens_todo.md создавать не пришлось (новых SaaS-only / 404 экранов не появилось; уже отмеченные `/ui/entity/list` 404 правильно описаны как известный баг с типизированной заменой)
+
+---
+
 ## Как обновлять этот файл
 
 1. При добавлении/правке numeric claim: `python scripts/extract_tech_claims.py` → обновится `tech_claims.md`.

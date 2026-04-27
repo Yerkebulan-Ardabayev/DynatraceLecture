@@ -1,23 +1,16 @@
 > 📅 **День 2: Инфраструктура, контейнеры, базы данных, сети** → Тема 4 из 9: «Мониторинг контейнеров»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:container.technology -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами Container monitoring rules / Cloud workload detection (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Все тех-факты сверены свежими WebFetch'ами на `docs.dynatrace.com/managed/` в текущей сессии. Ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (только Dynatrace Managed):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Setup on container platforms — Dynatrace Managed](https://docs.dynatrace.com/managed/ingest-from/setup-on-container-platforms) — установка OneAgent на контейнерных платформах в Managed-контуре
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Setup on container platforms](https://docs.dynatrace.com/docs/ingest-from/setup-on-container-platforms) — общий обзор установки OneAgent в Docker / containerd / CRI-O
-> - [Docker monitoring](https://docs.dynatrace.com/docs/ingest-from/setup-on-container-platforms/docker) — конкретно про Docker
-> - [Container platform monitoring — overview](https://docs.dynatrace.com/docs/observe/infrastructure-observability/container-platform-monitoring) — концепция мониторинга контейнерных платформ
-> - [Container monitoring rules](https://docs.dynatrace.com/docs/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules) — Built-in и custom monitoring rules для контейнеров
-> - [Cloud application and workload detection](https://docs.dynatrace.com/docs/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection) — как процессы внутри контейнеров группируются в workloads
-> - [Container technology — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-container-technology) — формальная схема страницы Container technology
-> - [Built-in container monitoring rule — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-container-built-in-monitoring-rule) — схема Built-in monitoring rule
-> - [Container monitoring rule — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-container-monitoring-rule) — схема пользовательской monitoring rule
-> - [Containers — параметрический shortlink](https://docs.dynatrace.com/docs/shortlink/containers) — каноническая точка входа для темы Containers
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
+> - [Setup on container platforms — Managed](https://docs.dynatrace.com/managed/ingest-from/setup-on-container-platforms) — установка OneAgent в Docker / Kubernetes / Cloud Foundry / Heroku
+> - [Container platform monitoring — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring) — поддержка Kubernetes Classic / Cloud Foundry / Docker / Heroku, container monitoring rules
+> - [Container monitoring rules — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules) — три Built-in правила (POD / pause-amd64 / openshift-sdn) + custom rules; работают только при установке OneAgent на хосты
+> - [Cloud application and workload detection — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection) — K8s labels (`app.kubernetes.io/name|version|stage`), `DT_RELEASE_*` env vars, naming rules
+> - [Infrastructure observability — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability) — общий раздел Hosts / Process groups / Containers
 
 ## 📍 КАРТА — четыре страницы про контейнеры
 
@@ -77,18 +70,19 @@
 Путь в меню: **Settings → Processes and containers → Built-in container monitoring rules**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:container.built-in-monitoring-rule`.
 
-Аналог `Built-in process monitoring rules` из Дня 1, только для контейнеров. Страница хранит **предустановленные правила распознавания популярных container-технологий и стандартных образов**.
+Аналог `Built-in process monitoring rules` из Дня 1, только для контейнеров. Страница хранит **предустановленные правила, исключающие из мониторинга служебные контейнеры**, чтобы они не загромождали интерфейс.
 
-**Типовые встроенные правила:**
+**Три встроенных правила** (дословно из Managed-документации):
 
-- Официальные Docker-образы: `nginx:*`, `redis:*`, `postgres:*`, `mongo:*`, `rabbitmq:*`. Каждое правило определяет технологию и набор метрик.
-- Системные контейнеры Kubernetes: `k8s.gcr.io/*`, `registry.k8s.io/*`. Обычно игнорируются в бизнес-метриках.
-- Sidecar'ы service mesh (Istio, Linkerd). Отдельная технология, метрики специфичные.
-- Container registries: AWS ECR, Google GCR, Azure ACR, собственные Harbor.
+1. «Do not monitor containers where Kubernetes container name equals `POD`» (pause-контейнер пода).
+2. «Do not monitor containers where Docker stripped image name contains `pause-amd64`».
+3. «Do not monitor containers where Kubernetes namespaces equals `openshift-sdn`» (служебная сеть OpenShift).
 
-Администратор может только включать / выключать правила, редактировать нельзя — как и у встроенных Process monitoring rules. Для специфичных случаев — кастомное правило на следующей странице.
+Все три включены по умолчанию. Администратор может только выключать или включать их обратно — `you can't edit them`. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules -->
 
-*Типовая настройка.* Все встроенные правила оставляют включёнными. Выключают только те, для технологий, которых точно нет в инфраструктуре (serverless, Cloud Run), чтобы упростить интерфейс.
+Распознавание прикладных технологий внутри контейнеров (nginx, postgres, redis, kafka и т. п.) идёт **не здесь, а на странице Built-in process monitoring rules** из Дня 1: те правила работают на уровне процессов и применяются как к baremetal-процессам, так и к процессам в контейнерах. Эта страница — только про сами контейнеры как сущность.
+
+*Типовая настройка.* Все три правила оставляют включёнными. Для специфичных случаев (исключить свои pause-контейнеры, sidecar service mesh, build-runners) — кастомное правило на следующей странице.
 
 ### Шаг 3 — Container monitoring rules (кастомные)
 
@@ -108,9 +102,12 @@
 **Структура правила:**
 
 - **Rule name.**
-- **Matcher** — свойство: Image name, Image label, Container label, Pod label (для K8s).
-- **Match operator** — Equals / Contains / Regex.
-- **Action** — Enable monitoring / Disable monitoring / Force deep monitoring / Exclude from metrics.
+- **Matcher** — свойство контейнера (например, имя образа) с оператором сравнения (`begins with` и аналогичные).
+- **Action** — Enable monitoring / Disable monitoring для совпавших контейнеров.
+
+Правила применяются по порядку (drag-and-drop в UI), первое сматчившееся побеждает.
+
+**Важное ограничение.** Дословно из Managed-документации: «Container monitoring rules are effective only when you install OneAgent on your hosts». В режимах Kubernetes-инъекции через webhook (`cloudNativeFullStack` или `applicationMonitoring` через Dynatrace Operator) механизм сбора другой и контролируется через DynaKube CR. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules -->
 
 ### Шаг 4 — Cloud application and workload detection
 
@@ -135,9 +132,9 @@
 
 **Что настраивается:**
 
-- **Набор labels для детекции.** По умолчанию стандартные K8s-labels: `app.kubernetes.io/name`, `app.kubernetes.io/version`, `app.kubernetes.io/component`, `app.kubernetes.io/part-of`, `app.kubernetes.io/managed-by`. Если команды используют свою схему (`company/product`, `company/team`), их добавляют здесь.
+- **Набор labels для детекции.** Managed-документация рекомендует пробрасывать стандартные K8s-labels в env-переменные: `app.kubernetes.io/version → DT_RELEASE_VERSION`, `app.kubernetes.io/name → DT_RELEASE_PRODUCT`, `app.kubernetes.io/stage → DT_RELEASE_STAGE`. Дополнительно поддерживаются `DT_RELEASE_BUILD_VERSION`. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection -->
 - **Правила группировки CA.** Например, deployments с префиксом `retail-` в одну CA `Retail Banking`. Удобно для дашбордов руководства.
-- **Workload naming rules.** Как именовать в интерфейсе: `.metadata.name` или `.metadata.labels.app`, добавить namespace, добавить cluster name.
+- **Workload naming rules.** Шаблон формирования имени Process Group — `<tech_prefix> <product> <STAGE> <base_pod_name>`, где product/stage/base_pod_name появляются, только когда они определены применённым правилом. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection -->
 - **Специальные случаи.** Knative / OpenFaaS (serverless), StatefulSet с PersistentVolume, Jobs / CronJobs — для каждого своя логика.
 
 *Типовая работа со страницей:*

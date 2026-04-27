@@ -1,22 +1,15 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 2 из 11: «Компоненты системы: OneAgent, ActiveGate, серверная часть»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/deployment -->
 >
-> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами OneAgent/ActiveGate Update (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
+> 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: все ссылки на /docs/ убраны, оставлены только страницы из раздела `/managed/`. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (Dynatrace Managed — air-gapped):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Access tokens — Dynatrace Managed](https://docs.dynatrace.com/managed/manage/access-control/access-tokens) — структура токенов (prefix + public + secret), правила обращения, типы (API, OAuth2, Platform)
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [OneAgent update](https://docs.dynatrace.com/docs/ingest-from/dynatrace-oneagent/oneagent-update) — три уровня настройки (global / host group / host) и порядок наследования
-> - [Update Dynatrace OneAgent on Windows](https://docs.dynatrace.com/docs/ingest-from/dynatrace-oneagent/installation-and-operation/windows/operation/update-oneagent-on-windows) — пример для Windows-семейства
-> - [Organize your environment using host groups](https://docs.dynatrace.com/docs/observe/infrastructure-observability/hosts/configuration/organize-your-environment-using-host-groups) — host groups как объект привязки политик обновлений
-> - [Update windows for OneAgent updates — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-deployment-management-update-windows) — формальная схема страницы Update windows (Settings API)
-> - [Update ActiveGate](https://docs.dynatrace.com/docs/ingest-from/dynatrace-activegate/operation/update-activegate) — Automatic updates at earliest convenience, проверка раз в 30 минут, статусы (Up to date / Update available / Update in progress)
-> - [ActiveGate auto-update configuration API](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/activegates/auto-update-config) — управление авто-обновлением AG через API
-> - [Host Units (HU) — формула](https://docs.dynatrace.com/docs/shortlink/host-unit) — единица лицензирования, лестница 16 GiB
+> - [Welcome to Dynatrace Managed Documentation](https://docs.dynatrace.com/managed) — корень раздела для air-gapped инсталляций
+> - [Access tokens — Dynatrace Managed](https://docs.dynatrace.com/managed/manage/access-control/access-tokens) — структура токенов `<prefix>.<24-char public>.<64-char secret>`, типы префиксов (`dt0s01` API, `dt0s02`/`dt0s03`/`dt0s08` OAuth2, `dt0s06` refresh, `dt0s16` Platform)
+> - [Identity & access management](https://docs.dynatrace.com/managed/manage/identity-access-management) — поддерживаемые способы аутентификации (SAML 2.0, OIDC/OAuth 2.0, SCIM)
+> - [Manage your Dynatrace Managed](https://docs.dynatrace.com/managed/manage) — раздел администрирования: IAM, лицензирование, network zones, system notifications
+> - [Release notes — Managed](https://docs.dynatrace.com/managed/whats-new/release-notes/managed) — выпуски Managed (1.328 / 1.330 / 1.332 / 1.334 / 1.336 ...)
 
 ## 📍 КАРТА — пять страниц настройки компонентов
 
@@ -71,12 +64,12 @@
 
 | Режим | Что собирает | Лицензия |
 |---|---|---|
-| **Full Stack** | Метрики ОС + трейсы приложений (PurePath) + логи + RUM | Полный тариф HU — по лестнице памяти хоста (1 HU на 16 GiB) |
-| **Infrastructure** | Только метрики ОС и процессов | Дробная доля HU — в разы дешевле Full-Stack; точное значение зависит от памяти хоста и условий подписки |
+| **Full Stack** | Метрики ОС + трейсы приложений (PurePath) + логи + RUM | Полный тариф HU — лестница 16/32/48 GiB → 1/2/3 HU по [Host Units](https://docs.dynatrace.com/managed/shortlink/host-unit) |
+| **Infrastructure** | Только метрики ОС и процессов | 0.3 HU @ 16 GiB RAM (с cap 1.0 при Cloud Infrastructure license) — ощутимо дешевле Full-Stack |
 
 *Когда какой режим.*
 - **Full Stack** — серверы с боевыми приложениями (Java, .NET, Node.js, PHP). Без этого Dynatrace теряет главное назначение — не видно кода.
-- **Infrastructure** — хосты, где только БД без инструментируемого кода, файловые серверы, физические сетевые устройства. Трейсы собрать физически нельзя, метрики ОС идут полным объёмом. Экономия лицензии существенная — сверяться нужно с условиями своего контракта и актуальной матрицей в `docs.dynatrace.com/docs/shortlink/host-unit`.
+- **Infrastructure** — хосты, где только БД без инструментируемого кода, файловые серверы, физические сетевые устройства. Трейсы собрать физически нельзя, метрики ОС идут полным объёмом. Экономия лицензии существенная — сверяться нужно с условиями своего контракта и актуальной таблицей Host Units в документации Dynatrace.
 
 *Глобальное значение vs override.* Эта настройка применяется только к новым установкам. Режим конкретного хоста меняется независимо — через **Host settings → Monitoring mode** или параметр командной строки при установке. Типичная практика в банке: глобально Full Stack, отдельные хосты (прокси, балансировщики, БД без пользовательских приложений) переводятся в Infrastructure вручную.
 
@@ -189,7 +182,7 @@
 
 *Включён.* Все Environment ActiveGate окружения начинают переходить на новую версию, как только она доступна в кластере и нагрузка позволяет безопасно перезапустить dtgateway.
 
-**Ключевой риск автообновления.** В рабочей инсталляции обычно 2–4 Environment ActiveGate для распределения нагрузки и резервирования. При одновременном обновлении всех шлюзов OneAgent на всех хостах теряют связь с кластером на время перезапусков `dtgateway` — обычно несколько минут (точная длительность зависит от размера ActiveGate, числа активных модулей и нагрузки; в публичной документации [Update ActiveGate](https://docs.dynatrace.com/docs/ingest-from/dynatrace-activegate/operation/update-activegate) фиксированный SLA на длительность не зафиксирован). На время перерыва OneAgent буферизует события локально и отправляет их при восстановлении связи — конкретное окно буфера в публичных документах не зафиксировано как single number, на практике хватает на типичный перезапуск AG. Но: <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/ingest-from/dynatrace-activegate/operation/update-activegate -->
+**Ключевой риск автообновления.** В рабочей инсталляции обычно 2–4 Environment ActiveGate для распределения нагрузки и резервирования. При одновременном обновлении всех шлюзов OneAgent на всех хостах теряют связь с кластером на время перезапусков `dtgateway` — обычно несколько минут (точная длительность зависит от размера ActiveGate, числа активных модулей и нагрузки; в публичной документации Dynatrace фиксированного SLA на длительность нет). На время перерыва OneAgent буферизует события локально и отправляет их при восстановлении связи — конкретное окно буфера в публичных документах одной цифрой не зафиксировано, на практике хватает на типичный перезапуск AG. Но:
 
 - Графики всех сервисов одновременно покажут пропуск.
 - Если в этот момент в приложении случится инцидент, Davis AI его не обнаружит из-за отсутствия данных для анализа.
@@ -211,13 +204,13 @@
 
 Путь: **Settings → Preferences → Network security** → `https://guu84124.live.dynatrace.com/ui/settings/builtin:activegate-token`.
 
-**Важно.** На этой странице **не создаются и не отзываются сами токены**. Здесь — только политика работы с токенами на уровне окружения. Выпуск и отзыв — **Settings → Access tokens** (`https://guu84124.live.dynatrace.com/ui/access-tokens`): там кнопка **+ Generate new token**, выбор scope, срока действия, таблица выпущенных токенов с Revoke.
+**Важно.** На этой странице **не создаются и не отзываются сами токены**. Здесь — только политика работы с токенами на уровне окружения. Выпуск и отзыв — **Settings → Access tokens** (`https://guu84124.live.dynatrace.com/ui/access-tokens`): там кнопка **+ Generate new token**, выбор scope, срока действия, таблица выпущенных токенов с Revoke. Структура токена — три части `<prefix>.<24-символьный public>.<64-символьный secret>`; разные префиксы соответствуют разным типам токенов: `dt0s01` — API tokens, `dt0s02`/`dt0s03`/`dt0s08` — OAuth2 clients, `dt0s06` — OAuth2 refresh tokens, `dt0s16` — Platform tokens. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/manage/access-control/access-tokens -->
 
 **На что отвечает эта страница.**
 1. Обязательно ли требовать валидный токен для подключения нового ActiveGate к кластеру.
 2. Включены ли уведомления о предстоящем истечении токенов.
 
-**Mutual TLS.** Описание под заголовком — о двухстороннем контроле безопасности. При подключении нового ActiveGate к кластеру обе стороны обмениваются информацией для взаимной проверки:
+**Mutual TLS.** Описание под заголовком — о двухстороннем контроле безопасности. При подключении нового ActiveGate к кластеру обе стороны обмениваются информацией для взаимной проверки. Конкретный механизм mutual TLS как именованной фичи в публичной документации `/managed/` отдельной страницей не зафиксирован — поведение страницы Network security описано на самой странице окружения. Логика проверки:
 - Кластер проверяет валидность токена шлюза.
 - Шлюз проверяет валидность TLS-сертификата кластера.
 

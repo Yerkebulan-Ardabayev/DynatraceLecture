@@ -1,23 +1,17 @@
 > 📅 **День 2: Инфраструктура, контейнеры, базы данных, сети** → Тема 5 из 9: «Мониторинг Kubernetes: кластеры, ноды, поды, ворклоады»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:cloud.kubernetes.monitoring -->
 >
-> 🔖 **Редакция от 2026-04-26.** Тех-факты сверены с `docs.dynatrace.com/managed/` и общими страницами Kubernetes monitoring / SPM / anomaly detection (общие для Managed и SaaS). Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-26 -->
+> 🔖 **Редакция от 2026-04-27.** Все тех-факты сверены свежими WebFetch'ами на `docs.dynatrace.com/managed/` в текущей сессии. Ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (только Dynatrace Managed):**
 >
-> **Managed-специфика (приоритетный источник):**
-> - [Setup on Kubernetes — Dynatrace Managed](https://docs.dynatrace.com/managed/ingest-from/setup-on-k8s) — установка Operator/CodeModules в кластер на Managed-документации (air-gapped registry, токены)
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница раздела Managed Docs
->
-> **Общая (одинаково для Managed и SaaS):**
-> - [Setup on Kubernetes — overview](https://docs.dynatrace.com/docs/ingest-from/setup-on-k8s) — установка OneAgent Operator, CodeModules, helm chart
-> - [Kubernetes installation](https://docs.dynatrace.com/docs/ingest-from/setup-on-k8s/installation) — варианты deployment (helm, manifests, OLM)
-> - [Kubernetes deployment patterns](https://docs.dynatrace.com/docs/ingest-from/setup-on-k8s/deployment) — типовые сценарии deployment
-> - [Kubernetes monitoring](https://docs.dynatrace.com/docs/observe/infrastructure-observability/container-platform-monitoring/kubernetes-monitoring) — концепция и структура Kubernetes-мониторинга в Dynatrace
-> - [Cloud Kubernetes monitoring — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-cloud-kubernetes-monitoring) — формальная схема страницы Kubernetes monitoring
-> - [Kubernetes Security Posture Management — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-kubernetes-security-posture-management) — SPM (compliance чек-листы)
-> - [Anomaly detection — Kubernetes cluster — schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-anomaly-detection-kubernetes-cluster) — пороги аномалий на уровне кластера
-> - [Anomaly detection — Kubernetes workload — schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-anomaly-detection-kubernetes-workload) — пороги аномалий на уровне workload
-> - [Kubernetes — параметрический shortlink](https://docs.dynatrace.com/docs/shortlink/kubernetes) — каноническая точка входа для темы Kubernetes
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
+> - [Set up Dynatrace on Kubernetes — Managed (shortlink)](https://docs.dynatrace.com/managed/shortlink/kubernetes) — Quickstart, Deployment, How it works, Reference, Operator release notes
+> - [Setup on Kubernetes — Managed](https://docs.dynatrace.com/managed/ingest-from/setup-on-k8s) — установка Operator/CodeModules в кластер (air-gapped registry, токены)
+> - [Container platform monitoring — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring) — Kubernetes Classic / Cloud Foundry / Docker / Heroku
+> - [Kubernetes monitoring — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/kubernetes-monitoring) — концептуальная страница Kubernetes-мониторинга в Managed
+> - [Cloud application and workload detection — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection) — связка процессов внутри контейнеров с Workloads и Cloud Applications
+> - [Infrastructure observability — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability) — общий раздел Hosts / Process groups / Containers / Message queues
 
 ## 📍 КАРТА — девять страниц для настройки Kubernetes-мониторинга
 
@@ -67,7 +61,7 @@
 
 *Что такое Telemetry Enrichment.* Когда приложение в контейнере отправляет метрики (OneAgent или OpenTelemetry), эти метрики сами по себе не знают, в каком поде они родились, в каком namespace, под каким deployment. Enrichment — **автоматическое добавление меток K8s к метрикам**, чтобы их можно было фильтровать и группировать.
 
-**Что обогащается.** Каждая метрика, трейс, лог от приложения в контейнере получает поля `k8s.pod.name`, `k8s.namespace.name`, `k8s.deployment.name`, `k8s.node.name`, `k8s.cluster.name`. Дальше в Data Explorer и Alerting profiles можно фильтровать по ним.
+**Что обогащается.** Каждая метрика, трейс, лог от приложения в контейнере получает поля `k8s.pod.name`, `k8s.namespace.name`, `k8s.deployment.name`, `k8s.node.name`, `k8s.cluster.name`. Дальше в Data Explorer и Alerting profiles можно фильтровать по ним. Стандартные K8s-labels пробрасываются в env-переменные процессов: `app.kubernetes.io/version → DT_RELEASE_VERSION`, `app.kubernetes.io/name → DT_RELEASE_PRODUCT`, `app.kubernetes.io/stage → DT_RELEASE_STAGE`. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection -->
 
 **Что настраивается:**
 
@@ -84,11 +78,13 @@
 Путь в меню: **Settings → Application Security → Security Posture Management: Kubernetes**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:kubernetes.security-posture-management`.
 
-Страница включает оценку K8s-кластеров на соответствие **CIS Kubernetes Benchmark** и другим стандартам безопасности. Часть функциональности Application Security.
+Страница в UI включает оценку K8s-кластеров на соответствие best-practices безопасности (Kubernetes Security Posture Management, KSPM).
 
-*Что делает SPM.* Сканирует конфигурацию кластера: RBAC-правила, SecurityContext подов, Network Policies, PodSecurityPolicies (или PodSecurityStandards в новых K8s), сертификаты, конфигурацию API server. Каждое несоответствие benchmark превращается в **finding** с уровнем серьёзности (Critical / High / Medium / Low) и рекомендациями.
+> ⚠️ **Air-gapped Managed Classic — функциональность KSPM/SPM в боевом режиме недоступна.** Полноценное хранение и анализ KSPM-findings опирается на платформу Grail и лицензионную модель Dynatrace Platform Subscription (DPS), которые работают только в SaaS-стеке. В air-gapped Managed Classic страница в UI присутствует, но без Grail/DPS findings не складываются в работающий compliance-pipeline. Эту нишу обычно закрывают сторонними KSPM-инструментами (kube-bench, Trivy Operator, Falco, Kube-hunter) или коммерческими решениями уровня платформы.
 
-**Типовые findings в свежем кластере:**
+*Концепция KSPM (для общего понимания).* KSPM-инструмент сканирует конфигурацию кластера — RBAC-правила, SecurityContext подов, Network Policies, PodSecurityPolicies/Standards, сертификаты, конфигурацию API server — и превращает каждое отклонение от best-practice в **finding** с severity и рекомендацией. Это не Dynatrace-специфичный термин, а общая практика отрасли.
+
+**Типовые категории findings в свежем кластере:**
 
 - Поды запущены как root (должны быть с не-root SecurityContext).
 - Контейнеры без `readOnlyRootFilesystem: true`.
@@ -97,7 +93,7 @@
 - Audit logging не включён.
 - Network Policies отсутствуют в критичных namespaces.
 
-*Роль SPM.* Часть compliance. Регуляторы требуют регулярного аудита K8s на соответствие best practices. SPM-репорты — вход для compliance-отчётности.
+В air-gapped Managed Classic эту страницу в курсе обычно показывают «как UI существует, но реальный compliance-чек — через сторонний инструмент».
 
 ### Шаг 4 — Kubernetes cluster anomaly detection
 
@@ -254,7 +250,7 @@ Dynatrace поддерживает все эти уровни как отдел�
 
 **Dynatrace Operator через Kubernetes API.** Ставится как Deployment в кластер, опрашивает API server с правами ServiceAccount. Получает структурную информацию: Deployments, Services, Ingresses, Namespaces, Events. Связывается с метриками от OneAgent через enrichment.
 
-**Автоматическая инъекция CodeModules.** Mutating webhook Operator при создании каждого пода добавляет init-контейнер с language-specific agent (Java, Node.js, .NET). Основной контейнер при старте загружает этот agent, он автоматически инструментирует приложение. Изменений в Docker-образе не требуется.
+**Автоматическая инъекция CodeModules.** Mutating webhook Operator при создании каждого пода добавляет init-контейнер с language-specific agent (Java, Node.js, .NET). Основной контейнер при старте загружает этот agent, он автоматически инструментирует приложение. Изменений в Docker-образе не требуется. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/kubernetes -->
 
 ### Автоматическая корреляция трейсов
 

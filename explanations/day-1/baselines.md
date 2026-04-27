@@ -1,19 +1,16 @@
 > 📅 **День 1: Введение в систему Dynatrace** → Тема 9 из 11: «Построение базовых линий и работа с порогами»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:anomaly-detection.services -->
 >
-> 🔖 **Редакция от 2026-04-27.** Тех-факты сверены с docs.dynatrace.com (Davis AI baseline / anomaly detection — общие концепции для Managed и SaaS, реализация 1:1; в air-gapped Managed работает без выхода в интернет, holiday-list поставляется в сборке кластера). 7-дневный learning period для traffic + 20%-недели (~1.4 дня) для error rate / response time подтверждены через WebFetch. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
+> 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: ссылки на /docs/, /platform/ удалены, оставлены только страницы из раздела `/managed/`. В air-gapped Managed Davis AI baseline работает локально, holiday-list поставляется в сборке кластера. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
 
-> 📚 **Источники (официальная документация Dynatrace):**
+> 📚 **Источники (Dynatrace Managed — air-gapped):**
 >
-> **Общая (Managed + SaaS):**
-> - [Anomaly detection — обзор](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection) — корневая страница про автоматическое обнаружение аномалий
-> - [Automated multi-dimensional baselining](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining) — почему baseline ведётся отдельно по каждому endpoint × геолокация × версия
-> - [Seasonal baseline](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/ai-models/seasonal-baseline) — confidence band с учётом сезонности (день недели, время суток)
-> - [Anomaly detection configuration](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/anomaly-detection-configuration) — как настраиваются параметры детекции
-> - [Adjust sensitivity for services](https://docs.dynatrace.com/docs/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services) — Response time degradation: absolute + relative threshold, low-load filter, abnormal state duration
-> - [Adjust sensitivity for database services](https://docs.dynatrace.com/docs/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-services-database) — те же параметры + Failed connects detection
-> - [Anomaly detection for services — settings schema](https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-anomaly-detection-services) — формальная схема страницы Settings → Anomaly detection → Services
-> - [Davis AI](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai) — корневая страница про Davis AI engine
+> - [Welcome to Dynatrace Managed Documentation](https://docs.dynatrace.com/managed) — корень раздела для air-gapped инсталляций
+> - [Davis AI](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai) — корневая страница про anomaly detection, root cause analysis, AI-модели baseline
+> - [Automated multidimensional baselining](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining) — 7-day learning period для traffic, 20%-недели для error/response time, 4 разреза (user action / geolocation / browser / OS)
+> - [Root cause analysis](https://docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/root-cause-analysis) — context-aware RCA через causal topology (Smartscape)
+> - [Manage your Dynatrace Managed](https://docs.dynatrace.com/managed/manage) — Settings 2.0, в котором живут страницы Anomaly detection (Services, Databases, Hosts, Holiday-aware baseline)
+> - [Managed cluster — minimum hardware requirements](https://docs.dynatrace.com/managed/managed-cluster/installation/managed-hardware-requirements) — Davis AI и baseline-вычисления выполняются на узлах кластера
 
 ## 📍 КАРТА — где настраиваются правила обнаружения аномалий
 
@@ -37,7 +34,7 @@
 
 | Тип | Как работает | Когда применяется |
 |---|---|---|
-| **Auto-adaptive / адаптивный** | Davis AI анализирует историю метрики (по умолчанию 7 дней), строит коридор с учётом времени суток и дня недели. Выход за коридор = аномалия. | По умолчанию для большинства метрик. Работает из коробки. |
+| **Auto-adaptive / адаптивный** | Davis AI анализирует историю метрики (период обучения — 7 дней по multidimensional baselining), строит коридор с учётом времени суток и дня недели. Выход за коридор = аномалия. | По умолчанию для большинства метрик. Работает из коробки. |
 | **Static / статический** | Администратор задаёт фиксированное число. «CPU выше 80% = аномалия». | Требования compliance, SLA с фиксированным порогом, известный технический предел. |
 | **Metric events / метрические события** | Кастомное правило на любую метрику с выражением на Metrics Selector. | Сложные сценарии, связка нескольких метрик, собственная логика. |
 
@@ -59,18 +56,16 @@
 
 Два подправила.
 
-- **All requests / все запросы.** Срабатывает, когда медиана времени отклика выросла по обоим критериям одновременно:
-  - **Absolute threshold / абсолютный порог** — по умолчанию 100 мс.
-  - **Relative threshold / относительный порог** — по умолчанию 50%.
-- **Slowest 10% / верхние 10% самых медленных.** Иногда деградируют только тяжёлые случаи — крупные отчёты, большие выборки. Absolute 1000 мс, Relative 50% по умолчанию.
+- **All requests / все запросы.** Срабатывает, когда медиана времени отклика одновременно превышает абсолютный и относительный пороги (значения видны на самой странице Settings → Anomaly detection → Services вашего тенанта).
+- **Slowest 10% / верхние 10% самых медленных.** Иногда деградируют только тяжёлые случаи — крупные отчёты, большие выборки. Отдельная пара (абсолютный + относительный) дефолтных порогов для медленных запросов.
 
-**Блок Avoid over-alerting / защита от ложных срабатываний.** Требует минимум N запросов в минуту на сервис (по умолчанию 10), прежде чем аномалия засчитывается. Плюс минимум N минут длительности (по умолчанию 1). Нужно, чтобы на редко используемых сервисах не гремели алерты от одного-двух случайных запросов.
+**Блок Avoid over-alerting / защита от ложных срабатываний.** Требует минимум N запросов в минуту на сервис прежде, чем аномалия засчитывается, плюс минимум N минут длительности абнормального состояния. Нужно, чтобы на редко используемых сервисах не гремели алерты от одного-двух случайных запросов. Конкретные значения N — на самой странице тенанта.
 
-**Блок Failure rate / частота отказов.** Тумблер **Detect increases in failure rate**. Абсолютный порог по умолчанию 0.1%, относительный 50%. Под параметрами — пример расчёта: если базовая failure rate была 11%, порог срабатывания = 11 + (11 × 50% / 100%) = 16.5%.
+**Блок Failure rate / частота отказов.** Тумблер **Detect increases in failure rate**. Дефолтные пороги (абсолютный и относительный) видны на самой странице Settings → Anomaly detection → Services вашего тенанта; универсальной публичной таблицы дефолтов в документации Managed нет — конкретные значения подбираются по природе сервиса. На странице приведён пример расчёта: если базовая failure rate была 11%, порог срабатывания = 11 + (11 × относительный% / 100%).
 
 **Блок Service load drops / spikes / падения и скачки нагрузки.** Падение нагрузки обычно значит, что клиенты не могут достучаться до сервиса (DNS, сеть, балансировщик). Скачок — внезапный рост (DDoS или вирусный контент). Пороги в процентах от ожидаемой нагрузки.
 
-**Reference period / период эталона.** Сколько дней истории Davis использует для baseline. По умолчанию **Last 7 days**. После архитектурных изменений (новая версия, новая нагрузка) Davis пересчитывает эталон — в ближайшие часы возможны ложные срабатывания, об этом предупреждает текст внизу страницы.
+**Reference period / период эталона.** Сколько дней истории Davis использует для baseline. Стандартный период обучения — **7 дней** (см. раздел Davis AI multidimensional baselining). После архитектурных изменений (новая версия, новая нагрузка) Davis пересчитывает эталон — в ближайшие часы возможны ложные срабатывания, об этом предупреждает текст внизу страницы.
 
 ### Шаг 2 — Anomaly detection / Database services
 
@@ -82,7 +77,7 @@
 
 **Блок Database failed connects / неудачные подключения.**
 
-*Что делает.* Тумблер **Detect failed connects** включает правило. Порог — процент неудачных подключений за минуту (по умолчанию 5%).
+*Что делает.* Тумблер **Detect failed connects** включает правило. Порог — процент неудачных подключений за минуту (дефолтное значение видно на самой странице Settings → Anomaly detection → Database services вашего тенанта).
 
 *Зачем нужно.* В системах с пулом подключений проблема «не могу подключиться» проявляется до того, как пользователи увидят ошибки в самих запросах. Ловить её нужно быстрее.
 
@@ -102,7 +97,7 @@
 
 **Основные категории правил.**
 
-- **CPU.** Тумблер **Detect unusual high CPU saturation**. Порог по умолчанию 95% в течение 5 минут. Срабатывает, когда процессор забит почти полностью, а не когда просто «загружен высоко». Для сервера с постоянной нагрузкой 70% порог 95% не будет ложно срабатывать.
+- **CPU.** Тумблер **Detect unusual high CPU saturation**. Дефолтный порог (видимый на странице Settings → Anomaly detection → Hosts) задан так, чтобы срабатывать, когда процессор забит почти полностью, а не просто «загружен высоко». Универсальной публичной таблицы дефолтов в документации Managed нет — конкретное значение проверяется на самой странице тенанта.
 - **Memory.** Detect unusual high memory usage, Detect memory page swapping (активный своп — один из худших сигналов на сервере), отдельные параметры для Linux и Windows.
 - **Disk.** Detect low disk space, Detect slow writes, Detect slow reads, Detect high disk inode usage (inode-ы кончаются — бывает на больших файловых системах с множеством мелких файлов).
 - **Network.** Detect network high packet loss rate (потеря пакетов), Detect network high retransmissions (переотправки TCP), Detect network connectivity issues, Detect network high traffic, Detect network low connectivity (плохая связь с ActiveGate или кластером).
@@ -162,11 +157,11 @@
 
 **Baseline учитывает сезонность.** Модель знает: утром в понедельник нагрузка такая-то, в пятницу вечером другая, в субботу ночью почти нулевая. Если сервис обычно отвечает за 50 мс утром и 120 мс в пик-часы, для Davis это два разных эталона — вечерние 120 мс не аномалия.
 
-**Baseline многомерный.** Для одной метрики ведутся несколько разрезов одновременно. Согласно [Automated multidimensional baselining](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining), Davis для frontend RUM комбинирует разрезы по **user action / endpoint** (например, `login.jsp`), **geolocation** (континент / страна / регион / город), **browser** (семейство и версия) и **operating system** (тип и версия). Для backend сервисов аналогично — отдельные baselines по типам запросов и характеристикам клиента. Аномалия может засечься в одном разрезе, не затронув общую картину. Пример: общее время отклика сервиса в норме, но для конкретного endpoint `/api/heavy-report` выросло на 200% — многомерный baseline это увидит.
+**Baseline многомерный.** Для одной метрики ведутся несколько разрезов одновременно. Согласно концепции Automated multidimensional baselining (раздел Davis AI документации Dynatrace для вашей версии), Davis для frontend RUM комбинирует разрезы по **user action / endpoint** (например, `login.jsp`), **geolocation** (континент / страна / регион / город), **browser** (семейство и версия) и **operating system** (тип и версия). Для backend сервисов аналогично — отдельные baselines по типам запросов и характеристикам клиента. Аномалия может засечься в одном разрезе, не затронув общую картину. Пример: общее время отклика сервиса в норме, но для конкретного endpoint `/api/heavy-report` выросло на 200% — многомерный baseline это увидит.
 
-**Период обучения — 7 дней.** Меняется в Reference period. По [официальной формулировке](https://docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining): «alerting on traffic spikes and drops begins after a learning period of one week because baselining requires a full week's worth of traffic to learn daily and weekly patterns» — для срабатывания алертов на skoki/drop трафика нужна полная неделя истории; для error rate и response time пороги активизируются раньше — после 20% недели (около 1.5 дней). После значительного архитектурного изменения имеет смысл сбросить baseline вручную или подождать 7 дней, пока модель пересчитается естественным путём. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/docs/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining -->
+**Период обучения — 7 дней.** Меняется в Reference period. По официальной формулировке Dynatrace: alerting on traffic spikes and drops begins after a learning period of one week because baselining requires a full week's worth of traffic to learn daily and weekly patterns — для срабатывания алертов на скачки/просадки трафика нужна полная неделя истории; для error rate и response time пороги активизируются раньше — после 20% недели (около 1.5 дней). Многомерный baseline для frontend RUM строится по 4 разрезам: **user action**, **geolocation**, **browser**, **operating system**. После значительного архитектурного изменения имеет смысл сбросить baseline вручную или подождать 7 дней, пока модель пересчитается естественным путём. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining -->
 
-**Defaults на странице Settings → Anomaly detection → Services.** Точные числовые дефолты (Absolute / Relative / Avoid over-alerting) Dynatrace не публикует одной общей таблицей в публичной доке — значения, видимые в самой странице Settings, считаются authoritative для конкретной сборки кластера. Цифры выше («100 мс / 50% / 0.1% / 10 rpm / 1 минута») приведены как ориентир для типичной свежей инсталляции и должны сверяться с реальной страницей вашего тенанта перед использованием в SLA или интеграциях.
+**Defaults на странице Settings → Anomaly detection → Services.** Точные числовые дефолты (Absolute / Relative / Avoid over-alerting) Dynatrace не публикует одной общей таблицей в публичной доке — значения, видимые в самой странице Settings, считаются authoritative для конкретной сборки кластера. Перед использованием конкретных порогов в SLA или интеграциях обязательно сверяйте их с реальной страницей вашего тенанта.
 
 **Adaptive vs Static.** Адаптивный baseline — основной инструмент, его хватает для 80% задач. Static thresholds применяются поверх адаптивных в двух случаях:
 - **Compliance.** SLA требует «тревога строго при CPU выше 85%» независимо от baseline.
