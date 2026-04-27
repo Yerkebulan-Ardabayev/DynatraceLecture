@@ -1,4 +1,16 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 10 из 14: «Настройка порогов, аномалий и базовых линий (для apps)»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:anomaly-detection.rum-web -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27**
+
+## 📚 Источники
+
+- [Anomaly detection — Managed](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection)
+- [Adjust sensitivity for applications](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-applications)
+- [Real User Monitoring — Managed](https://docs.dynatrace.com/managed/shortlink/rum)
+- [Apdex ratings](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings)
+- [Davis AI — anomaly detection concepts](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection)
 
 ## 📍 КАРТА — пять страниц anomaly detection для приложений
 
@@ -22,17 +34,18 @@
 
 Путь: `/ui/settings/builtin:anomaly-detection.rum-web`.
 
-**Что настраивается.** Глобальные пороги для web-приложений в RUM:
+**Что настраивается.** Глобальные пороги для web-приложений в RUM. По документации Dynatrace детектирует **четыре типа аномалий приложений**:
 
-- **Page load time degradation** — деградация времени загрузки.
-- **User action duration degradation** — деградация времени действия.
-- **JavaScript error rate increase** — рост JS-ошибок.
-- **Traffic drop/spike** — падение или скачок трафика.
-- **Apdex decline** — падение индекса удовлетворённости.
+- **Key performance metric degradations** — деградация ключевых метрик user actions (включая user action duration и связанные показатели).
+- **Traffic drops** — падение трафика.
+- **Traffic spikes** — рост трафика.
+- **Failure rate increases** — рост доли неуспешных user actions (туда же попадают JS-ошибки и request errors согласно настройкам error detection).
 
-Структура как у Anomaly detection for services: абсолютные + относительные пороги, Reference period, Avoid over-alerting.
+Каждый тип имеет два режима: **automated baselining** (Davis AI учится на реперном периоде — по умолчанию **последние 7 дней**) или **fixed thresholds** с тремя уровнями чувствительности — Low / Medium / High. При fixed thresholds для Failure rate должны нарушаться **оба** порога — относительный (%) и абсолютный (пп.).
 
 *Критичность.* Страница — одна из ключевых для алертов по клиентским web-приложениям. Её настройка определяет, насколько быстро дежурный узнает о проблеме.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-applications -->
 
 ### Шаг 2 — Anomaly detection for mobile applications
 
@@ -40,14 +53,11 @@
 
 Путь: `/ui/settings/builtin:anomaly-detection.rum-mobile`.
 
-Аналогично web, но для мобильных:
+Аналогично web, но для мобильных приложений. Те же 4 категории — деградация ключевых метрик user actions, traffic drops/spikes, рост failure rate. Crash rate выделен в отдельный детектор и настраивается на Шаге 5.
 
-- **App startup time** — время запуска приложения.
-- **HTTP errors** — ошибки сетевых запросов.
-- **Crash rate** — отдельная страница настройки на Шаге 5.
-- **Traffic drops / spikes** — падение или скачок трафика.
+*Критичная метрика.* App startup time. Долгий запуск мобильного приложения = потеря клиента. Типовые пороги строгие, точные значения подбираются под продукт; начинать удобно с automated baselining, после двух-трёх недель данных переключаться на fixed thresholds, если нужны жёсткие SLO.
 
-*Критичная метрика.* App startup time. Долгий запуск мобильного приложения = потеря клиента. Типовые пороги строгие: 2-3 секунды медиана, 5-7 секунд P95.
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-applications -->
 
 ### Шаг 3 — Anomaly detection for custom applications
 
@@ -79,15 +89,11 @@
 
 Та же механика, для мобильных. Критично для мобильного банкинга — crash = потеря клиента.
 
-*Типовой порог.* Crash rate > 1% за 15 минут → Problem. Для сравнения: Google Play считает плохим приложение с 2%+ crash rate. 1% — уже тревожно.
+**Как работает по документации.** Dynatrace строит baseline числа крашей по версии приложения. Скользящее окно наблюдения — **10 минут**. Чтобы избежать ложных срабатываний на низком трафике, перед поднятием event требуется минимум **10 одновременных пользователей** на этой версии приложения. Чувствительность настраивается тремя уровнями — Low / Medium / High.
 
 ---
 
 ## 🎓 ТЕОРИЯ — специфика anomaly detection для RUM
-
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Metric events — alerting на метрики](https://docs.dynatrace.com/docs/shortlink/metric-events)
 
 ### Отличие RUM от backend сервисов
 
@@ -112,13 +118,7 @@
 
 *Формула:* Crash rate = (crashes / sessions) × 100.
 
-*Индустриальный стандарт:*
-
-- < 1% — нормально.
-- 1-2% — внимание.
-- &gt; 2% — плохо, срочно чинить.
-
-Для критичных мобильных приложений типовая цель — < 0.5%.
+В Dynatrace baseline строится по версии приложения. Конкретный целевой уровень для каждого продукта подбирается под бизнес-контекст и SLO; Davis в режиме automated baselining ловит относительный рост, в режиме fixed thresholds — нарушение явного процента.
 
 ### Air-gapped specifics
 

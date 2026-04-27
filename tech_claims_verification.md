@@ -310,6 +310,97 @@ Revision dates везде обновлены `2026-04-26 → 2026-04-27`.
 
 ---
 
+## Сессия Учебного дня 4 (2026-04-27) — explanations/day-3-4 вторая половина
+
+Полная сверка 7 тем второй половины day-3-4/ с `/managed/`. WebFetch'ей за день: ~38 (по 5–7 на тему). link_check вырос с 92 → **114 URL × 200 OK**.
+
+### Темы и решения
+
+#### 1. key-actions.md — 5 правок
+
+| Блок | WebFetch | Решение |
+|---|---|---|
+| User actions: «клики/переходы» | https://docs.dynatrace.com/managed/shortlink/user-actions: «3 типа — Load / XHR / Custom» | ⚠️ переписан под 3 типа (load/XHR/custom); «клик» это часть load/XHR |
+| User action custom metrics — путь Settings | https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-calculated-metrics-web: «Web → Impact of user actions on performance → Analyze performance → Create metric» | ⚠️ исправлен путь + добавлены лимиты 500/env, 100/app |
+| Custom apps «Smart TV / Electron / Custom RUM SDK» | https://docs.dynatrace.com/managed/observe/digital-experience/custom-applications: «rich client / IoT / Alexa Skills через **OpenKit**» | ⚠️ список заменён на rich client / IoT / голосовые; SDK переименован в OpenKit |
+| Resource types: «по умолчанию почти всё включено, можно отключить» | Settings API schema builtin:rum.web.resource-types: «override классификации по file extension» | ⚠️ переписан как override-механика, не enable/disable |
+| Business events «в Grail (SaaS) или в event storage (Managed)» | Документация Managed: упоминание Grail некорректно, в Managed это classic pipeline / OpenPipeline | ⚠️ Grail упоминание убран |
+
+#### 2. sessions.md — 6 правок
+
+| Блок | WebFetch | Решение |
+|---|---|---|
+| Session timeout «inactivity timeout» (общая фраза) | https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/user-session: «Web 30 мин / Mobile 10 мин / Custom 10 мин / max 6h / 200 actions auto-split» | ⚠️ конкретизирован для всех типов apps + max 6h + 200 actions split |
+| Session Replay masking «через CSS-классы или правила» | https://docs.dynatrace.com/managed/observe/digital-experience/session-replay/configure-session-replay-web: «4 modes — Mask all / Mask user input / Allow list / Block list» + Recording vs Playback | ⚠️ список 4 modes + разделение Recording/Playback masking |
+| Session Replay cookie consent | Тот же URL: «opt-in mode + dtrum.enableSessionReplay() / disableSessionReplay()» | ⚠️ детализирован opt-in mode + JS API |
+| Resource capturing: «лимит размера, ignore-правила» | Тот же URL: «stylesheets автоматически + дополнительные правила для картинок/шрифтов» | ⚠️ переписан под реальную структуру настройки |
+| User session export «Elasticsearch или другую систему» | https://docs.dynatrace.com/managed/observe/digital-experience/session-segmentation/export-session-data: «webhook HTTPS PUT/POST, Elasticsearch — частный случай, NDJSON, Basic/OAuth2, до 3 endpoints, триггеры 1000 sessions / 896KB / 30s» | ⚠️ переписан как webhook (не «Elasticsearch или другая система») + триггеры |
+| Cost control «доля записанных сессий» | Тот же URL: «формула RUM% × SR%» | ⚠️ добавлена точная формула |
+
+#### 3. thresholds.md — 5 правок
+
+| Блок | WebFetch | Решение |
+|---|---|---|
+| Web RUM anomaly types «Page load / User action / JS error rate / Traffic / Apdex decline» | https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/adjust-sensitivity-anomaly-detection/adjust-sensitivity-applications: «4 типа: Key performance metric degradations / Traffic drops / Traffic spikes / Failure rate increases» | ❌ переписан под 4 категории; JS error rate и Apdex decline не отдельные типы |
+| Reference period «как у services» | Тот же URL: «default 7 days, sensitivity Low/Medium/High» | ⚠️ конкретизирован 7 days + три уровня |
+| Mobile app startup «2-3 сек медиана, 5-7 сек P95» | Без подтверждения | ⚠️ generic-цифры удалены, заменены на «начинать с automated baselining» |
+| Mobile crash rate «> 1% за 15 минут → Problem» + Google Play 2% | https://docs.dynatrace.com/docs/discover-dynatrace/references/dynatrace-api/environment-api/settings/schemas/builtin-anomaly-detection-rum-mobile-crash-rate-increase: «sliding window 10 минут + ≥10 concurrent users + Low/Medium/High» | ❌ Google Play цифра удалена (маркетинг); 15-минутное окно заменено на 10 + 10 пользователей |
+| Источник `metric-events` /docs/shortlink | n/a — /managed/ источника нет, источник /docs/ | ❌ удалён |
+
+#### 4. sli-slo-sla.md — 4 правки
+
+| Блок | WebFetch | Решение |
+|---|---|---|
+| SLO definitions «builtin:service.successes / requestCount.total» | https://docs.dynatrace.com/managed/deliver/service-level-objectives-classic/configure-and-monitor-slo: «SLO wizard + 6 шаблонов (Service-level availability / Service-method availability / Service performance / User experience / Mobile crash-free users / Synthetic availability)» | ⚠️ добавлены шаблоны wizard'а |
+| Period «rolling 30 days / calendar month / quarter» | Не подтверждено явной таблицей | ⚠️ заменено на общее «evaluation timeframe» |
+| Error budget «(100% - Target) × period duration» + 43.2 минуты | https://docs.dynatrace.com/managed/deliver/service-level-objectives-classic/slo-basics: формула normalized = `(status−target)/(100−target)×100` | ⚠️ нормализационная формула приведена точно; 43.2 минуты осталось как пример (это базовая SRE-математика, не /managed/-специфика) |
+| SLO setup «Maintenance windows / sensitivity / grace periods» | Тот же URL: «есть только Normalize error budget toggle, grace periods и maintenance исключения в SLO setup не описаны» | ❌ выдуманные «sensitivity / grace periods» удалены, оставлен реальный normalize toggle |
+
+#### 5. reliability-config.md — полная переработка
+
+| Блок | WebFetch / скрин | Решение |
+|---|---|---|
+| Все 3 экрана «Health Experience» | Captured screenshot: «In development» + «No data to display» + «Your user does not have the necessary write permissions». /managed/ shortlink `health-experience` 404. /docs/ - ссылается на SaaS Apps (Services app / Experience Vitals / Clouds app) | ❌ полная переработка: все 3 страницы помечены как Settings shells «In development», описана реальная Managed-связка (Anomaly detection + SLO + Alerting profiles); добавлены 3 скрина в empty_screens_todo.md |
+| «Бизнес-категории / severity classification / intelligent grouping» | Не подтверждено в Managed | ❌ удалено как маркетинг SaaS-Apps |
+| K8s cluster pressure / cloud cost spikes | Не подтверждено в Managed Health Experience | ❌ переадресовано на Anomaly detection for Kubernetes / hosts |
+
+#### 6. incident-lifecycle.md — 5 правок
+
+| Блок | WebFetch | Решение |
+|---|---|---|
+| Alerting profiles «Severity rules / Event filters / Conditions / Related integrations» | https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/alerting-profiles: «Management zone AND Severity rules (до 100, OR) AND Event filters (до 20, AND для negated, OR для non-negated)» + default-профиль non-deletable | ⚠️ структура переписана под точные лимиты и логику AND/OR |
+| Maintenance windows «Planned / Recurring / Scope» | https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/maintenance-windows: «Planned / Unplanned» + recurrence как опция (one-time/daily/weekly/monthly), suppress problems vs suppress alerts — отдельные toggles, до 2000/окружение | ⚠️ Recurring → опция Planned; добавлены Unplanned + 2 независимых suppress + лимит 2000 |
+| Problem notifications «Email / Slack / Jira / ServiceNow / PagerDuty / OpsGenie / Webhook» | https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/problem-notifications: добавлены VictorOps, xMatters, Microsoft Teams; уточнено что push только при создании и закрытии | ⚠️ список интеграций расширен и сгруппирован, добавлено правило «только create/resolve» |
+| Issue tracking integration «Двусторонняя интеграция с автозакрытием тикетов» | https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/problem-notifications/jira-integration: «Dynatrace does NOT auto-close Jira tickets» + https://docs.dynatrace.com/managed/deliver/release-monitoring/issue-tracking-integration: «это статистика релиза, до 20 конфигураций, 5 провайдеров» | ❌ переписано: issue-tracking — это статистика для Release inventory (Jira/GitHub/GitLab/ServiceNow), а автотикетинг идёт через Problem notifications, при этом auto-close не происходит |
+| ITSM auto-create + auto-close | Тот же URL Jira | ⚠️ уточнено: автосоздание есть, автозакрытие — нет |
+
+#### 7. appsec.md — 3 правки + важные уточнения
+
+| Блок | WebFetch | Решение |
+|---|---|---|
+| Code-level vulnerabilities: «SQL injection / **XSS** / SSRF / Path traversal / Command injection / XXE» | https://docs.dynatrace.com/managed/secure/application-security/vulnerability-analytics: «Java 8+, .NET Framework 4.5+, Go» + список вектора смягчён | ⚠️ XSS удалён (Dynatrace runtime detection не покрывает XSS); список приведён к общему «SQL injection, command injection, SSRF, JNDI и подобные insecure data flow»; добавлены поддерживаемые языки |
+| Attacks: «SQL injection, XSS и др.» | https://docs.dynatrace.com/managed/secure/application-security/application-protection: «4 класса — SQL injection / JNDI injection / Command injection / SSRF» | ❌ переписан под точные 4 класса RAP; XSS не блокируется RAP |
+| Air-gapped: «CVE-база через customer portal → CMC, раз в квартал, локальная база» | https://docs.dynatrace.com/managed/secure/faq + Vulnerability evaluation: «feed Snyk + NVD, push через Cloud Control / Mission Control, в Cluster доезжает за 2 часа, проверка раз в минуту» | ⚠️ переписан: feed pushes через Mission Control, Snyk + NVD; для полностью air-gapped — оффлайн-импорт по согласованию; добавлен раздел «Поддерживаемые технологии» с конкретными версиями (Java 8+ OneAgent 1.241+, .NET 4.5+ OneAgent 1.289+, Go OneAgent 1.311+) |
+
+### Финал
+
+- **Всего правок:** 5 + 6 + 5 + 4 + 1×полная-переработка + 5 + 3 = **29 фактических правок** + 1 переработанная тема целиком + 3 SaaS-only/in-development скрина в `empty_screens_todo.md`.
+- **Тематически:** правки покрывают Davis-конфигурацию (Anomaly detection 4 типа), Health Experience (Managed-статус), SLO templates/normalization, Alerting profile structure (100/20 лимиты), Maintenance window suppress toggles + Planned/Unplanned, Problem notification integrations, Issue tracking — статистика релиза vs автотикетинг, RAP supported languages + 4 attack classes (без XSS), CVE feed source (Snyk + NVD через Mission Control).
+- **WebFetch за день:** ~38 (включая поисковые WebSearch для уточнения).
+- `python scripts/quality_check.py` → ✅ 0 errors (2 warnings из day-1, не Day 4)
+- `python scripts/link_check.py` → ✅ **114 URL × 200 OK**.
+- `empty_screens_todo.md` создан с записью про reliability-config (3 «In development» / «No data to display» скрина).
+
+**Lessons Day 4:**
+
+1. **Health Experience в Managed = Settings shells «In development»**, реальная функциональность — в SaaS Apps. Lesson: при наличии Settings-страницы в UI Managed это ещё не значит что фича доступна; смотреть статус-бейдж и captured-скрин.
+2. **RAP блокирует только 4 класса атак** — SQL injection, JNDI injection, Command injection, SSRF. XSS НЕ блокируется (это front-end). Lesson: разделять Vulnerability detection vs Application Protection — это разные продукты с разным охватом.
+3. **Issue tracking integration ≠ автоматический ITSM-канал**. Issue tracking — это статистика релизов (Jira queries для подсчёта багов на версию). Автосоздание тикетов идёт через **Problem notifications**, и Dynatrace **не закрывает** Jira-тикеты автоматически.
+4. **Maintenance window — два независимых toggle** (Suppress problem detection / Suppress alerting), а не один общий «не создавать или не отправлять». Это критично: можно блокировать только notifications, оставив detection для post-event анализа.
+5. **CVE feed в Managed идёт через Mission Control**, не через локальную базу с ручным обновлением раз в квартал. В air-gapped — оффлайн-импорт по согласованию с Dynatrace, не через customer portal → CMC.
+
+---
+
 ## Как обновлять этот файл
 
 1. При добавлении/правке numeric claim: `python scripts/extract_tech_claims.py` → обновится `tech_claims.md`.

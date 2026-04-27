@@ -1,4 +1,16 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 14 из 14: «Обзор Security Module (Application Security)»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/security/overview -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27**
+
+## 📚 Источники
+
+- [Application Security — Managed](https://docs.dynatrace.com/managed/secure/application-security)
+- [Runtime Vulnerability Analytics](https://docs.dynatrace.com/managed/secure/application-security/vulnerability-analytics)
+- [Runtime Application Protection](https://docs.dynatrace.com/managed/secure/application-security/application-protection)
+- [Application Security FAQ](https://docs.dynatrace.com/managed/secure/faq)
+- [Application Security monitoring (ASUs) — Managed](https://docs.dynatrace.com/managed/license/monitoring-consumption-classic/application-security-units)
 
 ## 📍 КАРТА — 14 страниц модуля Application Security
 
@@ -62,16 +74,11 @@
 
 Путь: `/ui/security/code-vulnerabilities`.
 
-*Code-level* — уязвимости в собственном коде, не в библиотеках. Dynatrace анализирует поведение приложения в runtime и ищет типовые проблемы:
+*Code-level* — уязвимости в собственном коде, не в библиотеках. Dynatrace анализирует поведение приложения в runtime и ищет типовые проблемы (SQL injection, command injection, SSRF, JNDI injection и подобные insecure data flow). Code-level detection поддерживается на **Java 8+, .NET Framework 4.5+, Go**.
 
-- **SQL injection** — подозрение на неочищенный input в SQL.
-- **XSS** — reflected или persistent cross-site scripting.
-- **SSRF** — server-side request forgery.
-- **Path traversal** — обход директорий.
-- **Command injection** — внедрение команд ОС.
-- **XXE** — XML External Entity.
+*Отличие от SAST.* Runtime-анализ, не статический. Видно, что уязвимость **реально вызывается** в работающем приложении, а не «теоретически есть в коде». Уязвимость автоматически закрывается, как только её root cause не появляется в системе более двух часов (или сразу при остановке всех затронутых процессов).
 
-*Отличие от SAST.* Runtime-анализ, не статический. Видно, что уязвимость **реально вызывается** в работающем приложении, а не «теоретически есть в коде».
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/secure/application-security/vulnerability-analytics -->
 
 ### Шаг 4 — Attacks
 
@@ -79,15 +86,17 @@
 
 Путь: `/ui/security/attacks`.
 
-*Активные атаки* — когда злоумышленник реально пытается эксплуатировать. Dynatrace в runtime видит подозрительные HTTP-запросы (SQL injection patterns, XSS payloads) и создаёт запись об атаке.
+*Активные атаки* — когда злоумышленник реально пытается эксплуатировать. Dynatrace инструментирует точки риска (SQL-вызов, выполнение команды ОС, исходящий HTTP-запрос, JNDI lookup) и видит подозрительные паттерны прямо в runtime, а не из логов WAF.
 
 **На странице:**
 
 - Список зафиксированных атак с временем.
-- Тип атаки (SQL injection, XSS и др.).
+- Тип атаки. По документации **Runtime Application Protection** в Managed детектирует и опционально блокирует ровно **4 класса атак**: **SQL injection**, **JNDI injection**, **Command injection**, **SSRF**.
 - Source IP атакующего.
 - Target — сервис, endpoint.
 - Blocked / Allowed — если Application Protection активен.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/secure/application-security/application-protection -->
 
 ### Шаги 5-14 — Settings страницы
 
@@ -137,8 +146,24 @@ Application Security — один из инструментов compliance:
 
 *Типовая политика.* Сначала Monitor на 2-4 недели, затем Block для критичных endpoint'ов (платежи, аутентификация), остальные остаются Monitor.
 
+### Поддерживаемые технологии
+
+Это критично проверить на проекте — модуль AppSec в Managed Classic покрывает **не все** стеки:
+
+- **Third-party vulnerabilities** (библиотеки): Java, .NET, Node.js, Python, Go, PHP.
+- **Code-level vulnerabilities**: Java 8+, .NET Framework 4.5+, Go (для .NET, Go и Python требуется ручное включение deep monitoring).
+- **Runtime Application Protection (блокировка атак)**: Java 8+ (OneAgent 1.241+), .NET Framework 4.5+ (OneAgent 1.289+), Go (OneAgent 1.311+). Только Windows x86 и Linux x86, только 64-битные процессы.
+
+Для других технологий (Ruby, Erlang, Cobol) AppSec не работает — придётся опираться на сторонние SAST/DAST/WAF.
+
+### Vulnerability feed и Mission Control
+
+Для Managed-кластера обновления базы уязвимостей приходят через подключение к **Cloud Control / Mission Control** (закрытый канал Dynatrace). Источники feed: **Snyk** (для библиотек и runtime-компонентов в Kubernetes) и **NVD** (для .NET / Java / Node.js runtime). После публикации новой версии feed она доезжает до кластера в течение примерно двух часов; кластер сверяет окружение со свежими данными примерно раз в минуту.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/secure/faq -->
+
 ### Air-gapped нюансы
 
-- **CVE-база** поставляется с обновлениями Dynatrace через customer portal → CMC. Обновляется вручную админом, обычно раз в квартал. В SaaS обновления непрерывные, в Managed — дискретные.
-- **Внешний vulnerability feed не нужен.** Вся детекция идёт локально, по встроенной базе.
-- **Application Protection blocking** работает локально, без внешних сервисов. Важно для compliance — весь security-loop внутри контура.
+- В полностью air-gapped Managed-инсталляции обновление CVE-feed нужно явно прокидывать через разрешённый прокси к Mission Control либо организовывать оффлайн-импорт по согласованию с Dynatrace. Без свежего feed RVA продолжит работать на текущих данных, но новые CVE подхватятся только после следующего обновления.
+- **Application Protection blocking** выполняется на стороне OneAgent внутри контура, без обращения наружу.
+- **Внутренние SOC** интегрируются через Webhook / Email / ServiceNow notifications — те же каналы, что в incident-lifecycle.

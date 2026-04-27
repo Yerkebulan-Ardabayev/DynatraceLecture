@@ -1,4 +1,16 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 11 из 14: «SLI, SLO, SLA: подходы и реализация»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/slo -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27**
+
+## 📚 Источники
+
+- [Service-Level Objectives — Managed](https://docs.dynatrace.com/managed/shortlink/service-level-objectives)
+- [SLO Classic basics](https://docs.dynatrace.com/managed/deliver/service-level-objectives-classic/slo-basics)
+- [Configure and monitor SLOs](https://docs.dynatrace.com/managed/deliver/service-level-objectives-classic/configure-and-monitor-slo)
+- [SLO Classic — definition examples](https://docs.dynatrace.com/managed/deliver/service-level-objectives-classic/slo-definition-configuration-examples)
+- [Davis AI — anomaly detection](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection)
 
 ## 📍 КАРТА — три страницы про надёжность как сервис
 
@@ -44,13 +56,25 @@
 
 Путь: `/ui/settings/builtin:monitoring.slo`.
 
-**Здесь создаются SLO.** Структура одного SLO:
+**Здесь создаются SLO.** Удобный сценарий — SLO wizard с готовыми шаблонами. Доступные шаблоны:
+
+- **Service-level availability** — отношение успешных вызовов сервиса к общему количеству.
+- **Service-method availability** — то же на уровне отдельного key request.
+- **Service performance** — доля вызовов с откликом меньше порога.
+- **User experience** — на базе Apdex.
+- **Mobile crash-free users** — доля сессий без сбоев.
+- **Synthetic availability** — успешность Synthetic-чеков.
+
+Структура одного SLO:
+
 - **Имя** — `retail-api-availability`.
-- **SLI-запрос** — на основе какой метрики вычисляется (`builtin:service.successes` / `builtin:service.requestCount.total`).
+- **SLI** (Service-Level Indicator) — метрика, по которой считается; для service availability это `builtin:service.successes` / `builtin:service.requestCount.total`.
 - **Target** — 99.9%.
-- **Period** — за какой срок считается (rolling 30 days / calendar month / quarter).
-- **Error budget** — автоматически вычисляется как (100% - Target) × period duration.
-- **Alerting** — когда создавать Problem (обычно при быстром burn rate).
+- **Evaluation timeframe** — за какой срок считается.
+- **Error budget** и **burn rate** — Dynatrace вычисляет автоматически; burn rate = 1 означает «при текущем темпе budget будет полностью израсходован за длительность SLO».
+- **Alerting** — два типа: status alert (статус упал ниже target) и burn rate alert (budget съедается слишком быстро).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/deliver/service-level-objectives-classic/configure-and-monitor-slo -->
 
 ### Шаг 3 — SLO setup (нормализация)
 
@@ -59,17 +83,14 @@
 Путь: `/ui/settings/builtin:monitoring.slo.normalization`.
 
 **Дополнительные параметры расчёта SLO:**
-- **Нормализация** — какие периоды исключать из расчёта (maintenance windows, плановые простои).
-- **Лимиты чувствительности** — чтобы единичные отклонения не влияли на SLO.
-- **Grace periods** — периоды, после которых метрика «прощается» (например, новый сервис первую неделю не считается).
+
+- **Normalize error budget** — глобальный тумблер. Когда включён, остаток бюджета считается по формуле `(status − target) ÷ (100 − target) × 100`. Например, при target 95% и текущем статусе 96% normalized error budget = 20%. Без нормализации сравнивать budget между SLO с разными target неудобно — нормализация приводит всё к 0–100% и упрощает дашборды.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/deliver/service-level-objectives-classic/slo-basics -->
 
 ---
 
 ## 🎓 ТЕОРИЯ — SLI/SLO/SLA в банковской практике
-
-> 📚 **Источники (официальная документация Dynatrace):**
->
-> - [Service-Level Objectives (SLO)](https://docs.dynatrace.com/docs/shortlink/service-level-objectives)
 
 ### Типовые SLI
 
@@ -106,4 +127,4 @@
 
 ### Air-gapped нюансы
 
-Все SLO вычисляются локально в кластере на метриках из Cassandra. Внешних сервисов нет. SLO-дашборды живут в кластере, отчёты экспортируются через API во внутренние BI-системы.
+Все SLO вычисляются локально в кластере на метриках из Cassandra. Внешних сервисов нет. SLO-дашборды живут в кластере, статус и burn rate тянутся через Service-level objectives API во внутренние BI-системы банка.

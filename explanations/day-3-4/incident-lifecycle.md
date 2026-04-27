@@ -1,4 +1,16 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 13 из 14: «Incident Lifecycle: от детекции до Root Cause Analysis»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/problems -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27**
+
+## 📚 Источники
+
+- [Problem alerting profiles — Managed](https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/alerting-profiles)
+- [Maintenance windows — Managed](https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/maintenance-windows)
+- [Problem notifications — Managed](https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/problem-notifications)
+- [Jira integration for problem notifications](https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/problem-notifications/jira-integration)
+- [Issue-tracking integration for releases](https://docs.dynatrace.com/managed/deliver/release-monitoring/issue-tracking-integration)
 
 ## 📍 КАРТА — пять страниц полного цикла инцидента
 
@@ -32,13 +44,15 @@
 
 *Второй этап lifecycle.* После создания Problem Davis проверяет, под какие alerting profiles она попадает. Profile — правило «какие проблемы в какие интеграции».
 
-**Структура профиля:**
+**Структура профиля по документации Managed.** Scope складывается из трёх блоков, объединённых по AND:
 
-- **Name** — `prod-high-priority`.
-- **Conditions** — Severity ≥ Critical AND Management zone = prod AND Impact = Application.
-- **Severity rules** — минимальный severity для срабатывания.
-- **Event filters** — специфичные типы событий (slowdowns only, crashes only и др.).
-- **Related integrations** — куда слать (ссылка на Problem notifications).
+- **Management zone** — ограничивает профиль конкретной зоной видимости.
+- **Severity rules** — фильтр по уровню severity, длительности проблемы и тегам entity. До **100 правил** в профиле, между ними OR.
+- **Event filters** — фильтр по типу события (predefined или custom). До **20 правил** в профиле; среди них negated combine с AND, non-negated с OR, два набора потом объединяются по AND.
+
+В каждом окружении есть **default-профиль**, его нельзя удалить. Свои профили создают для команд и интеграций.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/alerting-profiles -->
 
 **Типовой набор профилей:**
 
@@ -53,19 +67,23 @@
 
 Путь: `/ui/settings/builtin:alerting.maintenance-window`.
 
-*Что это.* Периоды, когда Dynatrace **не создаёт проблемы** или **не отправляет уведомления**. Используется для:
+*Что это.* Периоды, когда Dynatrace **не создаёт проблемы** или **не отправляет уведомления** (две независимые опции — `Suppress problem detection` и `Suppress alerting`). Используется для:
 
 - Плановых работ (релиз, бэкап, миграция).
 - Праздничных периодов (в эти дни изменён baseline из-за пониженной активности).
 - Известных проблемных периодов (ночные ETL, которые тормозят БД).
 
-**Типы maintenance window:**
+**Типы maintenance window по документации Managed:**
 
-- **Planned** — единоразовое окно на конкретную дату и время.
-- **Recurring** — периодическое (каждое воскресенье 02:00-06:00).
-- **Scope** — какие сущности затрагивает (все / конкретные сервисы / хост-группы).
+- **Planned** — задаётся заранее, поддерживает recurrence (one-time, daily, weekly, monthly) c указанием таймзоны.
+- **Unplanned** — создаётся пост-фактум для уже произошедшего сбоя, чтобы он не уходил в baseline.
+- **Scope** — какие сущности затрагивает (всё окружение / management zone / конкретные entity).
+
+Лимит — до **2000 окон** на окружение. Maintenance-периоды дополнительно исключаются из расчёта baseline, чтобы load testing или плановый рестарт не «учили» Davis ложным паттернам.
 
 *Типовая практика.* Перед каждым плановым релизом создают maintenance window, чтобы не будить дежурных на «проблемы» во время деплоя.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/maintenance-windows -->
 
 ### Шаг 4 — Problem notifications
 
@@ -73,15 +91,16 @@
 
 Путь: `/ui/settings/builtin:problem.notifications`. Разбирался в Дне 1, Тема 10.
 
-*Четвёртый этап lifecycle.* Problem попадает под alerting profile и отправляется в настроенные интеграции:
+*Четвёртый этап lifecycle.* Problem попадает под alerting profile и отправляется в настроенные интеграции. По документации Managed доступны:
 
-- Email.
-- Slack / Microsoft Teams.
-- Jira / ServiceNow / другие ITSM.
-- PagerDuty / OpsGenie.
-- Webhook для кастомной логики.
+- **Incident management:** Opsgenie, PagerDuty, VictorOps, xMatters, Jira.
+- **ChatOps:** Slack, Microsoft Teams.
+- **Enterprise Service Management:** ServiceNow.
+- **Custom:** Email и Webhook для всего остального.
 
-Проблема покидает Dynatrace и попадает в рабочий процесс команды.
+Проблема покидает Dynatrace и попадает в рабочий процесс команды. Уведомления уходят только в момент **создания** и **закрытия** проблемы — это намеренно, чтобы не флудить промежуточными апдейтами.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/problem-notifications -->
 
 ### Шаг 5 — Issue tracking integration
 
@@ -89,13 +108,14 @@
 
 Путь: `/ui/settings/builtin:issue-tracking.integration`.
 
-*Что это.* Двусторонняя интеграция с трекерами задач (Jira, GitHub Issues, Azure DevOps, ServiceNow Incidents):
+*Что это.* **Issue-tracking integration for releases** — это **не** канал автотикетинга. Это привязка трекера задач к Release inventory: каждый монитоируемый сервис связывается со статистикой багов в Jira / GitHub / GitLab / ServiceNow по динамическому запросу (например, JQL `project = RETAIL AND fixVersion = {VERSION}`). Цель — увидеть прямо в Release inventory число открытых/закрытых тикетов на конкретный релиз продукта. Лимит — до **20 issue-tracking конфигураций** на окружение.
 
-- При создании Problem автоматически открывается тикет в трекере (через Problem notifications).
-- При изменении статуса Problem (Acknowledged / Resolved) обновляется статус тикета.
-- В тикете видны обогащённые данные: affected entity, root cause, PurePath, логи.
+Автоматическое создание тикета на Problem — это другая интеграция, **Problem notifications → Jira** (Шаг 4). При этом Dynatrace **не закрывает Jira-тикеты** автоматически после resolve проблемы — закрывать тикет нужно вручную в Jira или через свой workflow.
 
-Пятый этап lifecycle — перевод инцидента в управляемую задачу разработки или эксплуатации.
+Пятый этап lifecycle — перевод инцидента в управляемую задачу разработки или эксплуатации; Release-привязка отдельно показывает, какой релиз скорее всего инициировал проблему.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/deliver/release-monitoring/issue-tracking-integration -->
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/problem-notifications/jira-integration -->
 
 ---
 
@@ -115,7 +135,7 @@
 - **Каждый сервис — в alerting profile.** Не должно быть сервиса, не mapped ни в один профиль. Иначе это «забытый» сервис, проблемы на нём не увидят.
 - **Профили по командам и severity.** Отдельный профиль для каждой команды + severity. Позволяет маршрутизировать точно: проблема на retail → retail-team, а не всем.
 - **Maintenance windows перед деплоями.** Регламент: за час до плановой выкатки создаётся maintenance window. Экономит ночные часы дежурных.
-- **ITSM-интеграция с автосозданием.** Каждая Critical Problem → авто-тикет в ITSM. Гарантирует, что проблема не потеряется в письмах.
+- **ITSM-интеграция с автосозданием.** Каждая Critical Problem → авто-тикет в ITSM через Problem notifications. Закрытие тикета остаётся ручным процессом или автоматизируется через ITSM-workflow со стороны заказчика.
 - **Разделение профилей по типу сигнала.** Availability drop → немедленное уведомление. Slowdown → задержка 5 минут, чтобы отделить шум.
 
 ### Air-gapped specifics

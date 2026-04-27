@@ -1,4 +1,16 @@
 > 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 8 из 14: «Ключевые пользовательские действия + дополнительные свойства»
+<!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:user-action-custom-metrics -->
+<!-- revision: 2026-04-27 -->
+
+🔖 **Редакция от 2026-04-27**
+
+## 📚 Источники
+
+- [Real User Monitoring — Managed](https://docs.dynatrace.com/managed/shortlink/rum)
+- [User actions — RUM concepts](https://docs.dynatrace.com/managed/shortlink/user-actions)
+- [Applications — Web/Mobile/Custom](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/applications)
+- [Custom applications — OpenKit](https://docs.dynatrace.com/managed/observe/digital-experience/custom-applications)
+- [Create calculated metrics for web applications](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-calculated-metrics-web)
 
 ## 📍 КАРТА — четыре страницы про настройку user actions и resources
 
@@ -21,9 +33,17 @@
 
 Путь: `/ui/settings/builtin:user-action-custom-metrics`.
 
-*Что такое User Action.* В RUM — каждое осознанное действие пользователя: клик по кнопке, переход на страницу, отправка формы, XHR-запрос. Dynatrace распознаёт и трекует автоматически.
+*Что такое User Action.* В RUM — взаимодействие пользователя с интерфейсом, обычно сопровождающееся обращением к серверу. Dynatrace автоматически распознаёт три основных типа:
 
-*User action custom metrics* — механизм **дополнительных метрик**, вычисляемых на основе user actions. Примеры:
+- **Load actions** — переход на URL: загрузка страницы со всеми ресурсами (HTML, CSS, JS, картинки). Длительность измеряется от navigation start до завершения `onload`.
+- **XHR actions** — действие, инициировавшее `XMLHttpRequest` или `fetch()`. Длительность охватывает все асинхронные запросы и связанные DOM-изменения.
+- **Custom actions** — программно создаются через RUM JavaScript API (для измерения чисто JS-логики без сетевых вызовов).
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/user-actions -->
+
+*User action custom metrics* — механизм **дополнительных метрик**, вычисляемых на основе user actions. Создаются через **Web → application → Impact of user actions on performance → Analyze performance → Create metric**. Лимиты: до 500 метрик на окружение и до 100 метрик на приложение. Только новые данные попадают в метрику — историю задним числом не пересчитывают.
+
+Примеры:
 
 - `payment_amount` — сумма платежа, извлекается из user action отправки формы.
 - `login_method` — способ логина (SMS, биометрия, пароль).
@@ -31,17 +51,21 @@
 
 *Польза.* Метрики важны для бизнес-аналитики, доступны в Data Explorer и могут служить SLI.
 
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-calculated-metrics-web -->
+
 ### Шаг 2 — Custom RUM Enablement
 
 ![Custom RUM Enablement — включение Custom apps RUM](screenshots/day-3-4/key-actions/settings/builtinrum.custom.enablement/Enablement-and-cost-control-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.custom.enablement`.
 
-*Custom applications* — тип RUM для нестандартных приложений: Smart TV app, десктопный Electron-клиент, IoT-устройство. Используется Custom RUM SDK с ручной инструментацией.
+*Custom applications* — тип RUM для всех «цифровых точек контакта», которые не Web и не Mobile: rich client (десктоп), IoT-устройства, голосовые интерфейсы (например, Alexa Skills) и тому подобные. Инструментирование делается через **Dynatrace OpenKit** — открытые библиотеки на GitHub с API для разработчиков.
 
 **На странице:** главный тумблер Custom RUM и cost control.
 
-*Типовое применение.* Применяется редко. Случаи: банкоматы с кастомным UI, десктопные приложения для кассиров.
+*Типовое применение в банке.* Банкоматы с кастомным UI, десктопные приложения для кассиров — там, где нет браузера и нет нативного мобильного OneAgent.
+
+<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/custom-applications -->
 
 ### Шаг 3 — Resource types
 
@@ -51,7 +75,7 @@
 
 *Что такое Resources в RUM.* При загрузке страницы браузер подгружает ресурсы: CSS, JS, картинки, шрифты, XHR-запросы. RUM собирает по каждому: URL, время загрузки, размер, статус.
 
-*Resource types.* Настройка, какие типы ресурсов трекать. По умолчанию почти всё включено: images, scripts, stylesheets, XHR, fetch, fonts. Можно отключить, например, tracking картинок — для снижения объёма данных.
+*Resource types.* По умолчанию Dynatrace определяет тип ресурса по расширению файла. Эта настройка нужна, когда расширения нет или оно нестандартное (например, REST endpoint без `.json`, OpenDocument-файлы, динамические URL): через Java regex прописываем правило — какие URL получают какой Primary resource type и опциональный Secondary resource type. Это override классификации, не enable/disable отдельных категорий.
 
 ### Шаг 4 — Resource URL cleanup rules
 
@@ -59,9 +83,9 @@
 
 Путь: `/ui/settings/builtin:rum.web.resource-cleanup-rules`.
 
-*Проблема.* Многие URL содержат уникальные параметры (`?v=12345`, `/cache/abc-xyz.js`, `?sessionId=...`). Без нормализации каждый ресурс в статистике уникален — нельзя агрегировать метрики «сколько в среднем грузится main.js».
+*Проблема.* Многие URL содержат динамические элементы — IDs из REST API, query strings (например, случайные cache-busting аргументы) и session-данные. Без нормализации каждый такой ресурс уникален — нельзя агрегировать метрики «сколько в среднем грузится main.js».
 
-*Cleanup rules* — правила нормализации. Примеры:
+*Cleanup rules* — правила нормализации URL. Примеры:
 
 - Убрать query parameters `?v=*` — единый URL для всех версий.
 - Убрать hash в пути `/cache/hash-*.js` — общий паттерн.
@@ -82,11 +106,12 @@
 ### Business events vs Custom metrics
 
 В Dynatrace есть два похожих механизма:
-- **Business events** — отдельный поток данных, отправляемый приложением через API в Grail (в SaaS) или в event storage (в Managed). Используется для серьёзной бизнес-аналитики.
+
+- **Business events** — отдельный поток событий, отправляемый приложением через API. Каждое событие — атомарная запись с произвольными атрибутами.
 - **Custom metrics** — дополнительные метрики, привязанные к user actions RUM.
 
-**Когда что.** Business events — когда важны атомарные события с полной трассировкой (каждый совершённый платёж как отдельная запись). Custom metrics — для агрегированных показателей по user actions.
+**Когда что.** Business events — когда важны атомарные события с полной трассировкой (каждый совершённый платёж как отдельная запись с суммой, ID транзакции, признаком фрода). Custom metrics — для агрегированных показателей по user actions, которые нужно строить графиками и использовать в SLO.
 
 ### Air-gapped specifics
 
-Всё локально. Custom metrics хранятся в Cassandra как любые метрики. Custom RUM SDK распространяется через customer portal → внутренний Maven/CocoaPods репозиторий банка.
+Всё локально. Custom metrics хранятся в Cassandra как любые метрики Dynatrace. OpenKit-библиотеки (для Custom applications) распространяются как отдельный артефакт — банку нужно держать их в своём внутреннем Maven / npm / GitHub-зеркале.
