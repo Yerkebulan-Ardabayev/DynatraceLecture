@@ -8,6 +8,7 @@ Usage:
     python scripts/quality_check.py --json          # machine-readable
     python scripts/quality_check.py --strict        # exit 1 даже если только warnings
 """
+
 from __future__ import annotations
 
 import argparse
@@ -74,18 +75,23 @@ RULES: list[Rule] = [
         pattern=re.compile(r"\bРЕД\s*ОС\b"),
         suggestion="если не подтверждено заказчиком — убрать или заменить на «сертифицированный дистрибутив»",
     ),
-
     # 2. ROADMAP-ДАТЫ (Dynatrace не публикует публичных дат)
     Rule(
         cls="ROADMAP_DATE",
         severity="error",
-        pattern=re.compile(r"(Grail|DQL|Notebooks|Workflows|Apps\s*platform).{0,40}(в\s+Managed|в\s+managed).{0,40}20\d\d", re.IGNORECASE),
+        pattern=re.compile(
+            r"(Grail|DQL|Notebooks|Workflows|Apps\s*platform).{0,40}(в\s+Managed|в\s+managed).{0,40}20\d\d",
+            re.IGNORECASE,
+        ),
         suggestion="заменить на «сроки в публичных roadmap Dynatrace не зафиксированы»",
     ),
     Rule(
         cls="ROADMAP_DATE",
         severity="error",
-        pattern=re.compile(r"(Grail|DQL).{0,30}(запланирован|появится|ожидается).{0,30}20\d\d", re.IGNORECASE),
+        pattern=re.compile(
+            r"(Grail|DQL).{0,30}(запланирован|появится|ожидается).{0,30}20\d\d",
+            re.IGNORECASE,
+        ),
         suggestion="удалить дату — Dynatrace не публикует публичных roadmap-дат",
     ),
     Rule(
@@ -94,7 +100,6 @@ RULES: list[Rule] = [
         pattern=re.compile(r"(DQL|Grail)\s+следом", re.IGNORECASE),
         suggestion="удалить — спекуляция о порядке релизов",
     ),
-
     # 3. MARKETING / SALES BATTLE CARD (не обучение)
     Rule(
         cls="MARKETING",
@@ -131,9 +136,10 @@ RULES: list[Rule] = [
         severity="warn",
         pattern=re.compile(r"\bAppDynamics\b|\bSplunk\b", re.IGNORECASE),
         suggestion="упоминание конкурента — проверить, нужен ли в курсе обучения (vs battle card)",
-        guard_skip=re.compile(r"Splunk\s+SPL|синтаксис.*Splunk"),  # пример в usql.md для аналогии синтаксиса — ок
+        guard_skip=re.compile(
+            r"Splunk\s+SPL|синтаксис.*Splunk"
+        ),  # пример в usql.md для аналогии синтаксиса — ок
     ),
-
     # 4. SUPPORT-ИНСТРУКЦИИ (курс учит работе с платформой, не эскалации)
     Rule(
         cls="SUPPORT_INSTRUCTION",
@@ -144,7 +150,9 @@ RULES: list[Rule] = [
     Rule(
         cls="SUPPORT_INSTRUCTION",
         severity="error",
-        pattern=re.compile(r"поддержке\s+Dynatrace|в\s+поддержку\s+Dynatrace|поддержк[аеу]?\s+Dynatrace"),
+        pattern=re.compile(
+            r"поддержке\s+Dynatrace|в\s+поддержку\s+Dynatrace|поддержк[аеу]?\s+Dynatrace"
+        ),
         suggestion="удалить или переформулировать без упоминания процесса эскалации",
     ),
     Rule(
@@ -152,9 +160,10 @@ RULES: list[Rule] = [
         severity="warn",
         pattern=re.compile(r"открыть\s+тикет"),
         suggestion="проверить контекст — если это support-инструкция, убрать",
-        guard_skip=re.compile(r"тикет\s+в\s+(Jira|ServiceNow|Remedy)"),  # интеграция с внешним ITSM — ок
+        guard_skip=re.compile(
+            r"тикет\s+в\s+(Jira|ServiceNow|Remedy)"
+        ),  # интеграция с внешним ITSM — ок
     ),
-
     # 5. ВЫДУМАННЫЕ SUCCESS-STORIES (конкретные цифры без источника)
     Rule(
         cls="FAKE_SUCCESS_STORY",
@@ -180,27 +189,56 @@ RULES: list[Rule] = [
         pattern=re.compile(r"цена\s*\+\d+\s*%"),
         suggestion="конкретный прирост цены без источника — удалить или пометить «иллюстративно»",
     ),
-
     # 6. UNSOURCED ПРОЦЕНТЫ (overhead / CPU / память)
     Rule(
         cls="UNSOURCED_PERCENT",
         severity="warn",
-        pattern=re.compile(r"\d+\s*[-–]\s*\d+\s*%\s*(CPU|нагрузк|overhead|процессор)", re.IGNORECASE),
+        pattern=re.compile(
+            r"\d+\s*[-–]\s*\d+\s*%\s*(CPU|нагрузк|overhead|процессор)", re.IGNORECASE
+        ),
         suggestion="numeric claim про overhead — верифицировать в dtkb; если не подтверждается, смягчить («заметной доли не тратит»)",
     ),
     Rule(
         cls="UNSOURCED_PERCENT",
         severity="warn",
-        pattern=re.compile(r"до\s+\d+\s*%\s*(CPU|нагрузк|overhead|процессор)", re.IGNORECASE),
+        pattern=re.compile(
+            r"до\s+\d+\s*%\s*(CPU|нагрузк|overhead|процессор)", re.IGNORECASE
+        ),
         suggestion="верхняя граница overhead без источника — верифицировать в dtkb",
     ),
-
     # 7. RPS-CLAIMS (нагрузочные характеристики без источника)
     Rule(
         cls="UNSOURCED_RPS",
         severity="warn",
-        pattern=re.compile(r"\d{3,}\s*(rps|RPS|req/s|запросов\s+в\s+секунду)", re.IGNORECASE),
+        pattern=re.compile(
+            r"\d{3,}\s*(rps|RPS|req/s|запросов\s+в\s+секунду)", re.IGNORECASE
+        ),
         suggestion="нагрузочная цифра без источника — либо привязать к docs, либо переформулировать без числа",
+    ),
+    # 8. SaaS-ONLY ФИЧИ, ПОДАННЫЕ КАК ДОСТУПНЫЕ В MANAGED (курс — air-gapped Managed)
+    # Grail / DQL / Notebooks / Workflows / Apps platform / DPS и т.п. живут только в SaaS.
+    # Легитимны ТОЛЬКО как пояснение «в Managed этого нет». guard_skip снимает строки
+    # с exclusion-контекстом; остальное = кандидат на протечку (warn, ручной ревью).
+    # Pattern регистрозависим: ловит продукты (Workflows/Apps), не общий «workflow».
+    Rule(
+        cls="SAAS",
+        severity="warn",
+        pattern=re.compile(
+            r"\bGrail\b|\bDQL\b|\bNotebooks?\b|\bWorkflows\b|\bAutomationEngine\b"
+            r"|\bOpenPipeline\b|\bDPS\b|Apps[\s\-]?(?:platform|платформ|интерфейс)"
+            r"|Experience\s+Vitals|Latest\s+Dynatrace"
+        ),
+        suggestion=(
+            "SaaS-only фича, в air-gapped Managed её нет. Допустимо только как пояснение, "
+            "что в Managed недоступно. Если подаётся как рабочая в Managed, переписать на "
+            "классический аналог. Легитимную строку пометить <!-- qc:ignore=SAAS -->"
+        ),
+        guard_skip=re.compile(
+            r"недоступ|не\s*(?:доступ|активн|активир|работа|включ|целев|выполн|показыв|поддерж|относят)"
+            r"|Managed[^.\n]{0,30}\bнет\b|\bнет\b[^.\n]{0,20}(?:Grail|DQL|Managed)"
+            r"|\bSaaS\b|air-?gapped|классическ|\bClassic\b|пока\s+не|экран\s+пуст|пуст(?:ой|ая|ое)\b",
+            re.IGNORECASE,
+        ),
     ),
 ]
 
@@ -268,14 +306,16 @@ def scan_file(path: Path) -> list[Issue]:
                 start = max(m.start() - 40, 0)
                 end = min(m.end() + 40, len(line))
                 snippet = "…" + line[start:end].strip() + "…"
-            issues.append(Issue(
-                file=rel,
-                line=lineno,
-                cls=rule.cls,
-                severity=rule.severity,
-                snippet=snippet,
-                suggestion=rule.suggestion,
-            ))
+            issues.append(
+                Issue(
+                    file=rel,
+                    line=lineno,
+                    cls=rule.cls,
+                    severity=rule.severity,
+                    snippet=snippet,
+                    suggestion=rule.suggestion,
+                )
+            )
 
         # Source-required: tech-spec должен иметь docs-ссылку рядом
         if "NO_SOURCE" in ignored_classes or "*" in ignored_classes:
@@ -288,18 +328,20 @@ def scan_file(path: Path) -> list[Issue]:
                 snippet = line.strip()
                 if len(snippet) > 160:
                     snippet = snippet[:157] + "…"
-                issues.append(Issue(
-                    file=rel,
-                    line=lineno,
-                    cls="NO_SOURCE",
-                    severity="warn",
-                    snippet=snippet,
-                    suggestion=(
-                        "tech-spec без источника — добавить рядом ссылку на "
-                        "docs.dynatrace.com или пометить <!-- qc:ignore=NO_SOURCE --> "
-                        "если это generic-иллюстрация"
-                    ),
-                ))
+                issues.append(
+                    Issue(
+                        file=rel,
+                        line=lineno,
+                        cls="NO_SOURCE",
+                        severity="warn",
+                        snippet=snippet,
+                        suggestion=(
+                            "tech-spec без источника — добавить рядом ссылку на "
+                            "docs.dynatrace.com или пометить <!-- qc:ignore=NO_SOURCE --> "
+                            "если это generic-иллюстрация"
+                        ),
+                    )
+                )
     return issues
 
 
@@ -330,7 +372,9 @@ def print_human(issues: list[Issue]) -> None:
     for i in issues:
         by_class.setdefault(i.cls, []).append(i)
 
-    print(f"Найдено: {len(errors)} ошибок, {len(warns)} предупреждений по {len(by_class)} классам.\n")
+    print(
+        f"Найдено: {len(errors)} ошибок, {len(warns)} предупреждений по {len(by_class)} классам.\n"
+    )
 
     for cls in sorted(by_class):
         group = by_class[cls]
@@ -363,7 +407,9 @@ def print_json(issues: list[Issue]) -> None:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Quality check for dt-crawler explanations.")
+    ap = argparse.ArgumentParser(
+        description="Quality check for dt-crawler explanations."
+    )
     ap.add_argument("--json", action="store_true", help="JSON output for hooks/CI")
     ap.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     args = ap.parse_args()

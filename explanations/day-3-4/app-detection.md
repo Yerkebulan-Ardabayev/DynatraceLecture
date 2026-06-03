@@ -13,7 +13,7 @@
 - [Detection of IP addresses, locations and user agents (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/detection-of-ip-addresses-locations-and-user-agents)
 - [Web Applications RUM (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications)
 
-## 📍 КАРТА — пять страниц про детекцию и группировку приложений
+## 📍 КАРТА: пять страниц про детекцию и группировку приложений
 
 Термины темы: `Application / приложение / логическая web-единица в RUM`, `Beacon / бикон / пакет RUM-данных`, `CORS / Cross-Origin Resource Sharing`, `Host name / имя хоста`, `GeoIP / гео-IP-база`, `Reverse proxy / обратный прокси`.
 
@@ -29,33 +29,33 @@
 
 ## 🎬 Работа с детекцией приложений на пяти экранах
 
-### Шаг 1 — Application detection
+### Шаг 1: Application detection
 
-![Application detection — главная страница правил обнаружения приложений](screenshots/day-3-4/app-detection/settings/builtinrum.web.app-detection/Application-detection-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![Application detection: главная страница правил обнаружения приложений](screenshots/day-3-4/app-detection/settings/builtinrum.web.app-detection/Application-detection-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.web.app-detection`.
 
 *Что такое App detection.* RUM-сниппет собирает данные со всех страниц веб-сервера. Чтобы разделить их между Applications (например, `www.example.com` → `Public Site`, `portal.example.com` → `Client Portal`), нужны правила детекции.
 
-**Правила матчатся по URL** в формате `scheme://host:port/path?query` (порты 80 и 443 опускаются по умолчанию). Доступные операторы матчинга: **contains / ends with / equals**. Правила оцениваются **сверху вниз, срабатывает первое совпавшее**, дальнейшая обработка останавливается. Лимит — **до 1000 правил на окружение**.
+**Правила матчатся по URL** в формате `scheme://host:port/path?query` (порты 80 и 443 опускаются по умолчанию). Доступные операторы матчинга: **contains / ends with / equals**. Правила оцениваются **сверху вниз, срабатывает первое совпавшее**, дальнейшая обработка останавливается. Лимит: **до 1000 правил на окружение**.
 
 Можно сопоставлять:
 
-- **URL / host name** — основное условие (хост в домене → приложение).
-- **URL path prefix** — `/api/*` в одно приложение, `/admin/*` в другое.
-- **Query parameter** — по значению специального параметра.
-- **HTTP header** — по кастомному заголовку от reverse-proxy.
+- **URL / host name**: основное условие (хост в домене → приложение).
+- **URL path prefix**: `/api/*` в одно приложение, `/admin/*` в другое.
+- **Query parameter**: по значению специального параметра.
+- **HTTP header**: по кастомному заголовку от reverse-proxy.
 
 Изменения правил доезжают до OneAgent обычно в течение минуты.
 
-На той же странице есть инструмент **Check your existing detection rules** — ввести URL и увидеть, какое правило сработает и включён ли RUM.
+На той же странице есть инструмент **Check your existing detection rules**: ввести URL и увидеть, какое правило сработает и включён ли RUM.
 
 *Типовое применение.* 3-10 правил App detection по количеству разных публичных и внутренних веб-приложений. Каждое правило даёт отдельный Application в интерфейсе с собственными метриками и SLI.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/application-detection-rules -->
 
-### Шаг 2 — Beacon origins for CORS
+### Шаг 2: Beacon origins for CORS
 
-![Beacon origins for CORS — список доменов, откуда принимаются RUM-beacons](screenshots/day-3-4/app-detection/settings/builtinrum.web.beacon-domain-origins/Beacon-origins-for-CORS-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![Beacon origins for CORS: список доменов, откуда принимаются RUM-beacons](screenshots/day-3-4/app-detection/settings/builtinrum.web.beacon-domain-origins/Beacon-origins-for-CORS-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.web.beacon-domain-origins`.
 
@@ -72,21 +72,21 @@
 *Типовое содержание.* Все публичные домены и их CDN: `www.example.com`, `portal.example.com`, `mobile-api.example.com`, `cdn.example.com`.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-beacon-domain-allowlist -->
 
-### Шаг 3 — Identify host names
+### Шаг 3: Identify host names
 
-![Identify host names — правила идентификации имён хостов](screenshots/day-3-4/app-detection/settings/builtinrum.host-headers/Identify-host-names-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![Identify host names: правила идентификации имён хостов](screenshots/day-3-4/app-detection/settings/builtinrum.host-headers/Identify-host-names-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.host-headers`.
 
-*Что настраивает.* HTTP-заголовок для определения host name страницы. По умолчанию — `Host`. Но если приложение за reverse-proxy, реальный домен пользователя приходит в `X-Forwarded-Host` или `X-Original-Host`.
+*Что настраивает.* HTTP-заголовок для определения host name страницы. По умолчанию: `Host`. Но если приложение за reverse-proxy, реальный домен пользователя приходит в `X-Forwarded-Host` или `X-Original-Host`.
 
 *Риск без настройки.* Все страницы кажутся идущими с одного внутреннего домена прокси (`nginx-internal.local`), App detection не работает правильно.
 
 *Типовая настройка за reverse-proxy.* Обязательно добавить `X-Forwarded-Host` в список идентифицирующих заголовков.
 
-### Шаг 4 — IP determination
+### Шаг 4: IP determination
 
-![IP determination — настройка определения IP-адреса клиента](screenshots/day-3-4/app-detection/settings/builtinrum.ip-determination/IP-determination-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![IP determination: настройка определения IP-адреса клиента](screenshots/day-3-4/app-detection/settings/builtinrum.ip-determination/IP-determination-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.ip-determination`.
 
@@ -97,43 +97,43 @@
 *Риск без настройки.* Все клиенты кажутся с IP прокси. Геолокация не работает, анализ по странам невозможен.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/detection-of-ip-addresses-locations-and-user-agents -->
 
-### Шаг 5 — Map IP addresses to locations
+### Шаг 5: Map IP addresses to locations
 
-![Map IP addresses to locations — база для геолокации клиентов](screenshots/day-3-4/app-detection/settings/builtinrum.ip-mappings/Map-IP-addresses-to-locations-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![Map IP addresses to locations: база для геолокации клиентов](screenshots/day-3-4/app-detection/settings/builtinrum.ip-mappings/Map-IP-addresses-to-locations-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.ip-mappings`.
 
 *Что настраивает.* Кастомные правила преобразования IP в геолокацию. Для веб-приложений Dynatrace по умолчанию использует **MaxMind Geo2 database**, которая обновляется с каждой поставкой Managed-релиза. Для мобильных при наличии разрешения предпочтение отдаётся GPS, иначе fallback на IP-геолокацию.
 
-*Для внутренних IP* (10.x, 192.168.x) автоматической геолокации нет — этих диапазонов в MaxMind нет. Добавляют кастомные mapping: `10.10.0.0/16 → офис 1`, `10.20.0.0/16 → офис 2`. Это помогает анализу «в каком офисе медленно открывается корпоративный портал».
+*Для внутренних IP* (10.x, 192.168.x) автоматической геолокации нет: этих диапазонов в MaxMind нет. Добавляют кастомные mapping: `10.10.0.0/16 → офис 1`, `10.20.0.0/16 → офис 2`. Это помогает анализу «в каком офисе медленно открывается корпоративный портал».
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/detection-of-ip-addresses-locations-and-user-agents -->
 
 ---
 
-## 🎓 ТЕОРИЯ — детекция приложений в RUM
+## 🎓 ТЕОРИЯ: детекция приложений в RUM
 
 ### Почему App detection важна
 
 **Один RUM-сниппет может служить нескольким приложениям.** OneAgent на веб-сервере вставляет один и тот же сниппет во все HTML-ответы. Если на сервере хостятся три разных приложения (публичный сайт, клиентский портал, внутренняя админка), все они получат сниппет, и данные пойдут в ActiveGate с одного источника.
 
-**App detection разбирает эти данные** на отдельные Applications в интерфейсе. Без правил — одно огромное приложение со смешанными метриками. С правилами — три отдельных с собственной статистикой.
+**App detection разбирает эти данные** на отдельные Applications в интерфейсе. Без правил: одно огромное приложение со смешанными метриками. С правилами: три отдельных с собственной статистикой.
 
 ### Последствия неправильной детекции
 
 - **Метрики смешиваются.** Проблема в админке влияет на метрики публичного сайта и наоборот.
-- **SLO невозможны.** Нельзя задать «Availability клиентского портала ≥ 99.9%» — нет отдельной сущности.
+- **SLO невозможны.** Нельзя задать «Availability клиентского портала ≥ 99.9%»: нет отдельной сущности.
 - **Alerting profiles некорректны.** Алерты на одно приложение срабатывают по проблемам другого.
 
 ### Связь с остальными настройками темы
 
 Правильная детекция приложений требует всех пяти страниц в комплекте:
-- **App detection** — основные правила (по какому URL/host какое приложение).
-- **Identify host names** — чтобы правила могли корректно работать за reverse-proxy.
-- **IP determination** — чтобы геолокация работала.
-- **Beacon origins CORS** — чтобы браузеры не блокировали отправку данных.
-- **IP mappings** — чтобы внутренние IP имели понятную локацию.
+- **App detection**: основные правила (по какому URL/host какое приложение).
+- **Identify host names**: чтобы правила могли корректно работать за reverse-proxy.
+- **IP determination**: чтобы геолокация работала.
+- **Beacon origins CORS**: чтобы браузеры не блокировали отправку данных.
+- **IP mappings**: чтобы внутренние IP имели понятную локацию.
 
-Без хотя бы одного пункта — картина неполная.
+Без хотя бы одного пункта: картина неполная.
 
 ### Air-gapped specifics
 

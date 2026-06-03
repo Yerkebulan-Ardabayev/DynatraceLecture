@@ -13,15 +13,15 @@
 - [Configure RUM monitoring code source (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-monitoring-code-source)
 - [Control the RUM JavaScript version (Managed)](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-javascript-version)
 
-## 📍 КАРТА — пять страниц настройки RUM-инструментации
+## 📍 КАРТА: пять страниц настройки RUM-инструментации
 
 Термины темы: `RUM / Real User Monitoring / мониторинг реальных пользователей`, `Web RUM / веб-RUM через JavaScript`, `Mobile RUM / мобильный RUM через SDK`, `Session / сессия`, `Cost control / контроль расхода лицензии`, `Core Web Vitals / ключевые метрики веб-производительности`.
 
 | Что показать | Путь в меню | Прямая ссылка |
 |---|---|---|
-| Web RUM — включение и cost control | **Settings → Web and mobile monitoring → Web → Enablement and cost control** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.web.enablement` |
-| Mobile RUM — включение и cost control | **Settings → Web and mobile monitoring → Mobile → Enablement and cost control** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.mobile.enablement` |
-| RUM JavaScript — имя файла | **Settings → Web and mobile monitoring → Web → RUM JavaScript → File name** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.web.rum-javascript-file-name` |
+| Web RUM: включение и cost control | **Settings → Web and mobile monitoring → Web → Enablement and cost control** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.web.enablement` |
+| Mobile RUM: включение и cost control | **Settings → Web and mobile monitoring → Mobile → Enablement and cost control** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.mobile.enablement` |
+| RUM JavaScript: имя файла | **Settings → Web and mobile monitoring → Web → RUM JavaScript → File name** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.web.rum-javascript-file-name` |
 | Custom RUM JavaScript version | **Settings → Web and mobile monitoring → Web → RUM JavaScript → Version** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.web.custom-rum-javascript-version` |
 | RUM JavaScript updates | **Settings → Web and mobile monitoring → Web → RUM JavaScript → Updates** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:rum.web.rum-javascript-updates` |
 
@@ -29,23 +29,23 @@
 
 ## 🎬 Работа с RUM-инструментацией на пяти экранах
 
-### Шаг 1 — Web RUM: Enablement and cost control
+### Шаг 1: Web RUM: Enablement and cost control
 
-![Web Enablement and cost control — главный тумблер Web RUM](screenshots/day-3-4/instrumentation/settings/builtinrum.web.enablement/Enablement-and-cost-control-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![Web Enablement and cost control: главный тумблер Web RUM](screenshots/day-3-4/instrumentation/settings/builtinrum.web.enablement/Enablement-and-cost-control-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.web.enablement`.
 
 **Что настраивается:**
 
-- **Главный тумблер RUM for Web** — сбор данных от RUM-сниппетов в браузерах.
-- **Cost control** — ограничение объёма (лимиты сессий в месяц). Даёт предсказуемость DDU-лицензий.
-- **Session durations** — как долго считать одну сессию. По умолчанию пока пользователь активен.
+- **Главный тумблер RUM for Web**: сбор данных от RUM-сниппетов в браузерах.
+- **Cost control**: ограничение объёма (лимиты сессий в месяц). Даёт предсказуемость DDU-лицензий.
+- **Session durations**: как долго считать одну сессию. По умолчанию пока пользователь активен.
 
 *Типовое применение.* RUM включён для клиентских веб-приложений (интернет-банк) и внутренних корпоративных порталов.
 
-### Шаг 2 — Mobile RUM: Enablement and cost control
+### Шаг 2: Mobile RUM: Enablement and cost control
 
-![Mobile Enablement and cost control — главный тумблер Mobile RUM](screenshots/day-3-4/instrumentation/settings/builtinrum.mobile.enablement/Enablement-and-cost-control-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![Mobile Enablement and cost control: главный тумблер Mobile RUM](screenshots/day-3-4/instrumentation/settings/builtinrum.mobile.enablement/Enablement-and-cost-control-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.mobile.enablement`.
 
@@ -57,49 +57,49 @@
 
 *Установка Mobile RUM* требует интеграции Dynatrace SDK в мобильное приложение на этапе сборки. Swift Package Manager для iOS, Gradle для Android. OneAgent напрямую на мобильных устройствах не работает.
 
-### Шаг 3 — RUM monitoring code filename
+### Шаг 3: RUM monitoring code filename
 
-![RUM monitoring code filename — имя файла RUM JavaScript](screenshots/day-3-4/instrumentation/settings/builtinrum.web.rum-javascript-file-name/RUM-monitoring-code-filename-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![RUM monitoring code filename: имя файла RUM JavaScript](screenshots/day-3-4/instrumentation/settings/builtinrum.web.rum-javascript-file-name/RUM-monitoring-code-filename-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.web.rum-javascript-file-name`.
 
-*Что настраивает.* Префикс имени файла JavaScript-сниппета, который OneAgent внедряет в HTML-ответы. По умолчанию префикс **`ruxitagent`** (полное имя — например `/ruxitagentjs_ICA7NQVfqrtux_10307250124095659.js`, где после префикса идёт хеш активных модулей и версия). Префикс можно заменить на свой; сегмент `ruxitagentjs_` после префикса остаётся для идентификации запроса.
+*Что настраивает.* Префикс имени файла JavaScript-сниппета, который OneAgent внедряет в HTML-ответы. По умолчанию префикс **`ruxitagent`** (полное имя: например `/ruxitagentjs_ICA7NQVfqrtux_10307250124095659.js`, где после префикса идёт хеш активных модулей и версия). Префикс можно заменить на свой; сегмент `ruxitagentjs_` после префикса остаётся для идентификации запроса.
 
 *Когда меняют.* В инсталляциях с повышенными требованиями к безопасности префикс заменяют на нейтральный (`site-analytics`, `metrics-loader`), чтобы технологию нельзя было опознать из HTML. Частая смена префикса временно снижает объём собираемых данных, поэтому делается редко.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-monitoring-code-source -->
 
-### Шаг 4 — Custom RUM JavaScript version
+### Шаг 4: Custom RUM JavaScript version
 
-![Custom RUM JavaScript version — выбор версии RUM JS](screenshots/day-3-4/instrumentation/settings/builtinrum.web.custom-rum-javascript-version/Custom-RUM-JavaScript-version-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![Custom RUM JavaScript version: выбор версии RUM JS](screenshots/day-3-4/instrumentation/settings/builtinrum.web.custom-rum-javascript-version/Custom-RUM-JavaScript-version-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.web.custom-rum-javascript-version`.
 
 *Что настраивает.* Конкретная статическая версия RUM-JavaScript, на которую можно сослаться, если в RUM JavaScript updates выбран вариант **Custom**.
 
-*Зачем нужно.* Когда новая версия конфликтует с редким окружением (старый корпоративный IE и аналоги), сюда вписывают известную рабочую версию, а в **RUM JavaScript updates** выставляют Custom — обновления приостановлены.
+*Зачем нужно.* Когда новая версия конфликтует с редким окружением (старый корпоративный IE и аналоги), сюда вписывают известную рабочую версию, а в **RUM JavaScript updates** выставляют Custom: обновления приостановлены.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-javascript-version -->
 
-### Шаг 5 — RUM JavaScript updates
+### Шаг 5: RUM JavaScript updates
 
-![RUM JavaScript updates — политика обновлений RUM JS](screenshots/day-3-4/instrumentation/settings/builtinrum.web.rum-javascript-updates/RUM-JavaScript-updates-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![RUM JavaScript updates: политика обновлений RUM JS](screenshots/day-3-4/instrumentation/settings/builtinrum.web.rum-javascript-updates/RUM-JavaScript-updates-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `/ui/settings/builtin:rum.web.rum-javascript-updates`.
 
 *Что настраивает.* Политика версии RUM-JS, выбирается из набора:
 
-- **Latest stable** — самая свежая стабильная (динамическая, обновляется автоматически).
-- **Previous stable** — предыдущая стабильная (тоже динамическая).
-- **Custom** — фиксированная статическая версия из соседней страницы Custom RUM JavaScript version.
-- Legacy-варианты Latest IE7-10 supported / Latest IE11 supported — доступны только в окружениях, созданных до версии 1.294 (поддержка IE 11 была прекращена в RUM JS 1.293).
+- **Latest stable**: самая свежая стабильная (динамическая, обновляется автоматически).
+- **Previous stable**: предыдущая стабильная (тоже динамическая).
+- **Custom**: фиксированная статическая версия из соседней страницы Custom RUM JavaScript version.
+- Legacy-варианты Latest IE7-10 supported / Latest IE11 supported: доступны только в окружениях, созданных до версии 1.294 (поддержка IE 11 была прекращена в RUM JS 1.293).
 
 *Типовая политика.* В прод-приложениях выставляют Previous stable: одна версия буфера к выловленным регрессиям. Latest stable удобен в dev/QA-окружениях. Custom применяют только если найдена конкретная несовместимость и нужна стабильная привязка.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-javascript-version -->
 
 ---
 
-## 🎓 ТЕОРИЯ — как работает инструментация RUM
+## 🎓 ТЕОРИЯ: как работает инструментация RUM
 
-### Web RUM — через JavaScript snippet
+### Web RUM: через JavaScript snippet
 
 **Механика.** OneAgent на веб-сервере (Apache/Nginx/IIS) перехватывает исходящие HTML-ответы. В каждом ответе он автоматически вставляет в `<head>` тег:
 
@@ -114,12 +114,12 @@
 4. Ловит JavaScript-ошибки.
 5. Отправляет всё это батчами в ActiveGate по HTTPS.
 
-### Mobile RUM — через SDK
+### Mobile RUM: через SDK
 
 **Механика.** В мобильное приложение при сборке встраивается Dynatrace SDK:
 
-- **Android.** Основной путь — Dynatrace Android Gradle plugin (auto-instrumentation). Для тонкой интеграции есть OneAgent SDK for Android (manual).
-- **iOS.** Основной путь — OneAgent for iOS auto-instrumentation, подключение через Swift Package Manager или CocoaPods. Для SwiftUI-приложений есть отдельный SwiftUI instrumentor.
+- **Android.** Основной путь: Dynatrace Android Gradle plugin (auto-instrumentation). Для тонкой интеграции есть OneAgent SDK for Android (manual).
+- **iOS.** Основной путь: OneAgent for iOS auto-instrumentation, подключение через Swift Package Manager или CocoaPods. Для SwiftUI-приложений есть отдельный SwiftUI instrumentor.
 - **Гибридные стэки.** Поддерживаются Apache Cordova, Flutter, React Native, Xamarin, .NET MAUI через соответствующие плагины.
 
 SDK при старте приложения:

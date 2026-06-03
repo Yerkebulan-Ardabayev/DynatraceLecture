@@ -11,7 +11,7 @@
 > - [User actions](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/user-actions)
 > - [Real User Monitoring (RUM)](https://docs.dynatrace.com/managed/shortlink/rum)
 
-## 📍 КАРТА — одна страница, два языка
+## 📍 КАРТА: одна страница, два языка
 
 Термины темы: `USQL / User Session Query Language` (SQL-подобный для сессий и actions в Managed), `DQL / Dynatrace Query Language` (pipeline-язык SaaS для Grail, **в Managed недоступен**), `Grail / облачное хранилище SaaS`, `usersession / виртуальная таблица сессий`, `useraction / виртуальная таблица действий`, `Funnel function / встроенная функция построения воронки`.
 
@@ -23,13 +23,13 @@
 
 ## 🎬 Работа с USQL на одном экране
 
-### Шаг 1 — User Session Query editor
+### Шаг 1: User Session Query editor
 
-![User Session Query — редактор USQL](screenshots/day-5/usql/user-sessions/query/User-Session-Query-Demo-live-Demo-Live-Dynatrace.png)
+![User Session Query: редактор USQL](screenshots/day-5/usql/user-sessions/query/User-Session-Query-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: `https://guu84124.live.dynatrace.com/ui/user-sessions/query`.
 
-**Что здесь видно.** Страница с заголовком `Run a query to view results` и двумя действиями: `Run query`, `Copy`. Центральная часть страницы — текстовый редактор для написания USQL.
+**Что здесь видно.** Страница с заголовком `Run a query to view results` и двумя действиями: `Run query`, `Copy`. Центральная часть страницы: текстовый редактор для написания USQL.
 
 **Как показать клиенту.** Вводим простой запрос, нажимаем Run query, получаем результат в табличном виде.
 
@@ -49,7 +49,7 @@ GROUP BY userExperienceScore;
 | TOLERATING | 52 |
 | FRUSTRATED | 23 |
 
-Apdex получается: (203 + 0.5 × 52) / 278 = 0.824. То же самое, что платформа показывает в карточке приложения. Теперь мы сами получили его SQL-запросом — можем комбинировать как хотим.
+Apdex получается: (203 + 0.5 × 52) / 278 = 0.824. То же самое, что платформа показывает в карточке приложения. Теперь мы сами получили его SQL-запросом: можем комбинировать как хотим.
 
 **Разбивка по странам:**
 ```sql
@@ -64,7 +64,7 @@ ORDER BY sessions DESC
 LIMIT 20;
 ```
 
-Топ-20 стран по количеству сессий со средним числом ошибок. Полезно для поиска региональных проблем — из определённого региона больше ошибок → возможно проблема с локальным провайдером.
+Топ-20 стран по количеству сессий со средним числом ошибок. Полезно для поиска региональных проблем: из определённого региона больше ошибок → возможно проблема с локальным провайдером.
 
 **Поиск конкретных сессий с ошибками:**
 ```sql
@@ -82,22 +82,22 @@ ORDER BY totalErrorCount DESC
 LIMIT 50;
 ```
 
-Список самых проблемных сессий за час — каждую можно открыть в Session Replay (если запись доступна) и посмотреть, что шло не так.
+Список самых проблемных сессий за час: каждую можно открыть в Session Replay (если запись доступна) и посмотреть, что шло не так.
 
 ---
 
-## 🎓 ТЕОРИЯ — USQL, DQL и связь с другими языками
+## 🎓 ТЕОРИЯ: USQL, DQL и связь с другими языками
 
-### USQL — User Session Query Language
+### USQL: User Session Query Language
 
-USQL — SQL-подобный язык для запросов по пользовательским сессиям и user actions. Создан Dynatrace в 2016 году, когда формировалась RUM-функциональность.
+USQL: SQL-подобный язык для запросов по пользовательским сессиям и user actions. Создан Dynatrace в 2016 году, когда формировалась RUM-функциональность.
 
 **Синтаксис близок к SQL**, но ориентирован на четыре виртуальные таблицы:
 
-- `usersession` — одна строка на сессию.
-- `useraction` — одна строка на user action.
-- `userevent` — события (например, page changes, rage events).
-- `usererror` — ошибки и crashes.
+- `usersession`: одна строка на сессию.
+- `useraction`: одна строка на user action.
+- `userevent`: события (например, page changes, rage events).
+- `usererror`: ошибки и crashes.
 
 ```sql
 SELECT <columns>
@@ -120,24 +120,24 @@ LIMIT <n>;
 **Ограничения USQL:**
 
 - **Только закрытые сессии.** Live-сессии в выборке не участвуют.
-- **Default LIMIT 50, max 5000** — увеличить можно через `LIMIT <n>` до 5000, выше — нельзя.
+- **Default LIMIT 50, max 5000**: увеличить можно через `LIMIT <n>` до 5000, выше: нельзя.
 - **Single table per SELECT.** JOIN-ов между таблицами нет.
-- **Нет field-to-field comparisons** — нельзя сравнить два поля строки между собой.
-- **LIKE-ограничение** — запрос с 11+ LIKE-условиями, у которых wildcard стоит не в конце, отклоняется.
+- **Нет field-to-field comparisons**: нельзя сравнить два поля строки между собой.
+- **LIKE-ограничение**: запрос с 11+ LIKE-условиями, у которых wildcard стоит не в конце, отклоняется.
 
 **Доступ к USQL:**
 
 - Через UI (разобрано в Шаге 1).
 - Через REST endpoints **`/table`** (плоский результат) и **`/tree`** (иерархический) с API-токеном.
-- Через Data Explorer — часть USQL-запросов встраивается как tile в dashboard.
+- Через Data Explorer: часть USQL-запросов встраивается как tile в dashboard.
 
 **Time filtering** в USQL: переменные `$TIME_FRAME_START`, `$TIME_FRAME_END`, `$NOW` (с конструкциями вида `$NOW - DURATION("2h")`).
 
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/session-segmentation/custom-queries-segmentation-and-aggregation-of-session-data -->
 
-### DQL — Dynatrace Query Language
+### DQL: Dynatrace Query Language
 
-DQL — новый язык, появившийся в 2022 году для работы с **Grail**, облачным хранилищем Dynatrace. Синтаксис совершенно другой — pipeline-based, как в Splunk SPL или Kusto.
+DQL: новый язык, появившийся в 2022 году для работы с **Grail**, облачным хранилищем Dynatrace. Синтаксис совершенно другой: pipeline-based, как в Splunk SPL или Kusto.
 
 Пример DQL:
 ```
@@ -150,37 +150,37 @@ fetch logs
 
 **Ключевые отличия от USQL:**
 
-- **Pipeline-синтаксис** — `|` разделяет шаги обработки.
-- **Работает не только с сессиями** — со всей телеметрией: logs, metrics, spans, events, problems.
-- **Нативная поддержка временных рядов** — binning, rolling windows.
-- **Богатые аналитические функции** — percentiles, distinct counts, complex aggregations.
-- **Требует Grail storage** — облачное хранилище с parquet-форматом. В Managed **его нет**.
+- **Pipeline-синтаксис**: `|` разделяет шаги обработки.
+- **Работает не только с сессиями**: со всей телеметрией: logs, metrics, spans, events, problems.
+- **Нативная поддержка временных рядов**: binning, rolling windows.
+- **Богатые аналитические функции**: percentiles, distinct counts, complex aggregations.
+- **Требует Grail storage**: облачное хранилище с parquet-форматом. В Managed **его нет**.
 
 ### ⚠️ DQL и Grail в air-gapped Managed
 
-**Важно.** Grail — архитектурное решение SaaS-платформы Dynatrace. В текущих релизах Managed он **не доступен**, соответственно **DQL тоже не работает** в air-gapped Managed-контуре.
+**Важно.** Grail: архитектурное решение SaaS-платформы Dynatrace. В текущих релизах Managed он **не доступен**, соответственно **DQL тоже не работает** в air-gapped Managed-контуре.
 
-Типовой вопрос слушателей: «почему у нас нет Grail / DQL, когда в документации они везде?». Ответ: документация Dynatrace ориентирована прежде всего на SaaS-платформу, а Managed — отдельный продукт с собственным циклом релизов. Сроки появления Grail и DQL в Managed в публичных roadmap Dynatrace не зафиксированы, поэтому закладываться на них в проектировании нельзя.
+Типовой вопрос слушателей: «почему у нас нет Grail / DQL, когда в документации они везде?». Ответ: документация Dynatrace ориентирована прежде всего на SaaS-платформу, а Managed: отдельный продукт с собственным циклом релизов. Сроки появления Grail и DQL в Managed в публичных roadmap Dynatrace не зафиксированы, поэтому закладываться на них в проектировании нельзя.
 
-*В учебном плане* мы не показываем DQL напрямую, но упоминаем как «новая модель запросов, используемая в SaaS». Для текущего Managed-контура инструменты анализа — Metrics Selector, USQL и UI-фильтры логов.
+*В учебном плане* мы не показываем DQL напрямую, но упоминаем как «новая модель запросов, используемая в SaaS». Для текущего Managed-контура инструменты анализа: Metrics Selector, USQL и UI-фильтры логов.
 
 ### Синтаксис USQL детально
 
 **SELECT columns:**
-- `*` — все колонки (не рекомендуется, 50+ колонок).
+- `*`: все колонки (не рекомендуется, 50+ колонок).
 - Конкретные поля: `userId`, `startTime`, `duration`, `applicationId`, `applicationType`, `country`, `city`, `browserFamily`, `browserMajorVersion`, `osFamily`, `osVersion`, `userActionCount`, `totalErrorCount`, `userExperienceScore`, `useragent`, `ip`, …
 
 **Агрегации:**
 - `count(*)`, `count(distinct userId)`.
 - `avg(column)`, `sum(column)`, `min/max(column)`.
-- `percentile(column, 95)` — 95-й перцентиль.
+- `percentile(column, 95)`: 95-й перцентиль.
 
 **WHERE filters:**
 - Сравнения: `>`, `<`, `=`, `!=`, `IN (...)`, `LIKE '%pattern%'`.
 - Дата/время: `now() - 1d`, `now() - 1h`, фиксированные timestamp'ы.
 - Boolean: `AND`, `OR`, `NOT`.
 
-**FUNNEL-функция** — строит воронку по последовательности шагов:
+**FUNNEL-функция**: строит воронку по последовательности шагов:
 
 ```sql
 SELECT FUNNEL(
@@ -203,7 +203,7 @@ FROM usersession;
 - «Какая разбивка по версиям мобильного приложения среди проблемных сессий?»
 - «В каких локациях больше 5% сессий с network error?»
 
-**Ad-hoc расследования.** После инцидента — какие пользователи затронуты, какие сценарии ломались, откуда они подключались.
+**Ad-hoc расследования.** После инцидента: какие пользователи затронуты, какие сценарии ломались, откуда они подключались.
 
 **Custom-метрики для дашбордов.** USQL-запрос встраивается в dashboard как tile. Обновляется каждые 5 минут, показывает custom-значение (например, conversion rate по конкретному региону).
 
@@ -211,31 +211,31 @@ FROM usersession;
 
 ### Когда USQL не подходит
 
-- **Логи приложений.** USQL про сессии и actions, не про логи. Для логов — Logs UI в Dynatrace (или DQL в SaaS).
-- **Метрики сервисов.** USQL не работает с `builtin:service.*` метриками. Для них — Data Explorer / Metrics API.
-- **Трейсы.** USQL не видит PurePath-данные на уровне backend. Для трейсов — dedicated API или Distributed Tracing.
-- **Долгосрочные тренды.** Реальная глубина истории по сессиям ограничена retention RUM/Sessions Classic (35 дней). Для долгосрочного хранения — экспорт в Elasticsearch (User session export) или внешний BI (см. ниже).
+- **Логи приложений.** USQL про сессии и actions, не про логи. Для логов: Logs UI в Dynatrace (или DQL в SaaS).
+- **Метрики сервисов.** USQL не работает с `builtin:service.*` метриками. Для них: Data Explorer / Metrics API.
+- **Трейсы.** USQL не видит PurePath-данные на уровне backend. Для трейсов: dedicated API или Distributed Tracing.
+- **Долгосрочные тренды.** Реальная глубина истории по сессиям ограничена retention RUM/Sessions Classic (35 дней). Для долгосрочного хранения: экспорт в Elasticsearch (User session export) или внешний BI (см. ниже).
 
-### Альтернативы — куда смотреть для других типов данных
+### Альтернативы: куда смотреть для других типов данных
 
-- **Метрики инфраструктуры и сервисов** — Data Explorer (разбирался в Дне 1, Тема 8) или Metrics API.
-- **Логи** — Log Management в Dynatrace, тоже через отдельный UI. В air-gapped Managed это отдельный модуль лицензии.
-- **PurePath / Traces** — Distributed Tracing UI или API.
-- **Конфигурация / Settings** — Configuration API.
+- **Метрики инфраструктуры и сервисов**: Data Explorer (разбирался в Дне 1, Тема 8) или Metrics API.
+- **Логи**: Log Management в Dynatrace, тоже через отдельный UI. В air-gapped Managed это отдельный модуль лицензии.
+- **PurePath / Traces**: Distributed Tracing UI или API.
+- **Конфигурация / Settings**: Configuration API.
 
-USQL — специализированный инструмент для одного домена (RUM-сессии), не универсальный.
+USQL: специализированный инструмент для одного домена (RUM-сессии), не универсальный.
 
 ### Типичные ошибки новичков
 
-- **Забыть фильтр по времени** (`WHERE startTime > $NOW - DURATION("1d")` или диапазон через `BETWEEN`). USQL без явного окна работает по дольшему интервалу — времени уходит много, легко получить timeout.
+- **Забыть фильтр по времени** (`WHERE startTime > $NOW - DURATION("1d")` или диапазон через `BETWEEN`). USQL без явного окна работает по дольшему интервалу: времени уходит много, легко получить timeout.
 - **Использовать `SELECT *`.** Получает 50+ колонок, ломает UI-таблицу, тратит квоту объёма.
-- **Забыть `LIMIT`.** Default — 50 строк, max — 5000. UI может повиснуть на рендеринге, если ожидать тысячи строк.
+- **Забыть `LIMIT`.** Default: 50 строк, max: 5000. UI может повиснуть на рендеринге, если ожидать тысячи строк.
 - **Путать FROM.** Четыре таблицы: `usersession` (одна строка на сессию), `useraction` (одна строка на действие), `userevent` (события), `usererror` (ошибки/crashes). Разные структуры, разные колонки.
-- **Поле-к-полю сравнения нельзя.** USQL не поддерживает сравнение двух полей одной строки между собой — для такого сценария нужно вычислять оба поля и сравнивать в скрипте.
+- **Поле-к-полю сравнения нельзя.** USQL не поддерживает сравнение двух полей одной строки между собой: для такого сценария нужно вычислять оба поля и сравнивать в скрипте.
 
 ### API-экспорт USQL
 
-Для интеграции с внешними системами — API:
+Для интеграции с внешними системами: API:
 ```
 POST /api/v1/userSessionQueryLanguage/table
 Content-Type: application/json
@@ -265,10 +265,10 @@ Authorization: Api-Token dt0c01.ABC...
 
 ### Ключевые термины
 
-- **USQL** — User Session Query Language, SQL-подобный, для сессий и actions.
-- **DQL** — Dynatrace Query Language, новый pipeline-язык для Grail.
-- **Grail** — облачное хранилище всей телеметрии, пока только в SaaS.
-- **Funnel function** — встроенная функция USQL для построения funnel.
-- **usersession** — виртуальная таблица сессий.
-- **useraction** — виртуальная таблица действий.
-- **Extrapolation level** — Dynatrace иногда экстраполирует результаты, если лимит квоты — смотрим этот флаг в API-ответе.
+- **USQL**: User Session Query Language, SQL-подобный, для сессий и actions.
+- **DQL**: Dynatrace Query Language, новый pipeline-язык для Grail.
+- **Grail**: облачное хранилище всей телеметрии, пока только в SaaS.
+- **Funnel function**: встроенная функция USQL для построения funnel.
+- **usersession**: виртуальная таблица сессий.
+- **useraction**: виртуальная таблица действий.
+- **Extrapolation level**: Dynatrace иногда экстраполирует результаты, если лимит квоты: смотрим этот флаг в API-ответе.

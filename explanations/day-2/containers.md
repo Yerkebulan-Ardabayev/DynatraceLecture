@@ -5,14 +5,14 @@
 
 > 📚 **Источники (только Dynatrace Managed):**
 >
-> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed) — корневая страница Managed Docs
-> - [Setup on container platforms — Managed](https://docs.dynatrace.com/managed/ingest-from/setup-on-container-platforms) — установка OneAgent в Docker / Kubernetes / Cloud Foundry / Heroku
-> - [Container platform monitoring — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring) — поддержка Kubernetes Classic / Cloud Foundry / Docker / Heroku, container monitoring rules
-> - [Container monitoring rules — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules) — три Built-in правила (POD / pause-amd64 / openshift-sdn) + custom rules; работают только при установке OneAgent на хосты
-> - [Cloud application and workload detection — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection) — K8s labels (`app.kubernetes.io/name|version|stage`), `DT_RELEASE_*` env vars, naming rules
-> - [Infrastructure observability — Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability) — общий раздел Hosts / Process groups / Containers
+> - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed): корневая страница Managed Docs
+> - [Setup on container platforms: Managed](https://docs.dynatrace.com/managed/ingest-from/setup-on-container-platforms): установка OneAgent в Docker / Kubernetes / Cloud Foundry / Heroku
+> - [Container platform monitoring: Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring): поддержка Kubernetes Classic / Cloud Foundry / Docker / Heroku, container monitoring rules
+> - [Container monitoring rules: Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules): три Built-in правила (POD / pause-amd64 / openshift-sdn) + custom rules; работают только при установке OneAgent на хосты
+> - [Cloud application and workload detection: Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection): K8s labels (`app.kubernetes.io/name|version|stage`), `DT_RELEASE_*` env vars, naming rules
+> - [Infrastructure observability: Managed](https://docs.dynatrace.com/managed/observe/infrastructure-observability): общий раздел Hosts / Process groups / Containers
 
-## 📍 КАРТА — четыре страницы про контейнеры
+## 📍 КАРТА: четыре страницы про контейнеры
 
 Термины темы: `Container / контейнер`, `Container runtime / рантайм` (Docker, containerd, CRI-O, Podman), `Image / образ`, `cgroup / контрольная группа ядра`, `Pod / под`, `Workload / воркшлоад / Deployment/StatefulSet/DaemonSet`, `Cloud Application / CA / логическое приложение в облаке`, `OOMKilled / убит по превышению лимита памяти`.
 
@@ -37,14 +37,14 @@
 
 ## 🎬 Работа с настройками контейнеров на четырёх экранах
 
-### Шаг 1 — Container monitoring (глобальный переключатель runtime-ов)
+### Шаг 1: Container monitoring (глобальный переключатель runtime-ов)
 
-![Container monitoring — главная страница настройки мониторинга контейнеров](screenshots/day-2/containers/settings/builtincontainer.technology/Container-monitoring-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![Container monitoring: главная страница настройки мониторинга контейнеров](screenshots/day-2/containers/settings/builtincontainer.technology/Container-monitoring-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь в меню: **Settings → Processes and containers → Container monitoring**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:container.technology`.
 
-Страница — глобальное управление, **какие контейнерные технологии OneAgent мониторит**. Заголовков третьего уровня нет, страница состоит из тумблеров и списков.
+Страница: глобальное управление, **какие контейнерные технологии OneAgent мониторит**. Заголовков третьего уровня нет, страница состоит из тумблеров и списков.
 
 **Поддерживаемые технологии:**
 
@@ -56,16 +56,16 @@
 
 **Что настраивается:**
 
-- **Главный тумблер сбора метрик контейнеров.** Если выключен — OneAgent не опрашивает runtime, метрик нет. По умолчанию включён.
-- **Фильтры по технологиям** — можно выключить конкретный runtime, если он не используется.
-- **Ignore patterns** — какие контейнеры игнорировать (по имени образа, labels, cgroup path). Нужно для служебных контейнеров K8s (pause, sidecar), которые загромождают интерфейс.
-- **Deep monitoring options** — продвинутый сбор метрик каждого контейнера (per-container I/O, per-container network).
+- **Главный тумблер сбора метрик контейнеров.** Если выключен: OneAgent не опрашивает runtime, метрик нет. По умолчанию включён.
+- **Фильтры по технологиям**: можно выключить конкретный runtime, если он не используется.
+- **Ignore patterns**: какие контейнеры игнорировать (по имени образа, labels, cgroup path). Нужно для служебных контейнеров K8s (pause, sidecar), которые загромождают интерфейс.
+- **Deep monitoring options**: продвинутый сбор метрик каждого контейнера (per-container I/O, per-container network).
 
-*Типовая настройка.* Все runtime (Docker / containerd / CRI-O) включены — в большой инфраструктуре часто сосуществуют старые Docker-хосты и новые K8s-кластеры с containerd. Ignore patterns добавляются по мере обнаружения шума: pause-контейнеры K8s, контейнеры самого ActiveGate, внутренние build-системы.
+*Типовая настройка.* Все runtime (Docker / containerd / CRI-O) включены: в большой инфраструктуре часто сосуществуют старые Docker-хосты и новые K8s-кластеры с containerd. Ignore patterns добавляются по мере обнаружения шума: pause-контейнеры K8s, контейнеры самого ActiveGate, внутренние build-системы.
 
-### Шаг 2 — Built-in container monitoring rules
+### Шаг 2: Built-in container monitoring rules
 
-![Built-in container monitoring rules — предустановленные правила для популярных container runtime-ов](screenshots/day-2/containers/settings/builtincontainer.built-in-monitoring-rule/Built-in-container-monitoring-rules-Environment-Settings-Demo-live-Demo-Live-Dyn.png)
+![Built-in container monitoring rules: предустановленные правила для популярных container runtime-ов](screenshots/day-2/containers/settings/builtincontainer.built-in-monitoring-rule/Built-in-container-monitoring-rules-Environment-Settings-Demo-live-Demo-Live-Dyn.png)
 
 Путь в меню: **Settings → Processes and containers → Built-in container monitoring rules**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:container.built-in-monitoring-rule`.
@@ -78,20 +78,20 @@
 2. «Do not monitor containers where Docker stripped image name contains `pause-amd64`».
 3. «Do not monitor containers where Kubernetes namespaces equals `openshift-sdn`» (служебная сеть OpenShift).
 
-Все три включены по умолчанию. Администратор может только выключать или включать их обратно — `you can't edit them`. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules -->
+Все три включены по умолчанию. Администратор может только выключать или включать их обратно: `you can't edit them`. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules -->
 
-Распознавание прикладных технологий внутри контейнеров (nginx, postgres, redis, kafka и т. п.) идёт **не здесь, а на странице Built-in process monitoring rules** из Дня 1: те правила работают на уровне процессов и применяются как к baremetal-процессам, так и к процессам в контейнерах. Эта страница — только про сами контейнеры как сущность.
+Распознавание прикладных технологий внутри контейнеров (nginx, postgres, redis, kafka и т. п.) идёт **не здесь, а на странице Built-in process monitoring rules** из Дня 1: те правила работают на уровне процессов и применяются как к baremetal-процессам, так и к процессам в контейнерах. Эта страница: только про сами контейнеры как сущность.
 
-*Типовая настройка.* Все три правила оставляют включёнными. Для специфичных случаев (исключить свои pause-контейнеры, sidecar service mesh, build-runners) — кастомное правило на следующей странице.
+*Типовая настройка.* Все три правила оставляют включёнными. Для специфичных случаев (исключить свои pause-контейнеры, sidecar service mesh, build-runners): кастомное правило на следующей странице.
 
-### Шаг 3 — Container monitoring rules (кастомные)
+### Шаг 3: Container monitoring rules (кастомные)
 
-![Container monitoring rules — правила для управления мониторингом конкретных контейнеров](screenshots/day-2/containers/settings/builtincontainer.monitoring-rule/Container-monitoring-rules-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
+![Container monitoring rules: правила для управления мониторингом конкретных контейнеров](screenshots/day-2/containers/settings/builtincontainer.monitoring-rule/Container-monitoring-rules-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь в меню: **Settings → Processes and containers → Container monitoring rules**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:container.monitoring-rule`.
 
-Кастомные правила для мониторинга контейнеров. Аналог `Custom process monitoring rules` — переопределяют дефолт для конкретных образов или лейблов.
+Кастомные правила для мониторинга контейнеров. Аналог `Custom process monitoring rules`: переопределяют дефолт для конкретных образов или лейблов.
 
 **Типовые случаи:**
 
@@ -102,27 +102,27 @@
 **Структура правила:**
 
 - **Rule name.**
-- **Matcher** — свойство контейнера (например, имя образа) с оператором сравнения (`begins with` и аналогичные).
-- **Action** — Enable monitoring / Disable monitoring для совпавших контейнеров.
+- **Matcher**: свойство контейнера (например, имя образа) с оператором сравнения (`begins with` и аналогичные).
+- **Action**: Enable monitoring / Disable monitoring для совпавших контейнеров.
 
 Правила применяются по порядку (drag-and-drop в UI), первое сматчившееся побеждает.
 
 **Важное ограничение.** Дословно из Managed-документации: «Container monitoring rules are effective only when you install OneAgent on your hosts». В режимах Kubernetes-инъекции через webhook (`cloudNativeFullStack` или `applicationMonitoring` через Dynatrace Operator) механизм сбора другой и контролируется через DynaKube CR. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/container-monitoring-rules -->
 
-### Шаг 4 — Cloud application and workload detection
+### Шаг 4: Cloud application and workload detection
 
-![Cloud application and workload detection — распознавание Kubernetes workloads](screenshots/day-2/containers/settings/builtinprocess-group.cloud-application-workload-detection/Cloud-application-and-workload-detection-Environment-Settings-Demo-live-Demo-Liv.png)
+![Cloud application and workload detection: распознавание Kubernetes workloads](screenshots/day-2/containers/settings/builtinprocess-group.cloud-application-workload-detection/Cloud-application-and-workload-detection-Environment-Settings-Demo-live-Demo-Liv.png)
 
 Путь в меню: **Settings → Processes and containers → Cloud application and workload detection**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:process-group.cloud-application-workload-detection`.
 
-Страница специфична для **Kubernetes и cloud native**. Настраивает, как Dynatrace определяет Cloud Application и Workload — логические единицы, соответствующие Deployments / StatefulSets / DaemonSets / Jobs / Services в K8s.
+Страница специфична для **Kubernetes и cloud native**. Настраивает, как Dynatrace определяет Cloud Application и Workload: логические единицы, соответствующие Deployments / StatefulSets / DaemonSets / Jobs / Services в K8s.
 
 **Терминология Dynatrace:**
 
-- **Cloud Application / CA** — приложение в облаке или K8s. Например, весь deployment `payment-service` с 5 репликами.
-- **Workload** — технический уровень: конкретный Deployment / StatefulSet / DaemonSet.
-- **Pod** — один экземпляр (одна реплика).
+- **Cloud Application / CA**: приложение в облаке или K8s. Например, весь deployment `payment-service` с 5 репликами.
+- **Workload**: технический уровень: конкретный Deployment / StatefulSet / DaemonSet.
+- **Pod**: один экземпляр (одна реплика).
 
 **Где живут в интерфейсе:**
 
@@ -134,17 +134,17 @@
 
 - **Набор labels для детекции.** Managed-документация рекомендует пробрасывать стандартные K8s-labels в env-переменные: `app.kubernetes.io/version → DT_RELEASE_VERSION`, `app.kubernetes.io/name → DT_RELEASE_PRODUCT`, `app.kubernetes.io/stage → DT_RELEASE_STAGE`. Дополнительно поддерживаются `DT_RELEASE_BUILD_VERSION`. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection -->
 - **Правила группировки CA.** Например, deployments с префиксом `retail-` в одну CA `Retail Banking`. Удобно для дашбордов руководства.
-- **Workload naming rules.** Шаблон формирования имени Process Group — `<tech_prefix> <product> <STAGE> <base_pod_name>`, где product/stage/base_pod_name появляются, только когда они определены применённым правилом. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection -->
-- **Специальные случаи.** Knative / OpenFaaS (serverless), StatefulSet с PersistentVolume, Jobs / CronJobs — для каждого своя логика.
+- **Workload naming rules.** Шаблон формирования имени Process Group: `<tech_prefix> <product> <STAGE> <base_pod_name>`, где product/stage/base_pod_name появляются, только когда они определены применённым правилом. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/cloud-app-and-workload-detection -->
+- **Специальные случаи.** Knative / OpenFaaS (serverless), StatefulSet с PersistentVolume, Jobs / CronJobs: для каждого своя логика.
 
 *Типовая работа со страницей:*
 
-- **При первичном внедрении.** Настраивают labels под схему команды DevOps. Если используются стандартные K8s labels — дефолт работает.
+- **При первичном внедрении.** Настраивают labels под схему команды DevOps. Если используются стандартные K8s labels: дефолт работает.
 - **Через полгода-год.** Добавляют правила группировки CA по продуктам, чтобы дашборды руководства показывали бизнес-сущности, а не технические deployments.
 
 ---
 
-## ⚙️ COOKBOOK — настройка мониторинга контейнеров
+## ⚙️ COOKBOOK: настройка мониторинга контейнеров
 
 ### Первое развёртывание OneAgent на Kubernetes-кластере
 
@@ -155,7 +155,7 @@
 1. Установить OneAgent через Dynatrace Operator (Helm chart). Operator ставит агент на каждую ноду как DaemonSet.
 2. В настройках Operator включить `applicationMonitoring` для автоматической инструментации подов (CodeModules через mutating webhook).
 3. В Container monitoring проверить, что все используемые runtime включены (containerd для нового кластера).
-4. В Cloud application and workload detection проверить дефолтные labels. Если своя схема — добавить.
+4. В Cloud application and workload detection проверить дефолтные labels. Если своя схема: добавить.
 5. Через несколько минут Workloads появляются в интерфейсе с метриками, трейсами и проблемами.
 
 ### Исключить pause-контейнеры из интерфейса
@@ -178,7 +178,7 @@
 
 ---
 
-## 🎓 ТЕОРИЯ — как Dynatrace работает с контейнерами
+## 🎓 ТЕОРИЯ: как Dynatrace работает с контейнерами
 
 ### Архитектура Kubernetes-мониторинга
 
@@ -197,36 +197,36 @@
 ### Что видно по Cloud Application и Workload
 
 В карточке Workload:
-- **Overview** — сводка метрик контейнеров: CPU, Memory, Network, количество реплик.
-- **Pods** — список всех pods, их статусы (Running/Pending/Failed), возраст.
-- **Events** — Kubernetes-события: scaling, scheduling failures, OOMKilled, restart loops.
-- **Services** — какие K8s-сервисы (и endpoints) представляют этот workload.
-- **Ingress** — какие ingress-правила ведут трафик в этот workload.
-- **Related process groups** — какие Process Groups соответствуют контейнерам workload (связь с темой hosts-processes).
+- **Overview**: сводка метрик контейнеров: CPU, Memory, Network, количество реплик.
+- **Pods**: список всех pods, их статусы (Running/Pending/Failed), возраст.
+- **Events**: Kubernetes-события: scaling, scheduling failures, OOMKilled, restart loops.
+- **Services**: какие K8s-сервисы (и endpoints) представляют этот workload.
+- **Ingress**: какие ingress-правила ведут трафик в этот workload.
+- **Related process groups**: какие Process Groups соответствуют контейнерам workload (связь с темой hosts-processes).
 
 ### Специфика сбора метрик контейнеров
 
 **Лимиты и реальное использование.** Для каждого контейнера отдельно показываются:
 
-- **Limit** — сколько разрешено (из K8s-манифеста `.resources.limits.cpu` / `.resources.limits.memory`).
-- **Request** — сколько резервировано (из `.resources.requests`).
-- **Actual usage** — сколько реально использовано.
+- **Limit**: сколько разрешено (из K8s-манифеста `.resources.limits.cpu` / `.resources.limits.memory`).
+- **Request**: сколько резервировано (из `.resources.requests`).
+- **Actual usage**: сколько реально использовано.
 
-Важная метрика — **CPU throttling**: сколько процессорного времени контейнер попросил, но получил не сразу из-за упирания в лимит. Высокий throttling = контейнер голодает.
+Важная метрика: **CPU throttling**: сколько процессорного времени контейнер попросил, но получил не сразу из-за упирания в лимит. Высокий throttling = контейнер голодает.
 
-**OOMKilled tracking.** Если контейнер упал из-за превышения memory limit (Out Of Memory Killed) — отдельное событие в Dynatrace. Указывается: сколько памяти использовал в момент смерти, какой был лимит, какой процесс инициировал выделение. Ключевая метрика при анализе memory leak.
+**OOMKilled tracking.** Если контейнер упал из-за превышения memory limit (Out Of Memory Killed): отдельное событие в Dynatrace. Указывается: сколько памяти использовал в момент смерти, какой был лимит, какой процесс инициировал выделение. Ключевая метрика при анализе memory leak.
 
 **Network между контейнерами.** Dynatrace через eBPF видит трафик между подами. Строит Service Flow внутри кластера, ловит проблемы связности.
 
 ### Сравнение с классическим мониторингом K8s
 
-**Prometheus + Grafana + Alertmanager.** Open-source стек. Prometheus scrape'ит kubelet metrics и app-exposed metrics через annotations. Grafana строит дашборды. Alertmanager шлёт алерты. Требует отдельной инфраструктуры и настройки. Нет автоматической инструментации приложений — Prometheus-clients вшиваются явно.
+**Prometheus + Grafana + Alertmanager.** Open-source стек. Prometheus scrape'ит kubelet metrics и app-exposed metrics через annotations. Grafana строит дашборды. Alertmanager шлёт алерты. Требует отдельной инфраструктуры и настройки. Нет автоматической инструментации приложений: Prometheus-clients вшиваются явно.
 
-**Datadog Agent / New Relic Infrastructure.** Коммерческие альтернативы с похожей моделью развёртывания (DaemonSet + автоинструментация). Их работу здесь не разбираем — каждая платформа имеет свои особенности конфигурации.
+**Datadog Agent / New Relic Infrastructure.** Коммерческие альтернативы с похожей моделью развёртывания (DaemonSet + автоинструментация). Их работу здесь не разбираем: каждая платформа имеет свои особенности конфигурации.
 
 ### Air-gapped в контексте контейнеров
 
-**Всё работает локально.** OneAgent, ActiveGate, webhooks, CodeModules — всё в кластере. Ничего не ходит в интернет.
+**Всё работает локально.** OneAgent, ActiveGate, webhooks, CodeModules: всё в кластере. Ничего не ходит в интернет.
 
 **Требование к образам.** Образы Dynatrace Operator и CodeModules должны быть в internal container registry. Dynatrace распространяет их через customer portal. Админ скачивает на машине с интернетом, загружает в свой Harbor / Artifactory. Helm chart Operator'а настраивается с `image.repository=registry.internal/dynatrace/...`. После этого установка идёт без интернета.
 
