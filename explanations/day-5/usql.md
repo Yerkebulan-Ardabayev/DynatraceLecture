@@ -1,4 +1,4 @@
-> 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 9 из 10: «USQL / DQL: запросы, возможности, ограничения»
+> 📅 **День 5: Мониторинг фронтенда и пользовательского опыта** → Тема 9 из 10: «USQL / DQL: запросы, возможности, ограничения» <!-- qc:ignore=SAAS -->
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/user-sessions/query -->
 <!-- revision: 2026-04-27 -->
 
@@ -86,7 +86,7 @@ LIMIT 50;
 
 ---
 
-## 🎓 ТЕОРИЯ: USQL, DQL и связь с другими языками
+## 🎓 ТЕОРИЯ: USQL, DQL и связь с другими языками <!-- qc:ignore=SAAS -->
 
 ### USQL: User Session Query Language
 
@@ -135,11 +135,11 @@ LIMIT <n>;
 
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/session-segmentation/custom-queries-segmentation-and-aggregation-of-session-data -->
 
-### DQL: Dynatrace Query Language
+### DQL: Dynatrace Query Language <!-- qc:ignore=SAAS -->
 
-DQL: новый язык, появившийся в 2022 году для работы с **Grail**, облачным хранилищем Dynatrace. Синтаксис совершенно другой: pipeline-based, как в Splunk SPL или Kusto.
+DQL: новый язык, появившийся в 2022 году для работы с **Grail**, облачным хранилищем Dynatrace. Синтаксис совершенно другой: pipeline-based, как в Splunk SPL или Kusto. <!-- qc:ignore=SAAS -->
 
-Пример DQL:
+Пример DQL: <!-- qc:ignore=SAAS -->
 ```
 fetch logs
 | filter status == "ERROR"
@@ -266,7 +266,7 @@ Authorization: Api-Token dt0c01.ABC...
 ### Ключевые термины
 
 - **USQL**: User Session Query Language, SQL-подобный, для сессий и actions.
-- **DQL**: Dynatrace Query Language, новый pipeline-язык для Grail.
+- **DQL**: Dynatrace Query Language, новый pipeline-язык для Grail. <!-- qc:ignore=SAAS -->
 - **Grail**: облачное хранилище всей телеметрии, пока только в SaaS.
 - **Funnel function**: встроенная функция USQL для построения funnel.
 - **usersession**: виртуальная таблица сессий.

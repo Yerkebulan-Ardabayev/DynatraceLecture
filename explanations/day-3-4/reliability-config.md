@@ -14,7 +14,7 @@
 
 ## 📍 КАРТА: три страницы Health Experience (статус «In development»)
 
-Термины темы: `Health Experience / опыт надёжности`: новый слой alerting в Dynatrace Apps platform; `Severity / серьёзность` (Critical / Warning / Info); `Anomaly detection / детектор аномалий`; `SLO / цель уровня сервиса`; `Alerting profile / профиль оповещений`.
+Термины темы: `Health Experience / опыт надёжности`: новый слой alerting в Dynatrace Apps platform; `Severity / серьёзность` (Critical / Warning / Info); `Anomaly detection / детектор аномалий`; `SLO / цель уровня сервиса`; `Alerting profile / профиль оповещений`. <!-- qc:ignore=SAAS -->
 
 | Что показать | Путь в меню | Прямая ссылка |
 |---|---|---|
