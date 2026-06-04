@@ -22,18 +22,21 @@
 | Service detection | **Settings → Service Detection → Service detection rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:service-detection-rules` | Правила разбиения процессов на сервисы |
 | Service Detection v2 for OneAgent | **Settings → Server-side service monitoring → Service Detection v2 for OneAgent** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:service-detection-v2-for-oneagent` | Новая версия механизма детекции (больше возможностей разбиения) |
 
-**Типы сервисов в Dynatrace:**
+**Типы сервисов в Dynatrace (Service Detection v1, инструментация OneAgent):**
 
 | Тип | Что собой представляет | Как распознаётся |
 |---|---|---|
-| **Web service** | Сервер, отвечающий на входящие HTTP-запросы | OneAgent инструментирует Servlet/Filter/Controller/Express/etc. |
-| **Web request service** | То же что Web service: входящие HTTP; часто используется как default | По той же инструментации, другое внутреннее имя |
-| **Custom service** | Любой код, описанный вручную через правило | Через Custom Service rules в Settings |
-| **Messaging service** | Producer или consumer сообщений (Kafka, RabbitMQ, ActiveMQ) | Инструментация клиентов Kafka/JMS |
-| **Database service** | Клиент базы данных (JDBC/ODBC/Redis/MongoDB driver) | Инструментация драйверов |
-| **External service** | Вызов внешнего API (не инструментированного) | Перехват исходящих HTTP клиентов |
-| **Background activity** | Code без явного HTTP-вызова (batch, async workers) | Инструментация по правилам |
-| **Queue listener** | Подписчик на очередь | Специализация Messaging service |
+| **Web request service** | Сервис, отвечающий на входящие HTTP-запросы. Основной тип для современных backend-ов | OneAgent инструментирует Servlet / Filter / ASP.NET Controller / Express и аналоги |
+| **Web service** (full web service) | Классический WSDL-сервис (SOAP / JAX-WS). Остаётся для enterprise-интеграций | Инструментация SOAP-стека (Java JAX-WS, .NET WCF) с разбором WSDL-операций |
+| **Database service** | Клиент базы данных (JDBC / ODBC / Redis / MongoDB-драйвер) | Инструментация драйверов |
+| **Messaging service** | Отправитель сообщений (Kafka, RabbitMQ, ActiveMQ, IBM MQ) | Инструментация клиентов Kafka / JMS на стороне producer'а |
+| **Queue listener service** | Получатель сообщений: код, обрабатывающий входящие сообщения из очереди | Инструментация message-listener'ов; отдельный тип, не то же что Messaging service |
+| **Remote call service** (RMI / RPC) | Удалённые вызовы между процессами: Java RMI, .NET Remoting, Thrift и аналогичные RPC | Инструментация RMI / RPC-стека |
+| **External service** | Вызов внешнего, не инструментированного API (opaque) | Перехват исходящих HTTP-клиентов; сам внешний сервис под мониторинг не попадает |
+| **Background activity** | Код без явного входящего вызова (batch, async-воркеры) | Инструментация по правилам / OpenKit |
+| **Custom service** | Произвольный код, заданный вручную через правило | Через Custom service rules в Settings |
+
+> Полный перечень типов в API (поле `SERVICE_TYPE`) шире: он включает мейнфрейм- и интеграционные типы (CICS service, IMS service, z/OS Connect, Enterprise Service Bus service, IBM Integration Bus service). Они встречаются у заказчиков с мейнфреймами (z/OS) и корпоративными шинами; на типовом Java / .NET / Node-парке их не будет. <!-- last-verified: 2026-06-04 source: https://docs.dynatrace.com/managed/dynatrace-api/configuration-api/conditional-naming/json-models -->
 
 ---
 
@@ -182,12 +185,12 @@
 
 ### Web service vs Web request service
 
-*Исторически.* В старых версиях все HTTP-обслуживающие процессы считались Web service. С развитием появились тонкости: один Java-процесс мог обслуживать прямые HTTP-запросы (Web request) и быть вызванным из другого Java-процесса через RMI или EJB (Full web service). Появились два подтипа.
+*Исторически.* В старых версиях все HTTP-обслуживающие процессы считались Web service. С развитием механизм разделили: прямые входящие HTTP-запросы стали Web request service, а классические WSDL-сервисы (SOAP / JAX-WS) остались отдельным типом Web service (full web service).
 
-*Сейчас.* Большинство современных сервисов: Web request service (прямой HTTP). Web service остался для SOAP-WS-*, RMI и аналогичных enterprise-технологий. Команды разработки обычно встречают только Web request service при работе с современными микросервисами.
+*Сейчас.* Большинство современных сервисов это Web request service (прямой HTTP). Тип Web service остаётся для WSDL-описанных SOAP-сервисов. Удалённые вызовы между процессами (Java RMI, gRPC) это отдельный тип Remote call service, а не Web service. Команды разработки на современных микросервисах обычно встречают только Web request service.
 
 ### Специфика в air-gapped
 
 - **Правила Service detection** хранятся в кластере и применяются всем агентам. Ничего внешнего не требуется.
 - **Обновление правил при апгрейде OneAgent.** Если новая версия агента поддерживает v2 и новые типы: правила обновляет администратор вручную через Settings. Автоматически в air-gapped правила не скачиваются.
-- **SDv1 vs SDv2 в Managed.** Service Detection v1 (SDv1): основной классический механизм для OneAgent-инструментированных сервисов, поддержаны технологические типы сервисов (Web request, Web, Database, Messaging, Remoting (RMI/RPC), Background activity, Custom). Service Detection v2 (SDv2) появилась с Cluster 1.318+ и применяется в первую очередь для OpenTelemetry-сервисов; OneAgent-сервисы в Managed по-прежнему работают через SDv1 + Custom service / Web request rules. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v1 -->
+- **SDv1 vs SDv2 в Managed.** Service Detection v1 (SDv1): основной классический механизм для OneAgent-инструментированных сервисов, поддержаны технологические типы сервисов (Web request, Web (full/WSDL), Database, Messaging, Queue listener, Remote call (RMI/RPC), External, Background activity, Custom). Service Detection v2 (SDv2) появилась с Cluster 1.318+ и применяется в первую очередь для OpenTelemetry-сервисов; OneAgent-сервисы в Managed по-прежнему работают через SDv1 + Custom service / Web request rules. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v1 -->

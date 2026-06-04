@@ -476,6 +476,23 @@ Revision dates везде обновлены `2026-04-26 → 2026-04-27`.
 
 ---
 
+## Доп. правка 2026-06-04: services-overview, таблица типов сервисов (SDv1)
+
+Закрыт открытый NEEDS-USER пункт: в `day-2/services-overview.md` сосуществовали две несогласованные нумерации типов сервисов (таблица 8 строк vs SDv1-абзац 7 строк), плюс «Web service» в таблице был описан как «сервер, отвечающий на входящие HTTP» (это Web request service, а не Web service).
+
+| Блок (было) | File | Источник правды | Решение |
+|---|---|---|---|
+| «Web service = сервер на входящие HTTP» + «Web request service = то же, другое имя» | `services-overview.md` таблица | enum `SERVICE_TYPE`: `WEB_REQUEST_SERVICE` (входящие HTTP) и `WEB_SERVICE` (full web service, WSDL/SOAP), это разные типы | ❌ исправлено: Web request service = входящий HTTP (основной тип); Web service = WSDL full web service |
+| В таблице нет Remote call service | `services-overview.md` таблица | `SERVICE_TYPE` содержит `RMI_SERVICE` + `RPC_SERVICE` | ➕ добавлена строка Remote call service (RMI / RPC: Java RMI, .NET Remoting, Thrift) |
+| Таблица (8) vs SDv1-абзац (7): разные подмножества | `services-overview.md` | один enum `SERVICE_TYPE` | ⚠️ согласованы: оба перечисляют один набор из 9 типов; добавлена сноска про мейнфрейм/ESB-типы (CICS / IMS / z/OS Connect / ESB / IBM Integration Bus) |
+| ТЕОРИЯ: «вызван через RMI или EJB (Full web service)» | `services-overview.md` | RMI = `RMI_SERVICE` (отдельный тип); Full web service = WSDL | ❌ исправлено: RMI/RPC = Remote call service, не Web service |
+
+**Источник (dtkb /managed/):** [Conditional naming API — JSON models](https://docs.dynatrace.com/managed/dynatrace-api/configuration-api/conditional-naming/json-models), enum `SERVICE_TYPE` (17 значений: BACKGROUND_ACTIVITY, CICS_SERVICE, CUSTOM_SERVICE, DATABASE_SERVICE, ENTERPRISE_SERVICE_BUS_SERVICE, EXTERNAL, IBM_INTEGRATION_BUS_SERVICE, IMS_SERVICE, MESSAGING_SERVICE, QUEUE_LISTENER_SERVICE, RMI_SERVICE, RPC_SERVICE, SPAN, UNIFIED, WEB_REQUEST_SERVICE, WEB_SERVICE, ZOS_CONNECT).
+
+**Гейты:** `quality_check.py` 0 errors (7 pre-existing SAAS-warns: usql×6 + reliability×1), em-dash 0 во всех `explanations/`.
+
+---
+
 ## Как обновлять этот файл
 
 1. При добавлении/правке numeric claim: `python scripts/extract_tech_claims.py` → обновится `tech_claims.md`.
