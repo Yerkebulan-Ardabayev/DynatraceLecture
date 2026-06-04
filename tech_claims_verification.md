@@ -493,6 +493,21 @@ Revision dates везде обновлены `2026-04-26 → 2026-04-27`.
 
 ---
 
+## Доп. правка 2026-06-04 (2): ux-metrics SLO-пример + key-actions лимит метрик
+
+Закрыт последний открытый NEEDS-USER пункт (числовой пример SLO в ux-metrics + поведение лимита 100/app в key-actions).
+
+| Блок | File | Источник правды | Решение |
+|---|---|---|---|
+| SLO-плитка без числового примера | `ux-metrics.md` | slo-basics: normalized error budget = (status − target) ÷ (100 − target) × 100 | ➕ добавлен явно-иллюстративный расчёт (target 99.5%, статус 99.7% даёт 40% остатка), та же формула что в `sli-slo-sla.md`; числа помечены «значения произвольные» |
+| «Лимиты: 500/env, 100/app» без поведения | `key-actions.md` | rum-calculated-metrics-web: «up to 500 enabled per environment … up to 100 enabled per application»; «Once a metric has been created, you can't change its properties» | ⚠️ уточнено: лимит по ENABLED-метрикам; ➕ ЕСЛИ→ТО: disable снимает метрику со счётчика, свойства менять нельзя (удалить и пересоздать) |
+
+Источники (dtkb /managed/): [SLO basics](https://docs.dynatrace.com/managed/deliver/service-level-objectives-classic/slo-basics), [Create calculated metrics for web applications](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-calculated-metrics-web). Числа SLO-примера произвольны (иллюстрация формулы), не выдаются за дефолт Dynatrace.
+
+**Гейты:** `quality_check.py` 0 errors (7 pre-existing SAAS-warns), em-dash 0 во всех `explanations/`.
+
+---
+
 ## Как обновлять этот файл
 
 1. При добавлении/правке numeric claim: `python scripts/extract_tech_claims.py` → обновится `tech_claims.md`.

@@ -41,9 +41,11 @@
 
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/user-actions -->
 
-*User action custom metrics*: механизм **дополнительных метрик**, вычисляемых на основе user actions. Создаются через **Web → application → Impact of user actions on performance → Analyze performance → Create metric**. Лимиты: до 500 метрик на окружение и до 100 метрик на приложение.
+*User action custom metrics*: механизм **дополнительных метрик**, вычисляемых на основе user actions. Создаются через **Web → application → Impact of user actions on performance → Analyze performance → Create metric**. Лимит считается по **включённым** (enabled) метрикам: до 500 enabled на окружение и до 100 enabled на приложение.
 
 ЕСЛИ создаёте метрику только сейчас → ТО в неё попадут только новые данные: историю задним числом Dynatrace не пересчитывает (хотите видеть платежи за прошлый месяц, метрику надо было завести месяц назад).
+
+ЕСЛИ упёрлись в лимит (100 enabled на приложение или 500 на окружение) → ТО освободите место: отключите ненужную метрику (disable снимает её со счётчика enabled) либо удалите. Свойства уже созданной метрики менять нельзя, для изменения метрику удаляют и создают заново.
 
 Примеры:
 
