@@ -166,16 +166,6 @@ Dynatrace сам не умеет делать escalation («если никто 
 
 Dynatrace шлёт только начальное уведомление, дальше эскалация управляется внешней системой.
 
-### Интеграция с Wiki / Confluence / Notion
-
-Иногда команды хотят, чтобы при каждом инциденте автоматически создавалась страница в корпоративной wiki с шаблоном post-mortem. Через generic webhook:
-
-1. Dynatrace → webhook → internal service.
-2. Internal service → Wiki / Confluence / Notion API → создаёт страницу.
-3. URL страницы возвращается в тикет Jira.
-
-Логика пишется вручную, но webhook-механизм Dynatrace гибкий для любых таких цепочек.
-
 ### Integration health monitoring
 
 Как узнать, что integration сломалась? Варианты:

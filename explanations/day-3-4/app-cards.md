@@ -55,7 +55,9 @@
 
 - Какие факторы учитывать (скорость, ошибки, поведение).
 - Веса факторов.
-- Пороги для классификации Satisfactory / Tolerable / Frustrating (так документация Managed называет три категории Apdex и UX score; в UI per-application можно править через **Web → выбрать приложение → More (...) → Edit → General settings**, отдельные ползунки для Load actions, XHR actions, Custom actions).
+- Пороги для классификации Satisfactory / Tolerable / Frustrating: так документация Managed называет три категории Apdex и UX score.
+  - Per-application порог правится через **Web → выбрать приложение → More (...) → Edit → General settings**.
+  - Там отдельные ползунки для Load actions, XHR actions и Custom actions.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-apdex-web -->
 
 ### Шаг 3: Usability analytics

@@ -103,6 +103,8 @@
 
 **Что такое v2.** Service Detection v2 (SDv2): переработанный механизм детекции, доступный в Managed начиная с **Cluster version 1.318+**. SDv2 спроектирован для **OpenTelemetry-сервисов** и Adobe Experience Manager; его правила опираются на единый набор `resource attributes` и `span attributes` с условиями. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v2 -->
 
+Практический ориентир: ЕСЛИ сервис инструментирован OneAgent (Java / .NET / Node) → ТО он детектируется через SDv1 (предыдущий шаг), и правила на этом экране на него не влияют. SDv2 применяется только к OpenTelemetry-сервисам и Adobe Experience Manager.
+
 Что в нём отличается от v1:
 
 - **Расширенный набор свойств для матчинга**: span/resource attributes, Kubernetes-метаданные, container labels.
@@ -188,4 +190,4 @@
 
 - **Правила Service detection** хранятся в кластере и применяются всем агентам. Ничего внешнего не требуется.
 - **Обновление правил при апгрейде OneAgent.** Если новая версия агента поддерживает v2 и новые типы: правила обновляет администратор вручную через Settings. Автоматически в air-gapped правила не скачиваются.
-- **SDv1 vs SDv2 в Managed.** Service Detection v1 (SDv1): основной классический механизм для OneAgent-инструментированных сервисов, поддержано семь типов сервисов. Service Detection v2 (SDv2) появилась с Cluster 1.318+ и применяется в первую очередь для OpenTelemetry-сервисов; OneAgent-сервисы в Managed по-прежнему работают через SDv1 + Custom service / Web request rules. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v1 -->
+- **SDv1 vs SDv2 в Managed.** Service Detection v1 (SDv1): основной классический механизм для OneAgent-инструментированных сервисов, поддержаны технологические типы сервисов (Web request, Web, Database, Messaging, Remoting (RMI/RPC), Background activity, Custom). Service Detection v2 (SDv2) появилась с Cluster 1.318+ и применяется в первую очередь для OpenTelemetry-сервисов; OneAgent-сервисы в Managed по-прежнему работают через SDv1 + Custom service / Web request rules. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v1 -->

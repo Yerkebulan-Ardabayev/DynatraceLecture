@@ -42,6 +42,8 @@
 
 Все три блока (management zone + severity rules + event filters) объединяются логикой **AND**. В environment всегда есть Default-профиль, его нельзя удалить, но можно изменить.
 
+*Простой пример OR/AND.* Возьмём профиль с двумя severity rules: `Availability` и `Error`, и одним event filter с тегом `customer-facing`. Severity rules между собой OR: проблема со степенью Availability ИЛИ Error проходит первый блок. Event filter добавляется по AND: проблема идёт дальше, только если она ещё и помечена тегом `customer-facing`. Итог: уведомление уйдёт для проблемы (Availability ИЛИ Error) И (customer-facing). Платёжный сбой с тегом customer-facing пройдёт; тот же сбой на внутреннем сервисе без тега: нет.
+
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/alerting-profiles -->
 
 **Типовой набор профилей:**

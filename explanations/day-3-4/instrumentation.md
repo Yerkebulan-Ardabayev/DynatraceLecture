@@ -90,7 +90,8 @@
 - **Latest stable**: самая свежая стабильная (динамическая, обновляется автоматически).
 - **Previous stable**: предыдущая стабильная (тоже динамическая).
 - **Custom**: фиксированная статическая версия из соседней страницы Custom RUM JavaScript version.
-- Legacy-варианты Latest IE7-10 supported / Latest IE11 supported: доступны только в окружениях, созданных до версии 1.294 (поддержка IE 11 была прекращена в RUM JS 1.293).
+
+> Legacy IE-варианты (Latest IE7-10 / Latest IE11) встречаются только в окружениях, созданных до версии 1.294: поддержка IE 11 прекращена в RUM JS 1.293. В новых установках их в списке нет, в банковском контуре они не используются.
 
 *Типовая политика.* В прод-приложениях выставляют Previous stable: одна версия буфера к выловленным регрессиям. Latest stable удобен в dev/QA-окружениях. Custom применяют только если найдена конкретная несовместимость и нужна стабильная привязка.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-javascript-version -->

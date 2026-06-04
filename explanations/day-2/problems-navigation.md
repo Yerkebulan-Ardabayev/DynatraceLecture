@@ -110,7 +110,16 @@
 
 В простых случаях совпадают (проблема локальна). В сложных различаются: Affected: сервис платежей, Root cause: хост, на котором живёт БД, используемая этим сервисом. Причину ищут в Root cause, эффект: в Affected.
 
-Davis для определения Root cause использует **context-aware** подход (а не простую корреляцию по времени): применяет всю доступную топологию, distributed traces и code-level информацию, чтобы связать события одного и того же корня в одну Problem. Анализируются и **вертикальные** (application → service → process → host), и **горизонтальные** (service ↔ service) зависимости; влияние ранжируется по силе. Дословно из Managed-документации: «detects interdependent Davis events across time, processes, hosts, services, applications, and both vertical and horizontal topological monitoring perspectives». <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-intelligence/root-cause-analysis/concepts -->
+Davis определяет Root cause не по простому совпадению во времени, а **context-aware** подходом (с учётом контекста): берёт всю топологию, distributed traces (сквозные трассировки запросов) и code-level информацию (вплоть до уровня кода).
+
+ЕСЛИ две аномалии совпали только по времени → Davis НЕ склеивает их автоматически: проверяет, есть ли между сущностями реальная зависимость в топологии.
+ЕСЛИ зависимость есть → события объединяются в одну Problem с общим корнем, и лишние алерты не плодятся.
+
+Анализируются оба направления зависимостей:
+- **вертикальные** (по стеку: application → service → process → host), пример: медленный сервис из-за нагруженного хоста под ним;
+- **горизонтальные** (между равными: service ↔ service), пример: сервис A тормозит, потому что вызывает уже замедленный сервис B.
+
+Каждый вклад в первопричину ранжируется по силе влияния, и можно провалиться до конкретного метода в коде или, например, высокой GC-активности процесса. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/dynatrace-intelligence/root-cause-analysis/concepts ; цитата из источника: "detects interdependent Davis events across time, processes, hosts, services, applications, and both vertical and horizontal topological monitoring perspectives" -->
 
 **Когда Davis не смог определить Root cause.** Колонка остаётся пустой. Это не ошибка, а честное «недостаточно данных». В таких случаях инженер опирается на граф сущностей и определяет причину экспертно. Обычно это проблемы на инфраструктуре без OneAgent (чистое сетевое железо, внешние SaaS) или новые технологии без накопленного baseline.
 

@@ -139,7 +139,13 @@ Data Center (ДЦ или облачный регион)
 
 **Сквозной анализ инцидента.** При падении сервиса важно быстро ответить: какие приложения пострадали (уровень вверх), на каких хостах проблема (уровень вниз). Иерархия Application → Service → Process Group → Host, это и есть цепочка анализа.
 
-**Правильный scope алертов.** Alert profile с фильтром `type(SERVICE)` включает только сервисные проблемы, `type(HOST)`: только хостовые. Разные команды отвечают за разные уровни: SRE: за хосты, разработчики: за сервисы. Сегментация алертов по типу сущности важна для правильной маршрутизации. Раздел [Process group detection](https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/pg-detection) объясняет, по каким правилам OneAgent объединяет процессы в одну группу и как это влияет на алерты на уровне Process Group.
+**Правильный scope алертов.** Разные команды отвечают за разные уровни: SRE за хосты, разработчики за сервисы. Маршрутизация опирается на тип сущности.
+
+ЕСЛИ alerting profile (профиль оповещения) ограничен зоной хостов через фильтр Management zone → ТО в этот канал уйдут только хостовые проблемы Davis, сервисные в него не попадут (фильтр Management zone сокращает объём данных, который профиль вычисляет). Отдельный профиль для зоны сервисов отправит разработчикам только сервисные проблемы. <!-- source: docs.dynatrace.com/managed/analyze-explore-automate/notifications-and-alerting/alerting-profiles -->
+
+На уровне Environment API v2 тот же отбор по типу выражается селектором сущностей: `type(SERVICE)` вернёт только сервисы, `type(HOST)`: только хосты. Это API-форма той же логики разделения по уровню.
+
+Раздел [Process group detection](https://docs.dynatrace.com/managed/observe/infrastructure-observability/process-groups/configuration/pg-detection) объясняет, по каким правилам OneAgent объединяет процессы в одну группу и как это влияет на алерты на уровне Process Group.
 
 **Правильный выбор метрик.** Метрики разных уровней разные. `builtin:host.cpu.usage`, это метрика хоста. `builtin:service.response.time`: метрика сервиса. `builtin:apps.web.actionDuration`: метрика приложения. Путать их нельзя: они живут в разных measurement scope.
 

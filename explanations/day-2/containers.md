@@ -91,6 +91,10 @@
 Путь в меню: **Settings → Processes and containers → Container monitoring rules**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:container.monitoring-rule`.
 
+> **Сначала проверьте, применима ли вам эта страница.**
+> ЕСЛИ OneAgent установлен прямо на хосты (classic host monitoring) → ТО правила с этой страницы работают, читайте дальше.
+> ЕСЛИ мониторинг идёт через webhook-инъекцию Kubernetes (`cloudNativeFullStack` или `applicationMonitoring` через Dynatrace Operator) → ТО эти правила игнорируются, сбор контролируется через DynaKube CR (подробности в конце шага). Настраивать тут нечего.
+
 Кастомные правила для мониторинга контейнеров. Аналог `Custom process monitoring rules`: переопределяют дефолт для конкретных образов или лейблов.
 
 **Типовые случаи:**

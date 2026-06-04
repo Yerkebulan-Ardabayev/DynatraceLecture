@@ -112,7 +112,7 @@
 
 Путь: **Settings → Anomaly detection → Holiday-aware baseline modification** → `https://guu84124.live.dynatrace.com/ui/settings/builtin:anomaly-detection.holiday-aware-baseline`.
 
-*Что делает.* Один тумблер **Holiday aware**. Когда включён, Davis AI при построении baseline исключает из обучающей выборки государственные праздники.
+*Что делает.* Один тумблер **Holiday aware**. ЕСЛИ тумблер включён → ТО Davis AI при построении baseline вырезает из обучающей выборки государственные праздники, иначе праздничные дни учитываются как обычные и искажают эталон.
 
 *Зачем нужно.* Праздники искажают baseline. В праздник нагрузка либо заметно ниже (люди не работают), либо заметно выше (предпраздничные пики покупок). Если 1 января сравнивать с обычным вторником, baseline начнёт показывать ложные аномалии. С включённым тумблером Davis вырезает праздничные дни из обучения.
 
@@ -130,7 +130,7 @@
 
 Путь: **Settings → Anomaly detection → Frequent issue detection** → `https://guu84124.live.dynatrace.com/ui/settings/builtin:anomaly-detection.frequent-issues`.
 
-*Что делает.* Механизм обработки повторяющихся проблем. Если Dynatrace замечает одну и ту же проблему много раз за неделю, он конвертирует её в **часто повторяющуюся** и агрегирует новые появления вместо создания новых Problems.
+*Что делает.* Механизм обработки повторяющихся проблем. ЕСЛИ Dynatrace видит одну и ту же проблему много раз за неделю → ТО он помечает её как **часто повторяющуюся** и сворачивает новые появления в эту же запись, а не плодит новые Problems.
 
 *Зачем нужно.* В реальной инфраструктуре есть проблемы-шумы: каждую ночь cron-скрипт на 15 минут забивает диск и проходит. Если каждое такое событие создавать как отдельную Problem, за неделю наберутся сотни одинаковых записей: реально важные проблемы в них теряются.
 
@@ -159,7 +159,7 @@
 
 **Baseline многомерный.** Для одной метрики ведутся несколько разрезов одновременно. Согласно концепции Automated multidimensional baselining (см. [Automated multidimensional baselining](https://docs.dynatrace.com/managed/dynatrace-intelligence/anomaly-detection/automated-multidimensional-baselining)), Davis для frontend RUM комбинирует разрезы по **user action / endpoint** (например, `login.jsp`), **geolocation** (континент / страна / регион / город), **browser** (семейство и версия) и **operating system** (тип и версия). Для backend сервисов аналогично: отдельные baselines по типам запросов и характеристикам клиента. Аномалия может засечься в одном разрезе, не затронув общую картину. Пример: общее время отклика сервиса в норме, но для конкретного endpoint `/api/heavy-report` выросло на 200%: многомерный baseline это увидит.
 
-**Период обучения: 7 дней.** Меняется в Reference period. По официальной формулировке Dynatrace: alerting on traffic spikes and drops begins after a learning period of one week because baselining requires a full week's worth of traffic to learn daily and weekly patterns: для срабатывания алертов на скачки/просадки трафика нужна полная неделя истории; для error rate и response time пороги активизируются раньше: после 20% недели (около 1.5 дней). Многомерный baseline для frontend RUM строится по 4 разрезам: **user action**, **geolocation**, **browser**, **operating system**. После значительного архитектурного изменения имеет смысл сбросить baseline вручную или подождать 7 дней, пока модель пересчитается естественным путём. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining -->
+**Период обучения: 7 дней.** Меняется в Reference period. ЕСЛИ метрика, это трафик (скачки и просадки нагрузки) → ТО алерты включаются только после полной недели истории: baseline'у нужна неделя, чтобы выучить дневной и недельный ритм. ЕСЛИ метрика, это error rate или response time → ТО пороги активизируются раньше, после 20% недели (около 1.4 дня). Многомерный baseline для frontend RUM строится по 4 разрезам: **user action**, **geolocation**, **browser**, **operating system**. После значительного архитектурного изменения имеет смысл сбросить baseline вручную или подождать 7 дней, пока модель пересчитается естественным путём. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/discover-dynatrace/platform/davis-ai/anomaly-detection/concepts/automated-multidimensional-baselining -->
 
 **Defaults на странице Settings → Anomaly detection → Services.** Точные числовые дефолты (Absolute / Relative / Avoid over-alerting) Dynatrace не публикует одной общей таблицей в публичной доке: значения, видимые в самой странице Settings, считаются authoritative для конкретной сборки кластера. Перед использованием конкретных порогов в SLA или интеграциях обязательно сверяйте их с реальной страницей вашего тенанта.
 

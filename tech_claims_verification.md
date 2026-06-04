@@ -306,7 +306,7 @@ Revision dates везде обновлены `2026-04-26 → 2026-04-27`.
 1. retention-цифры пересмотрены централизованно (5 лет / 35 дней / 365 дней) — те же ошибки уже фиксили в Day 2, но у Day 3 mlt-concepts были свои собственные неверные числа (13 месяцев / 5-7 дней / 35 дней). Lesson: новый файл = новая проверка, старый журнал не освобождает.
 2. eBPF → Service Discovery (НЕ инструментация трейсов). Это сквозная путаница, которая уже прокрадывалась в day-1; здесь она снова появилась как «Handler в Go (через eBPF)». Lesson: при упоминании eBPF в контексте трейсов — обязательно WebFetch.
 3. Web Vitals терминология — FID устарел, заменён на INP. Lesson: терминологию Web Vitals обновлять при каждом проходе RUM-тем.
-4. Service Detection v1 vs v2 — в Managed работает SDv1, SDv2 — SaaS-only с OneAgent в Public Preview. Соответствующие баннеры/упоминания в курсе нужно ставить в SDv1-контекст.
+4. Service Detection v1 vs v2. **[ОБНОВЛЕНО 2026-06-03]** SDv2 теперь GA в Managed (Cluster version **1.318+**); правила SDv2 применяются ТОЛЬКО к OpenTelemetry-сервисам и Adobe Experience Manager (первая OneAgent-технология, release note sprint-318). OneAgent-сервисы Java/.NET/Node по-прежнему детектируются через SDv1. Прежняя формулировка «SDv2 это SaaS-only, Public Preview» (2026-04-27) устарела: снято по свежему скрейпу `docs/managed/observe/applications-and-microservices/services/service-detection-v2.md` (sha b6174894, updated 2026-02-04). В курсе баннеры для OneAgent-стека ставить в SDv1-контекст, но не утверждать, что SDv2 в Managed отсутствует.
 
 ---
 

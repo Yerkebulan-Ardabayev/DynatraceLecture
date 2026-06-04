@@ -4,7 +4,7 @@
 
 🔖 Редакция от 2026-04-27.
 
-Путь в UI: **Settings → Web and mobile monitoring → Web → Application detection / Beacon origins for CORS / Identify host names / IP determination / Geographic regions → Map IP addresses to locations**.
+Путь в UI: **Settings → Web and mobile monitoring → Web**. Тема охватывает пять связанных страниц этого раздела: Application detection, Beacon origins for CORS, Identify host names, IP determination и Map IP addresses to locations. Прямые ссылки на каждую: в КАРТЕ ниже.
 
 ## 📚 Источники
 

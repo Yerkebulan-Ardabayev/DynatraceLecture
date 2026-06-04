@@ -55,7 +55,7 @@
 
 - **Cloud provider**: чекбоксы AWS RDS и Azure. Видно, где живут managed-базы в облаке.
 - **Database technology**: AWS DB2, Derby Client, H2, IBM и ещё шесть опций в выпадающем списке (`+6 options in the filter field`). Тип определяется по JDBC-драйверу клиента.
-- **Problem impact**: Any / Impacted / Not impacted. На captured-экране индикатор: `1 Database that matches your query is associated with Davis-detected problems`. То есть одна база сейчас под активной проблемой от Davis.
+- **Problem impact**: Any / Impacted / Not impacted. На экране индикатор: `1 Database that matches your query is associated with Davis-detected problems`. То есть одна база сейчас под активной проблемой от Davis.
 
 **Колонки таблицы:**
 
@@ -66,7 +66,7 @@
 - **Requests**: запросов в минуту.
 - **Actions**: контекстное меню, переход в карточку БД.
 
-Логика имени в captured-данных: `[eks-live][easytrade-live-debugger] TradeManagement i-0f7a7ed4fe4218ffb`. Префикс: среда и приложение, имя: TradeManagement, суффикс: EC2-инстанс `i-0f7a7ed4fe4218ffb`. Для managed-БД в облаке в имени идентификатор инстанса. Для embedded-БД (H2/SQLite) префикс `[embedded]`.
+Логика имени в данных с тенанта: `[eks-live][easytrade-live-debugger] TradeManagement i-0f7a7ed4fe4218ffb`. Префикс: среда и приложение, имя: TradeManagement, суффикс: EC2-инстанс `i-0f7a7ed4fe4218ffb`. Для managed-БД в облаке в имени идентификатор инстанса. Для embedded-БД (H2/SQLite) префикс `[embedded]`.
 
 Реальные показатели `TradeManagement` на демо: медиана `2.09 ms`, Slowest 10% `10.1 ms`, 0% ошибок, 248 запросов в минуту.
 

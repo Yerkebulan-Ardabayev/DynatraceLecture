@@ -21,6 +21,9 @@
 | Service-level health alerts | **Settings → Dynatrace Service Settings → Schema for service alerts** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:health-experience.service-alert` |
 | Frontend health alerts | **Settings → Dynatrace Service Settings → Frontend health alerts** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:health-experience.frontend-alert` |
 | Cloud health alerts | **Settings → Dynatrace Service Settings → Cloud health alerts settings** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:health-experience.cloud-alert` |
+| → Рабочая замена: Anomaly detection for services | **Settings → Anomaly detection → Services** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:anomaly-detection.services` |
+| → Рабочая замена: SLO definitions | **Settings → Service-level objectives → Definition** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:monitoring.slo` |
+| → Рабочая замена: Alerting profiles | **Settings → Alerting → Alerting profiles** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:alerting.profile` |
 
 > **Важно для Managed Classic.** Эти три страницы Settings относятся к новому слою **Health Experience**, который реализован как часть SaaS Apps platform: Services app / Experience Vitals (Frontend) app / Clouds app. В Managed Classic эти Apps не включены. На captured-скриншотах все три экрана показывают состояние **«In development»** + **«No data to display»** + ошибку прав. Это означает, что в курсе мы их **не настраиваем**, а используем реально работающие в Managed Classic механизмы измерения надёжности: Anomaly detection, SLO и Alerting profiles.
 
@@ -74,7 +77,11 @@
 
 ## 🎓 ТЕОРИЯ: как реально измеряется надёжность в Managed Classic
 
-Связка из трёх слоёв:
+Связка из трёх слоёв (как они срабатывают по цепочке):
+
+- **ЕСЛИ** настроите Anomaly detection (порог или baseline) → **ТО** Davis заведёт Problem при выходе метрики за порог, иначе отклонение останется незамеченным.
+- **ЕСЛИ** определите SLO с target → **ТО** Dynatrace посчитает error budget и burn rate и заведёт status- или burn-rate-алерт при просадке, без SLO «здоровье» не измеряется в процентах.
+- **ЕСЛИ** настроите Alerting profile под нужный severity и зону → **ТО** проблема уйдёт в указанный канал (email / webhook / ServiceNow / OpsGenie / Jira), иначе Davis-проблема создастся, но никого не оповестит.
 
 ### 1. Anomaly detection: что считать отклонением
 
