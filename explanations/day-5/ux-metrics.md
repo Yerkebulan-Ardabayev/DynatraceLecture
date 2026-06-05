@@ -32,7 +32,7 @@
 
 Путь: `https://guu84124.live.dynatrace.com/ui/applications`.
 
-*На captured-экране* видна плашка «Connection issues: trying to reconnect» с кнопками `Try to restore connection now` и `Try again`. Стандартное поведение захваченной страницы: SPA-UI пытается подключиться к WebSocket backend для подгрузки данных, в статическом дампе соединения нет.
+*На экране демо-тенанта* видна плашка «Connection issues: trying to reconnect» с кнопками `Try to restore connection now` и `Try again`. Стандартное поведение захваченной страницы: SPA-UI пытается подключиться к WebSocket backend для подгрузки данных, в статическом дампе соединения нет.
 
 **На живом тенанте**: список RUM-приложений, строка на каждое:
 
@@ -59,7 +59,7 @@
 
 *Формула Apdex.* Порог T задаёте вы. ЕСЛИ время действия ≤ T → ТО действие Satisfied; ЕСЛИ T < время ≤ 4T → ТО Tolerating; ЕСЛИ время > 4T → ТО Frustrated. То есть граница «терпимого», это всегда 4T: поставите T = 1 сек → действия дольше 4 сек считаются Frustrated, поставите T = 0.5 сек → уже всё дольше 2 сек. Стандарт Apdex Alliance.
 
-**Типы action, для которых задаются пороги (по captured-странице):**
+**Типы action, для которых задаются пороги (по снятой странице):**
 
 - **Web**: Page load (загрузка полной страницы), XHR action (AJAX-вызов), Route change (SPA-переход без полной перезагрузки).
 - **Mobile**: App start (холодный запуск приложения), Custom action (через Mobile SDK), Web request (HTTP-запрос из мобильного приложения).

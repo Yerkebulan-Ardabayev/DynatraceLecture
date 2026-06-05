@@ -32,9 +32,9 @@
 
 ### Шаг 1: Services
 
-![Services: 239 сервисов](screenshots/day-3-4/response-analysis/services/Services-Demo-live-Demo-Live-Dynatrace.png)
+![Services: 241 сервис](screenshots/day-3-4/response-analysis/services/Services-Demo-live-Demo-Live-Dynatrace.png)
 
-Путь: `/ui/services`, видно 239 Services. Точка входа для анализа.
+Путь: `/ui/services`, видно 241 Services. Точка входа для анализа.
 
 ### Шаг 2: Anomaly detection for services
 

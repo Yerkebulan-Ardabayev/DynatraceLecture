@@ -33,16 +33,16 @@
 
 ---
 
-## 🎬 Работа со Service Flow на captured экране
+## 🎬 Работа со Service Flow на экране демо-тенанта
 
 ### Шаг 1: Services (вход в Service Flow через карточку)
 
-![Services: 239 сервисов, вход в карточку → раздел Service Flow](screenshots/day-3-4/service-flow/services/Services-Demo-live-Demo-Live-Dynatrace.png)
+![Services: 241 сервис, вход в карточку → раздел Service Flow](screenshots/day-3-4/service-flow/services/Services-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь в меню: **Application Observability → Services**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/services`.
 
-На экране заголовок **239 Services**. Service Flow открывается не с отдельного URL, а из **карточки конкретного сервиса**.
+На экране заголовок **241 Services**. Service Flow открывается не с отдельного URL, а из **карточки конкретного сервиса**.
 
 **Как попасть в Service Flow.**
 1. Открыть список Services.

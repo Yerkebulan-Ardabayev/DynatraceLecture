@@ -78,7 +78,7 @@
 
 *Code-level*: уязвимости в собственном коде, не в библиотеках. Dynatrace анализирует поведение приложения в runtime и ищет типовые проблемы (SQL injection, command injection, SSRF, JNDI injection и подобные insecure data flow). Поддерживаемые стеки и версии OneAgent сведены ниже, в разделе «Поддерживаемые технологии».
 
-*Отличие от SAST.* Runtime-анализ, не статический. Видно, что уязвимость **реально вызывается** в работающем приложении, а не «теоретически есть в коде». Уязвимость автоматически закрывается, как только её root cause не появляется в системе более двух часов (или сразу при остановке всех затронутых процессов).
+*Отличие от SAST.* Runtime-анализ, не статический. Видно, что уязвимость **реально вызывается** в работающем приложении, а не «теоретически есть в коде». Code-level уязвимость закрывается автоматически, когда затронутый процесс перезапущен и OneAgent больше не видит опасных потоков данных к ней (исправлен код, нет трафика или процесс остановлен). Двухчасовое окно «компонент не загружается» относится к third-party уязвимостям (библиотеки), а не к code-level.
 
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/secure/application-security/vulnerability-analytics -->
 
@@ -160,7 +160,7 @@ Application Security: один из инструментов compliance:
 
 ### Vulnerability feed и Mission Control
 
-Для Managed-кластера обновления базы уязвимостей приходят через подключение к **Cloud Control / Mission Control** (закрытый канал Dynatrace). Источники feed: **Snyk** (для библиотек и runtime-компонентов в Kubernetes) и **NVD** (для .NET / Java / Node.js runtime). После публикации новой версии feed она доезжает до кластера в течение примерно двух часов; кластер сверяет окружение со свежими данными примерно раз в минуту.
+Для Managed-кластера обновления базы уязвимостей приходят через подключение к **Cloud Control / Mission Control** (закрытый канал Dynatrace). Источники feed: **Dynatrace Vulnerability feed** (для библиотек и runtime-компонентов в Kubernetes) и **NVD** (для .NET / Java / Node.js runtime). Dynatrace Vulnerability feed объединяет данные OSV.dev, GitHub advisories, NVD, vendor advisories, Snyk и собственных исследований Dynatrace; он заменил прежний feed на базе Snyk. После публикации новой версии feed она доезжает до кластера в течение примерно двух часов; кластер сверяет окружение со свежими данными примерно раз в минуту.
 
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/secure/faq -->
 

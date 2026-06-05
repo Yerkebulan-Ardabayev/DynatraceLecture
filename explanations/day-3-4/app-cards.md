@@ -31,7 +31,7 @@
 
 ![Applications: список веб-приложений под RUM-мониторингом](screenshots/day-3-4/app-cards/applications/Demo-live-Demo-Live-Dynatrace.png)
 
-Путь: `/ui/applications`. Разбирался в Дне 1 (DEM, UI overview). На captured-тенанте центральная область часто пустая или показывает Connection issues: демо без активных RUM-приложений.
+Путь: `/ui/applications`. Разбирался в Дне 1 (DEM, UI overview). На демо-тенанте центральная область часто пустая или показывает Connection issues: демо без активных RUM-приложений.
 
 **В карточке приложения (в боевом окружении):**
 
@@ -55,7 +55,7 @@
 
 - Какие факторы учитывать (скорость, ошибки, поведение).
 - Веса факторов.
-- Пороги для классификации Satisfactory / Tolerable / Frustrating: так документация Managed называет три категории Apdex и UX score.
+- Пороги для классификации Satisfactory / Tolerable / Frustrating: это три категории user experience score на уровне сессии, в отличие от пятиуровневой шкалы Apdex (на уровне действий) выше.
   - Per-application порог правится через **Web → выбрать приложение → More (...) → Edit → General settings**.
   - Там отдельные ползунки для Load actions, XHR actions и Custom actions.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-apdex-web -->

@@ -25,7 +25,7 @@
 | → Рабочая замена: SLO definitions | **Settings → Service-level objectives → Definition** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:monitoring.slo` |
 | → Рабочая замена: Alerting profiles | **Settings → Alerting → Alerting profiles** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:alerting.profile` |
 
-> **Важно для Managed Classic.** Эти три страницы Settings относятся к новому слою **Health Experience**, который реализован как часть SaaS Apps platform: Services app / Experience Vitals (Frontend) app / Clouds app. В Managed Classic эти Apps не включены. На captured-скриншотах все три экрана показывают состояние **«In development»** + **«No data to display»** + ошибку прав. Это означает, что в курсе мы их **не настраиваем**, а используем реально работающие в Managed Classic механизмы измерения надёжности: Anomaly detection, SLO и Alerting profiles.
+> **Важно для Managed Classic.** Эти три страницы Settings относятся к новому слою **Health Experience**, который реализован как часть SaaS Apps platform: Services app / Experience Vitals (Frontend) app / Clouds app. В Managed Classic эти Apps не включены. На снятых скриншотах все три экрана показывают состояние **«In development»** + **«No data to display»** + ошибку прав. Это означает, что в курсе мы их **не настраиваем**, а используем реально работающие в Managed Classic механизмы измерения надёжности: Anomaly detection, SLO и Alerting profiles.
 
 ---
 

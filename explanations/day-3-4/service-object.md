@@ -31,11 +31,11 @@
 
 ### Шаг 1: Services (список сервисов как точка входа)
 
-![Services: список 239 сервисов](screenshots/day-3-4/service-object/services/Services-Demo-live-Demo-Live-Dynatrace.png)
+![Services: список из 241 сервиса](screenshots/day-3-4/service-object/services/Services-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь: **Application Observability → Services**. Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/services`.
 
-На экране список из **239 Services**. Полный разбор структуры списка: в Дне 1, Тема 5 и Дне 2, Тема 7.
+На экране список из **241 Services**. Полный разбор структуры списка: в Дне 1, Тема 5 и Дне 2, Тема 7.
 
 ### Шаг 2: Service detection rules for Full Web Services
 

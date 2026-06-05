@@ -29,7 +29,7 @@
 
 Термины темы: `Host / хост`, `OS service / сервис ОС / служба` (Windows-служба или Linux systemd unit), `Process / процесс` (конкретный запущенный бинарник с PID), `Mount point / точка монтирования`, `Entity list / список сущностей`.
 
-| Что показать | Путь в меню | Прямая ссылка | Статус на captured |
+| Что показать | Путь в меню | Прямая ссылка | Статус на снимке |
 |---|---|---|---|
 | Список хостов (entity list) | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/ui/entity/list` | **404**: старый универсальный entity list отключён |
 | OS services monitoring | **Settings → Monitoring → OS services monitoring** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:os-services-monitoring` | Мониторинг Windows-служб и Linux systemd units |
@@ -156,7 +156,7 @@
 - Специфичный порог для Oracle Flash Recovery Area.
 - Правило для SSD под индексы: при переполнении производительность падает быстрее, чем у HDD.
 
-На captured демо-тенанте правил нет. Обычно пишутся в первый месяц после развёртывания, когда накопилась история нагрузки и понятно, какие диски требуют особой политики.
+На демо-тенанте правил нет. Обычно пишутся в первый месяц после развёртывания, когда накопилась история нагрузки и понятно, какие диски требуют особой политики.
 
 ---
 

@@ -46,7 +46,7 @@
 - **Analysis over time**: переключает представление между списком сессий и временным графиком.
 - **Application type**: Web / Mobile.
 - **Application versions**: версии приложения, если используется `dtrum.enterAction`.
-- **Applications**: конкретное RUM-приложение (на captured-тенанте видно 5 приложений, созданных через application detection rules).
+- **Applications**: конкретное RUM-приложение (на демо-тенанте видно 5 приложений, созданных через application detection rules).
 - **User experience score**: Apdex: Satisfied / Tolerating / Frustrated.
 - **Errors and annoyances**: сессии с JS-ошибками, падениями сети, долгими загрузками.
 - **Conversions and bounces**: сессии с конверсионным action, либо с уходом после первой страницы.
