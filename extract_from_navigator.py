@@ -4,10 +4,18 @@
 Выход: navigator_content.json со всеми страницами.
 """
 import json
+import os
 import re
 from pathlib import Path
 
-NAV_HTML = Path(r"C:\Users\yerke\Desktop\dynatrace-platform\dynatrace-platform.html")
+# Кросс-платформенно (через env / от домашней папки), не Windows-хардкод.
+NAV_HTML = Path(
+    os.environ.get(
+        "NAV_HTML",
+        Path.home()
+        / "Desktop" / "Projects" / "dynatrace-platform" / "dynatrace-platform.html",
+    )
+)
 OUT_FILE = Path(__file__).parent / "navigator_content.json"
 
 
