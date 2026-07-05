@@ -45,6 +45,20 @@ def load_pages():
 
 
 def status_marker(p):
+    # Приоритет: реальный HTTP-статус ответа (пишется краулером в http_status).
+    # Подстрока "404" в title была ненадёжной: страница про коды ошибок HTTP
+    # с "404" в заголовке ложно помечалась как битая, а реальный 404 без слова
+    # "404" в title, наоборот, как рабочий.
+    status = p.get("http_status")
+    if isinstance(status, int):
+        if status == 404:
+            return "❌ 404"
+        if status == 403:
+            return "🔒 403"
+        if status >= 400:
+            return f"❌ {status}"
+        return "✅"
+    # Fallback для старых записей без http_status: прежняя эвристика по title.
     title = (p.get("title") or "").lower()
     if "404" in title:
         return "❌ 404"
@@ -107,7 +121,7 @@ def write_day(day, pages_for_day):
                     rel = "../" + sc.split("output/", 1)[1] if "output/" in sc else sc
                     out.append(f"![{short_title}]({rel})\n\n")
         elif t.get("routes"):
-            out.append("_⚠️ Crawler не зафиксировал скриншотов — запусти `python plan_runner.py --day {day['id']}`_\n\n")
+            out.append(f"_⚠️ Crawler не зафиксировал скриншотов — запусти `python plan_runner.py --day {day['id']}`_\n\n")
             for r in t.get("routes", []):
                 out.append(f"- `{r}`\n")
             out.append("\n")

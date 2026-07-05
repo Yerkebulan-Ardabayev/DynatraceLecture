@@ -628,6 +628,10 @@ def main():
     pages = load_pages()
     data = build_topics_data(plan, pages)
     data_json = json.dumps(data, ensure_ascii=False)
+    # Экранируем '<' -> '<', чтобы '</script>' (или '<!--') в контенте
+    # страницы не закрывал inline <script> раньше времени и не ломал HTML.
+    # Валидный JSON, при JSON.parse на клиенте символ восстанавливается.
+    data_json = data_json.replace("<", "\\u003c")
     build_id = compute_build_id()
     html = HTML_TEMPLATE.replace("__DATA_PLACEHOLDER__", data_json).replace(
         "__BUILD_ID__", build_id

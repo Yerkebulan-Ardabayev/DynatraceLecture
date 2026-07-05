@@ -92,7 +92,7 @@ python plan_html.py
 3. **`crawler.py deep --section <X>`** — рекурсивно по разделу.
 4. **`extract_ui_elements.py`** — извлекает headings/buttons/fields в `output/data/ui_elements.json`.
 
-Скриншоты НЕ кликают по destructive-кнопкам (Save / Delete / Apply / Send) — см. `config.yaml → safe_actions.click_deny_text`.
+Краулер только переходит по URL и снимает страницу, он вообще не кликает по кнопкам. Поэтому destructive-действия (Save / Delete / Apply / Send) невозможны by construction.
 
 ### Структура output/
 
@@ -131,7 +131,7 @@ python extract_ui_elements.py
 
 - `.env` содержит plain-text пароль. В `.gitignore`. Не коммитить.
 - `state/storage_state.json` ≈ logged-in cookie. Не делиться.
-- Crawler не нажимает destructive UI. Новые опасные кнопки → добавить в `config.yaml → click_deny_text`.
+- Crawler не нажимает destructive UI: он только открывает URL и снимает страницу, кликов по кнопкам нет.
 
 ---
 

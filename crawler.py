@@ -17,14 +17,30 @@ import os
 import re
 import json
 import sys
+import errno
+import hashlib
 import asyncio
 import argparse
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
+from urllib.parse import urlsplit, urlunsplit
 import yaml
-from playwright.async_api import async_playwright
 from dotenv import load_dotenv
+
+# Playwright грузим мягко: чистые хелперы (slugify/normalize_url/frontier)
+# импортируются и тестируются без установленного браузера. Нужен он только в
+# момент реального обхода (crawl); там проверяем и просим установить.
+try:
+    from playwright.async_api import async_playwright
+except ImportError:  # pragma: no cover
+    async_playwright = None
+
+# fcntl is POSIX-only; on Windows the single-instance lock is skipped (best effort).
+try:
+    import fcntl
+except ImportError:  # pragma: no cover - Windows fallback
+    fcntl = None
 
 load_dotenv()
 
@@ -40,7 +56,13 @@ for d in (CHECKPOINTS, LOGS, OUT / "screenshots", OUT / "pages", OUT / "data"):
     d.mkdir(parents=True, exist_ok=True)
 
 VISITED_FILE = CHECKPOINTS / "visited.json"
+FRONTIER_FILE = CHECKPOINTS / "frontier.json"
+EXTRACTED_LINKS_FILE = CHECKPOINTS / "extracted_links.json"
+LOCK_FILE = CHECKPOINTS / "crawler.lock"
 DATA_FILE = OUT / "data" / "pages.jsonl"
+
+# Сколько раз вернуть упавший URL во фронтир прежде чем окончательно бросить.
+MAX_RETRIES = CONFIG["crawl"].get("max_retries", 2)
 
 SKIP_PATTERNS = [re.compile(p, re.IGNORECASE) for p in CONFIG["crawl"]["url_skip_patterns"]]
 
@@ -75,11 +97,61 @@ def load_visited():
     return set()
 
 
-def save_visited(visited):
-    VISITED_FILE.write_text(
-        json.dumps(sorted(visited), ensure_ascii=False, indent=2),
+def _atomic_write_json(path: Path, payload) -> None:
+    """Записать JSON атомарно (tmp + os.replace), чтобы kill посреди записи
+    не оставил битый чекпоинт."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(
+        json.dumps(payload, ensure_ascii=False, indent=2),
         encoding="utf-8",
     )
+    os.replace(tmp, path)
+
+
+def save_visited(visited):
+    _atomic_write_json(VISITED_FILE, sorted(visited))
+
+
+def load_frontier():
+    """Восстановить BFS-очередь из чекпоинта.
+
+    Возвращает список пар [url, depth]. Пусто, если файла нет или он битый:
+    вызывающий тогда стартует с seeds.
+    """
+    if FRONTIER_FILE.exists():
+        try:
+            raw = json.loads(FRONTIER_FILE.read_text(encoding="utf-8"))
+            out = []
+            for item in raw:
+                if isinstance(item, (list, tuple)) and len(item) == 2:
+                    out.append((str(item[0]), int(item[1])))
+            return out
+        except Exception:
+            return []
+    return []
+
+
+def load_extracted_links():
+    """Восстановить накопленные исходящие ссылки (url -> список ссылок)."""
+    if EXTRACTED_LINKS_FILE.exists():
+        try:
+            data = json.loads(EXTRACTED_LINKS_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
+        except Exception:
+            return {}
+    return {}
+
+
+def save_checkpoint(visited, queue, extracted_links):
+    """Единый чекпоинт: visited + frontier (очередь) + извлечённые ссылки.
+
+    Вызывается после КАЖДОЙ страницы, поэтому kill теряет максимум текущую
+    страницу, а не последние N (раньше чекпоинт был раз в 5 страниц).
+    """
+    save_visited(visited)
+    _atomic_write_json(FRONTIER_FILE, [[u, d] for (u, d) in queue])
+    _atomic_write_json(EXTRACTED_LINKS_FILE, extracted_links)
 
 
 def append_data(record: dict):
@@ -96,14 +168,98 @@ def log(msg: str):
         f.write(line + "\n")
 
 
+def _host_of(url: str) -> str:
+    return urlsplit(url).netloc.lower()
+
+
+def same_host(url: str, base: str) -> bool:
+    """True, если url на том же хосте, что base.
+
+    Через urlparse, а не startswith: startswith(TENANT_URL) пропускал
+    fooguu84124.live.dynatrace.com.evil.com (граница хоста не проверялась).
+    """
+    return bool(_host_of(url)) and _host_of(url) == _host_of(base)
+
+
 def should_skip_url(url: str) -> bool:
-    if not url.startswith(TENANT_URL):
+    if not same_host(url, TENANT_URL):
         return True
     return any(p.search(url) for p in SKIP_PATTERNS)
 
 
 def normalize_url(url: str) -> str:
-    return url.split("#")[0].rstrip("/")
+    """Канонизировать URL для дедупа.
+
+    Отбрасываем фрагмент (#...) И query-строку (?gtf=-2h и т.п.): в UI это
+    транзиентные фильтры времени/состояния, из-за которых одна и та же страница
+    попадала во фронтир многократно как «разные» URL.
+    """
+    parts = urlsplit(url)
+    cleaned = urlunsplit((parts.scheme, parts.netloc, parts.path, "", ""))
+    return cleaned.rstrip("/")
+
+
+def _url_hash(url: str, length: int = 8) -> str:
+    return hashlib.sha1(url.encode("utf-8")).hexdigest()[:length]
+
+
+def unique_filename(title_slug: str, url: str, ext: str) -> str:
+    """Имя файла скриншота/HTML с коротким хэшем URL.
+
+    Раньше файлы звались только по slugify(title): две разные страницы с
+    одинаковым <title> (частое в SPA) молча перезаписывали друг друга. Хэш URL
+    делает имя уникальным на URL.
+    """
+    return f"{title_slug}-{_url_hash(url)}{ext}"
+
+
+# ---------- frontier (BFS): чистая логика, тестируется без браузера ----------
+
+def is_crawlable_link(url: str) -> bool:
+    """Ссылка достойна фронтира: тот же хост, не skip-паттерн, в /ui/ или /apps/."""
+    return not should_skip_url(url) and ("/ui/" in url or "/apps/" in url)
+
+
+def build_initial_frontier(seeds, restored_frontier, visited):
+    """Собрать стартовую очередь.
+
+    Приоритет: восстановленный из чекпоинта фронтир. Если он пуст (первый
+    запуск или битый файл), берём seeds на depth=0. Уже посещённые URL в
+    очередь не кладём.
+    """
+    queue: list[tuple[str, int]] = []
+    in_queue: set[str] = set()
+
+    source = restored_frontier if restored_frontier else [(normalize_url(u), 0) for u in seeds]
+    for url, depth in source:
+        clean = normalize_url(url)
+        if clean and clean not in visited and clean not in in_queue:
+            queue.append((clean, depth))
+            in_queue.add(clean)
+    return queue, in_queue
+
+
+def enqueue_links(links, depth, max_depth, visited, in_queue, queue):
+    """Добавить исходящие ссылки во фронтир (BFS), с дедупом.
+
+    Мутирует queue и in_queue на месте. Возвращает число реально добавленных.
+    Вынесено из главного цикла, чтобы покрыть дедуп юнит-тестом.
+    """
+    if depth >= max_depth:
+        return 0
+    added = 0
+    for link in links:
+        clean = normalize_url(link)
+        if (
+            clean
+            and clean not in visited
+            and clean not in in_queue
+            and is_crawlable_link(clean)
+        ):
+            queue.append((clean, depth + 1))
+            in_queue.add(clean)
+            added += 1
+    return added
 
 
 # ---------- capture ----------
@@ -114,11 +270,11 @@ async def capture_page(page, url: str, depth: int, folder: str, extra_meta: dict
 
     sc_dir = OUT / "screenshots" / folder
     sc_dir.mkdir(parents=True, exist_ok=True)
-    sc_path = sc_dir / f"{title_slug}.png"
+    sc_path = sc_dir / unique_filename(title_slug, url, ".png")
 
     html_dir = OUT / "pages" / folder
     html_dir.mkdir(parents=True, exist_ok=True)
-    html_path = html_dir / f"{title_slug}.html"
+    html_path = html_dir / unique_filename(title_slug, url, ".html")
 
     # screenshot — full page
     try:
@@ -200,10 +356,38 @@ async def capture_page(page, url: str, depth: int, folder: str, extra_meta: dict
 
 # ---------- crawl ----------
 
+def acquire_single_instance_lock():
+    """Межпроцессный lock через fcntl.flock.
+
+    Два параллельных краулера гонялись на visited.json / pages.jsonl / чекпоинтах
+    (дубли, битый state). Держим эксклюзивный lock на весь прогон; хэндл файла
+    возвращаем наружу, чтобы он жил до конца процесса.
+    """
+    if fcntl is None:  # pragma: no cover - Windows
+        return None
+    fh = open(LOCK_FILE, "w")
+    try:
+        fcntl.flock(fh.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as e:
+        fh.close()
+        if e.errno in (errno.EACCES, errno.EAGAIN):
+            log(f"ERROR: another crawler is already running (lock held on {LOCK_FILE}).")
+            sys.exit(3)
+        raise
+    fh.write(f"{os.getpid()}\n")
+    fh.flush()
+    return fh
+
+
 async def crawl(mode: str, section: str | None, headless: bool):
+    if async_playwright is None:
+        log("ERROR: playwright is not installed. Run: pip install -r requirements.txt && playwright install chromium")
+        sys.exit(2)
     if not STATE_FILE.exists():
         log(f"ERROR: storage state missing at {STATE_FILE}. Run: python auth.py")
         sys.exit(2)
+
+    lock_handle = acquire_single_instance_lock()
 
     if mode == "discovery":
         seeds = [TENANT_URL + r for r in CONFIG["seed_routes"]]
@@ -221,12 +405,20 @@ async def crawl(mode: str, section: str | None, headless: bool):
         sys.exit(2)
 
     visited = load_visited()
+    restored_frontier = load_frontier()
+    extracted_links = load_extracted_links()
     nav_wait = CONFIG["crawl"]["navigation_wait_ms"]
     page_timeout = CONFIG["crawl"]["page_timeout_ms"]
     vw = CONFIG["crawl"]["viewport_width"]
     vh = CONFIG["crawl"]["viewport_height"]
 
-    log(f"start: mode={mode} headless={headless} max_pages={max_pages} already_visited={len(visited)} seeds={len(seeds)}")
+    queue, in_queue = build_initial_frontier(seeds, restored_frontier, visited)
+    if restored_frontier:
+        log(f"Restored frontier with {len(queue)} pages from checkpoint (visited={len(visited)})")
+
+    retries: dict[str, int] = {}
+
+    log(f"start: mode={mode} headless={headless} max_pages={max_pages} already_visited={len(visited)} frontier={len(queue)} seeds={len(seeds)}")
 
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=headless)
@@ -236,8 +428,6 @@ async def crawl(mode: str, section: str | None, headless: bool):
         )
         page = await context.new_page()
 
-        queue: list[tuple[str, int]] = [(normalize_url(u), 0) for u in seeds]
-        in_queue = {u for u, _ in queue}
         crawled = 0
         errors = 0
 
@@ -245,11 +435,14 @@ async def crawl(mode: str, section: str | None, headless: bool):
             url, depth = queue.pop(0)
             in_queue.discard(url)
             if url in visited or should_skip_url(url):
+                # Пропуск ничего не добавляет во фронтир, чекпоинт не нужен:
+                # при рестарте такой URL просто повторно отсеется (идемпотентно).
                 continue
 
             try:
                 log(f"[{crawled+1}] depth={depth} {url}")
-                await page.goto(url, wait_until="domcontentloaded", timeout=page_timeout)
+                response = await page.goto(url, wait_until="domcontentloaded", timeout=page_timeout)
+                http_status = response.status if response is not None else None
                 await page.wait_for_timeout(nav_wait)
                 # extra wait for Angular/SPA settle
                 try:
@@ -258,34 +451,41 @@ async def crawl(mode: str, section: str | None, headless: bool):
                     pass
 
                 folder = url_to_folder(page.url)  # use ACTUAL URL (after redirects)
-                links = await capture_page(page, page.url, depth, folder)
+                links = await capture_page(
+                    page, page.url, depth, folder, extra_meta={"http_status": http_status}
+                )
                 visited.add(url)
                 visited.add(normalize_url(page.url))
                 crawled += 1
 
-                if crawled % 5 == 0:
-                    save_visited(visited)
+                # Персистим исходящие ссылки страницы (раньше в pages.jsonl был
+                # только links_count, восстановить фронтир было нельзя).
+                extracted_links[url] = links
+                enqueue_links(links, depth, max_depth, visited, in_queue, queue)
 
-                if depth < max_depth:
-                    for link in links:
-                        clean = normalize_url(link)
-                        if (
-                            clean
-                            and clean not in visited
-                            and clean not in in_queue
-                            and not should_skip_url(clean)
-                            and ("/ui/" in clean or "/apps/" in clean)
-                        ):
-                            queue.append((clean, depth + 1))
-                            in_queue.add(clean)
+                # Чекпоинт после КАЖДОЙ страницы: visited + очередь + ссылки.
+                save_checkpoint(visited, queue, extracted_links)
 
             except Exception as e:
                 errors += 1
                 log(f"  ERROR: {type(e).__name__}: {str(e)[:200]}")
+                # Ретрай: вернуть URL в конец очереди до MAX_RETRIES раз, чтобы
+                # временный сбой (таймаут/сеть) не терял страницу навсегда.
+                attempts = retries.get(url, 0)
+                if attempts < MAX_RETRIES:
+                    retries[url] = attempts + 1
+                    queue.append((url, depth))
+                    in_queue.add(url)
+                    log(f"  retry scheduled ({retries[url]}/{MAX_RETRIES}) for {url}")
+                else:
+                    log(f"  giving up on {url} after {MAX_RETRIES} retries")
+                save_checkpoint(visited, queue, extracted_links)
 
-        save_visited(visited)
+        save_checkpoint(visited, queue, extracted_links)
         await browser.close()
         log(f"done. crawled={crawled} errors={errors} total_visited={len(visited)} queue_remaining={len(queue)}")
+    if lock_handle is not None:
+        lock_handle.close()
 
 
 # ---------- docs ----------

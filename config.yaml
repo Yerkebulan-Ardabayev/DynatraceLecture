@@ -67,6 +67,7 @@ crawl:
   navigation_wait_ms: 2500
   viewport_width: 1920
   viewport_height: 1080
+  max_retries: 2      # сколько раз вернуть упавший URL во фронтир
 
   url_skip_patterns:
     - "/entity/HOST-"
@@ -97,31 +98,3 @@ discovery:
 deep:
   depth: 3
   max_pages: 2000
-
-safe_actions:
-  click_deny_text:
-    - delete
-    - remove
-    - disable
-    - save
-    - apply
-    - send
-    - submit
-    - run
-    - execute
-    - confirm
-    - "yes"
-    - create
-    - edit
-    - duplicate
-    - share
-    - download
-    - export
-    - upload
-    - install
-    - uninstall
-    - reset
-    - clear
-    - generate token
-    - revoke
-    - rotate
