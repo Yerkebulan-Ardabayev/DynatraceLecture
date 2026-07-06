@@ -45,7 +45,8 @@ seed_routes:
 
   # --- Settings (главный, далее depth=2 раскроет ~150 sub-pages) ---
   - /ui/settings
-  - /ui/access-tokens
+  # /ui/access-tokens НЕ скрейпим намеренно: страница токенов содержит PII
+  # (owner-email реальных сотрудников), для курса не нужна (решение 2026-07-06)
 
   # --- Якорные Settings sub-pages, чтобы гарантированно зацепить весь tree ---
   - /ui/settings/builtin:os-services-monitoring
