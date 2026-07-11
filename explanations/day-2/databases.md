@@ -7,7 +7,6 @@
 >
 > - [Welcome to Dynatrace Managed](https://docs.dynatrace.com/managed): корневая страница Managed Docs
 > - [Applications and microservices: Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices): раздел про сервисы (включая БД)
-> - [Databases: Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases): корневая страница темы Databases в Managed
 > - [Database services classic: Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases/database-services-classic): классический интерфейс мониторинга БД, automatic detection / analysis / SQL bind variables
 > - [How database activity is monitored: Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases/database-services-classic/how-database-activity-is-monitored): Java/.NET/PHP/Node.js процессы, frameworks JDBC/ADO.NET/PDO
 > - [Analyze database services: Managed](https://docs.dynatrace.com/managed/observe/applications-and-microservices/databases/database-services-classic/analyze-database-services): карточка БД, current hotspots, failed statements
