@@ -34,9 +34,11 @@ QC_SCRIPT = ROOT / "scripts" / "quality_check.py"
 LC_SCRIPT = ROOT / "scripts" / "link_check.py"
 
 
-def pre_build_quality_check() -> None:
+def pre_build_quality_check(cards: bool = False) -> None:
     """Вызывает scripts/quality_check.py. Если найдены errors — блокирует сборку.
 
+    cards=True (сборка v2) добавляет флаг --cards: проверяются и cards/*.md
+    (CARD-детекторы). Дефолт (v1) флаг не передаёт, поведение v1-гейта неизменно.
     Можно отключить переменной окружения SKIP_QC=1 (для отладки только). Warnings
     не блокируют — они в логе quality_check для ручного ревью.
     """
@@ -47,8 +49,11 @@ def pre_build_quality_check() -> None:
         print(f"⚠️  {QC_SCRIPT} не найден — quality_check пропущен.")
         return
     print("→ quality_check…")
+    cmd = [sys.executable, str(QC_SCRIPT)]
+    if cards:
+        cmd.append("--cards")
     result = subprocess.run(
-        [sys.executable, str(QC_SCRIPT)],
+        cmd,
         cwd=str(ROOT),
         capture_output=True,
         text=True,
@@ -1143,7 +1148,7 @@ def render_v2_html(data: list, build_id: str) -> str:
 
 def main():
     v2 = "--v2" in sys.argv[1:]
-    pre_build_quality_check()
+    pre_build_quality_check(cards=v2)
     pre_build_link_check()
     plan = load_plan()
     pages = load_pages()

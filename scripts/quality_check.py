@@ -355,6 +355,102 @@ def scan_all() -> list[Issue]:
     return all_issues
 
 
+# ---------- CARD DETECTORS (Ф2.3, spec.md раздел 10) -----------------------
+# Сканируют cards/<day>/<topic>.md. Включаются флагом --cards (или из plan_html
+# при сборке v2). Дефолтный quality_check (только explanations) не затрагивается,
+# чтобы незавершённость карточек не блокировала сборку v1.
+#   CARD_MISSING            (warn)  — темы без карточки (инфо, не блокирует)
+#   CARD_EMDASH             (error) — длинное тире в карточке
+#   CARD_BANNED_CATEGORY    (error) — запрещённая категория контент-политики в карточке
+#   CARD_UNSOURCED_NUMBER   (error) — число, которого нет в explanation той же темы
+
+CARDS_DIR = ROOT / "cards"
+PLAN_FILE = ROOT / "study_plan.yaml"
+CARD_NUM_RE = re.compile(r"\d+(?:[.,]\d+)?")
+
+
+def _ignored_classes(line: str) -> set[str]:
+    """Классы из inline-маркера <!-- qc:ignore[=A,B] -->; {'*'} = все."""
+    m = IGNORE_RE.search(line)
+    if not m:
+        return set()
+    raw = m.group(1)
+    return {"*"} if raw is None else {c.strip() for c in raw.split(",") if c.strip()}
+
+
+def _frontmatter_end(lines: list[str]) -> int:
+    """1-based номер строки, закрывающей YAML-шапку (второй '---'); 0 если шапки нет."""
+    if not lines or lines[0].strip() != "---":
+        return 0
+    for i in range(1, len(lines)):
+        if lines[i].strip() == "---":
+            return i + 1
+    return 0
+
+
+def _card_numbers(text: str) -> set[str]:
+    """Множество числовых токенов (запятая->точка для единообразия)."""
+    return {n.replace(",", ".") for n in CARD_NUM_RE.findall(text or "")}
+
+
+def scan_cards() -> list[Issue]:
+    import yaml
+
+    issues: list[Issue] = []
+    plan = yaml.safe_load(PLAN_FILE.read_text(encoding="utf-8"))
+    for day in plan["days"]:
+        for t in day.get("topics", []):
+            day_id, topic_id = day["id"], t["id"]
+            cf = CARDS_DIR / day_id / f"{topic_id}.md"
+            rel = f"cards/{day_id}/{topic_id}.md"
+            if not cf.exists():
+                issues.append(Issue(rel, 0, "CARD_MISSING", "warn",
+                                    f"{day_id}/{topic_id}",
+                                    "карточка лектора ещё не создана (Ф2.2)"))
+                continue
+
+            text = cf.read_text(encoding="utf-8")
+            lines = text.splitlines()
+            fm_end = _frontmatter_end(lines)
+
+            expl = EXPLANATIONS / day_id / f"{topic_id}.md"
+            expl_nums = _card_numbers(expl.read_text(encoding="utf-8")) if expl.exists() else None
+
+            for lineno, line in enumerate(lines, start=1):
+                ignored = _ignored_classes(line)
+                if "*" in ignored:
+                    continue
+
+                # CARD_EMDASH: только U+2014 (короткое тире '–' в списках допустимо)
+                if "—" in line and "CARD_EMDASH" not in ignored:
+                    issues.append(Issue(rel, lineno, "CARD_EMDASH", "error",
+                                        line.strip()[:160],
+                                        "длинное тире запрещено: заменить на «,» «:» или «·»"))
+
+                # CARD_BANNED_CATEGORY: переиспользуем error-правила контент-политики
+                if "CARD_BANNED_CATEGORY" not in ignored:
+                    for rule in RULES:
+                        if rule.severity != "error" or rule.cls in ignored:
+                            continue
+                        if rule.pattern.search(line) and not (
+                            rule.guard_skip and rule.guard_skip.search(line)
+                        ):
+                            issues.append(Issue(rel, lineno, "CARD_BANNED_CATEGORY", "error",
+                                                line.strip()[:160],
+                                                f"{rule.cls}: {rule.suggestion}"))
+
+                # CARD_UNSOURCED_NUMBER: число тела карточки обязано быть в explanation
+                if expl_nums is not None and lineno > fm_end and "CARD_UNSOURCED_NUMBER" not in ignored:
+                    for num in CARD_NUM_RE.findall(line):
+                        if num.replace(",", ".") not in expl_nums:
+                            issues.append(Issue(rel, lineno, "CARD_UNSOURCED_NUMBER", "error",
+                                                line.strip()[:160],
+                                                f"число «{num}» не найдено в explanation темы "
+                                                f"({day_id}/{topic_id}); цифры карточки берутся "
+                                                f"только из explanation"))
+    return issues
+
+
 # ---------- REPORT ---------------------------------------------------------
 
 SEV_GLYPH = {"error": "❌", "warn": "⚠️"}
@@ -412,9 +508,13 @@ def main() -> int:
     )
     ap.add_argument("--json", action="store_true", help="JSON output for hooks/CI")
     ap.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
+    ap.add_argument("--cards", action="store_true",
+                    help="также проверять cards/*.md (CARD-детекторы, Ф2.3)")
     args = ap.parse_args()
 
     issues = scan_all()
+    if args.cards:
+        issues += scan_cards()
 
     if args.json:
         print_json(issues)
