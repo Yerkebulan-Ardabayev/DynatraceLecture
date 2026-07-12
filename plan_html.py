@@ -621,31 +621,563 @@ if (last >= 0 && last < FLAT.length) showTopic(last);
 """
 
 
+# =============================================================================
+# v2 «Presenter Edition» (spec.md раздел 10, пакет Ф1).
+#
+# Собирается ТОЛЬКО при флаге `--v2` в отдельный файл output/training_v2.html.
+# Дефолтная сборка v1 (output/training.html) ниже в main() не меняется ни на
+# байт: v2 не переписывает HTML_TEMPLATE, а трансформирует его КОПИЮ, вставляя
+# CSS/HTML/JS по уникальным якорям (</style>, </body>, </script>) и убирая
+# внешний Google-Fonts @import (требование офлайн, 0 сетевых запросов).
+# =============================================================================
+
+OUT_FILE_V2 = ROOT / "output" / "training_v2.html"
+CARDS_DIR = ROOT / "cards"
+# Порядок блоков карточки лектора (схема из spec.md раздел 5).
+CARD_SECTIONS = ["ГДЕ", "ЗАЧЕМ", "ЦИФРЫ", "ЕСЛИ→ТО", "ЗАПАСНОЙ ПЛАН", "ВОПРОСЫ АУДИТОРИИ"]
+# Единственная внешняя ссылка шаблона v1: в v2 удаляем (air-gapped, офлайн).
+GOOGLE_FONTS_IMPORT = (
+    "@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:"
+    "wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');"
+)
+
+
+def parse_card(path: Path) -> dict:
+    """Разобрать cards/<day>/<topic>.md: YAML-шапка + блоки `## ЗАГОЛОВОК`.
+
+    Возвращает {"meta": {...}, "sections": {"ГДЕ": "<md>", ...}}. Тело каждого
+    блока остаётся сырым markdown (рендерится в HTML в attach_cards).
+    """
+    text = path.read_text(encoding="utf-8")
+    meta: dict = {}
+    body = text
+    if text.startswith("---"):
+        parts = text.split("---", 2)
+        if len(parts) == 3:
+            meta = yaml.safe_load(parts[1]) or {}
+            body = parts[2]
+    sections: dict[str, str] = {}
+    current = None
+    buf: list[str] = []
+    for line in body.splitlines():
+        m = re.match(r"^##\s+(.+?)\s*$", line)
+        if m:
+            if current is not None:
+                sections[current] = "\n".join(buf).strip()
+            current = m.group(1).strip()
+            buf = []
+        elif current is not None:
+            buf.append(line)
+    if current is not None:
+        sections[current] = "\n".join(buf).strip()
+    return {"meta": meta, "sections": sections}
+
+
+def attach_cards(data: list) -> list:
+    """Прикрепить карточку лектора к каждой теме (t["card"], None если нет файла).
+
+    Вызывается ТОЛЬКО в v2-ветке, поэтому v1-данные остаются без поля card.
+    """
+    for day in data:
+        for t in day["topics"]:
+            cf = CARDS_DIR / day["id"] / f"{t['id']}.md"
+            if not cf.exists():
+                t["card"] = None
+                continue
+            card = parse_card(cf)
+            secs = card["sections"]
+            # verified в YAML-шапке разбирается как datetime.date -> str для JSON.
+            verified = card["meta"].get("verified")
+            t["card"] = {
+                "timing_min": card["meta"].get("timing_min"),
+                "verified": str(verified) if verified is not None else None,
+                "sections": [
+                    {"title": name, "html": md_to_html(secs[name])}
+                    for name in CARD_SECTIONS
+                    if secs.get(name)
+                ],
+            }
+    return data
+
+
+V2_CSS = """
+/* === v2 Presenter Edition === */
+kbd{display:inline-block;background:var(--bg);border:1px solid var(--border);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);margin:0 1px}
+#dt-hint{margin-left:14px;color:var(--muted);font-size:11px;white-space:nowrap}
+#dt-open-presenter{background:var(--greenDim);color:var(--green);border-color:transparent}
+#dt-open-presenter:hover{background:var(--green);color:var(--bg)}
+.dt-hidden{display:none !important}
+#dt-palette{position:fixed;inset:0;z-index:1000;background:rgba(3,4,8,.72);backdrop-filter:blur(2px);display:flex;align-items:flex-start;justify-content:center;padding-top:12vh}
+#dt-palette-box{width:min(680px,92vw);background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 24px 80px rgba(0,0,0,.6);overflow:hidden;display:flex;flex-direction:column;max-height:72vh}
+#dt-palette-input{border:none;border-bottom:1px solid var(--border);background:var(--surface);color:var(--bright);font-family:inherit;font-size:17px;padding:16px 18px;outline:none}
+#dt-palette-results{overflow-y:auto;padding:6px}
+.dt-pal-item{padding:9px 12px;border-radius:8px;cursor:pointer;border:1px solid transparent}
+.dt-pal-item.active{background:var(--accentDim);border-color:var(--accent)}
+.dt-pal-row{display:flex;align-items:baseline;gap:10px}
+.dt-pal-name{color:var(--bright);font-size:14px;font-weight:600;flex:1}
+.dt-pal-day{color:var(--muted);font-size:11px;white-space:nowrap}
+.dt-pal-snip{color:var(--text);font-size:12px;margin-top:3px;line-height:1.4;font-family:'JetBrains Mono',monospace;opacity:.85}
+.dt-pal-empty{padding:22px;text-align:center;color:var(--muted);font-size:13px}
+#dt-palette-foot{padding:8px 14px;border-top:1px solid var(--border);color:var(--muted);font-size:11px;background:var(--surface)}
+mark.dt-hl{background:var(--tip);color:#1a1206;border-radius:2px;padding:0 2px;font-weight:600}
+#dt-font-badge{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(8px);background:var(--card);border:1px solid var(--border);color:var(--bright);padding:7px 14px;border-radius:20px;font-size:13px;z-index:1200;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+#dt-font-badge.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#dt-presenter{position:fixed;inset:0;z-index:900;background:var(--bg);color:var(--text)}
+#dt-pres-wrap{display:flex;flex-direction:column;height:100vh;overflow:hidden}
+#dt-pres-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;padding:16px 24px;border-bottom:1px solid var(--border);background:var(--card)}
+.dt-pres-day{color:var(--accent);font-size:12px;text-transform:uppercase;letter-spacing:1.4px;font-weight:700}
+.dt-pres-topic{color:var(--bright);font-size:26px;font-weight:700;margin-top:4px;line-height:1.2}
+.dt-pres-pos{color:var(--muted);font-size:12px;margin-top:4px}
+.dt-timer-box{text-align:right;min-width:150px}
+.dt-timer{font-family:'JetBrains Mono',monospace;font-size:44px;font-weight:600;color:var(--green);line-height:1}
+.dt-timer.over{color:var(--red)}
+.dt-timer-target{color:var(--muted);font-size:12px;margin-top:2px;height:14px}
+.dt-timer-ctrls{margin-top:8px;display:flex;gap:6px;justify-content:flex-end}
+.dt-btn{background:var(--accentDim);color:var(--accent);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-family:inherit;font-size:13px;cursor:pointer;transition:all .13s}
+.dt-btn:hover{background:var(--accent);color:var(--bg)}
+#dt-pres-main{flex:1;display:grid;grid-template-columns:1fr 320px;overflow:hidden}
+.dt-pres-body{overflow-y:auto;padding:24px 30px 60px}
+.dt-card-meta{color:var(--muted);font-size:12px;margin-bottom:14px;font-family:'JetBrains Mono',monospace}
+.dt-card-sec{margin-bottom:20px;border-left:3px solid var(--accent);padding-left:16px}
+.dt-card-sec h3{color:var(--accent);font-size:14px;text-transform:uppercase;letter-spacing:1.1px;margin-bottom:8px}
+.dt-card-body{font-size:17px;line-height:1.7;color:var(--text)}
+.dt-card-body ul,.dt-card-body ol{margin:6px 0 6px 22px}
+.dt-card-body li{margin:5px 0}
+.dt-card-body p{margin:7px 0}
+.dt-card-body strong{color:var(--bright)}
+.dt-card-body code{background:var(--accentDim);color:var(--accent);padding:1px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:.9em}
+.dt-nocard{color:var(--muted);font-size:16px;line-height:1.6;padding:30px;border:1px dashed var(--border);border-radius:10px;text-align:center;margin-top:20px}
+.dt-nocard span{display:block;font-size:13px;opacity:.8;margin-top:8px}
+#dt-pres-side{border-left:1px solid var(--border);background:var(--card);overflow-y:auto;padding:18px 18px 40px;display:flex;flex-direction:column}
+.dt-side-title{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:1.3px;font-weight:700;margin-bottom:10px}
+.dt-pres-plan{display:flex;flex-direction:column;gap:2px}
+.dt-plan-item{padding:7px 10px;border-radius:6px;font-size:13px;color:var(--text);border-left:3px solid transparent}
+.dt-plan-item.cur{background:var(--accentDim);color:var(--accent);border-left-color:var(--accent);font-weight:600}
+.dt-pres-next{margin-top:16px;padding:12px;background:var(--surface);border-radius:8px;color:var(--bright);font-size:14px;font-weight:600;line-height:1.4}
+.dt-pres-nav{display:flex;gap:8px;margin-top:16px}
+.dt-pres-nav .dt-btn{flex:1;text-align:center}
+.dt-pres-hint{margin-top:auto;padding-top:16px;color:var(--muted);font-size:11px;line-height:1.7}
+@media (max-width:820px){#dt-pres-main{grid-template-columns:1fr}#dt-pres-side{border-left:none;border-top:1px solid var(--border)}}
+"""
+
+V2_BODY = """
+<div id="dt-palette" class="dt-hidden" role="dialog" aria-label="Палитра поиска">
+  <div id="dt-palette-box">
+    <input id="dt-palette-input" type="text" autocomplete="off" spellcheck="false" placeholder="Поиск по темам и тексту курса…">
+    <div id="dt-palette-results"></div>
+    <div id="dt-palette-foot">↑ ↓ выбор · Enter перейти · Esc закрыть / вернуться к теме плана</div>
+  </div>
+</div>
+<div id="dt-presenter" class="dt-hidden"></div>
+"""
+
+# raw-строка: обратные слэши в JS-регексах (\d, \], \\) остаются как есть,
+# без SyntaxWarning и без двойного экранирования.
+V2_SCRIPT = r'''
+/* ===== v2 Presenter Edition (палитра Ctrl+K, окно докладчика P, масштаб) ===== */
+(function(){
+  var isPresenter = location.hash === '#presenter';
+  var bc = ('BroadcastChannel' in window) ? new BroadcastChannel('dt-presenter') : null;
+
+  /* --- общий масштаб (zoom области чтения; CSS v1 в px, поэтому не rem) --- */
+  var fontScale = parseFloat(localStorage.getItem('dt-font-scale') || '1') || 1;
+  if (!(fontScale >= 0.8 && fontScale <= 2)) fontScale = 1;
+  function applyFontScale(){
+    var c = document.getElementById('content'); if (c) c.style.zoom = fontScale;
+    var pb = document.getElementById('dt-pres-body'); if (pb) pb.style.zoom = fontScale;
+  }
+  function fontBadge(){
+    var b = document.getElementById('dt-font-badge');
+    if (!b){ b = document.createElement('div'); b.id = 'dt-font-badge'; document.body.appendChild(b); }
+    b.textContent = 'Масштаб ' + Math.round(fontScale * 100) + '%';
+    b.classList.add('show'); clearTimeout(b._t);
+    b._t = setTimeout(function(){ b.classList.remove('show'); }, 900);
+  }
+  function setFont(v){
+    fontScale = Math.min(2, Math.max(0.8, Math.round(v * 10) / 10));
+    try { localStorage.setItem('dt-font-scale', String(fontScale)); } catch(e){}
+    applyFontScale(); fontBadge();
+  }
+
+  /* --- поиск для палитры (по 44 темам + полнотекст по DATA) --- */
+  function fuzzySub(text, q){
+    var ti = 0;
+    for (var i = 0; i < q.length; i++){ ti = text.indexOf(q[i], ti); if (ti < 0) return false; ti++; }
+    return true;
+  }
+  function makeSnippet(plain, pos, len){
+    var start = Math.max(0, pos - 30), end = Math.min(plain.length, pos + len + 40);
+    var pre = (start > 0 ? '…' : '') + plain.slice(start, pos);
+    var hit = plain.slice(pos, pos + len);
+    var post = plain.slice(pos + len, end) + (end < plain.length ? '…' : '');
+    return escapeHtml(pre) + '<mark class="dt-hl">' + escapeHtml(hit) + '</mark>' + escapeHtml(post);
+  }
+  function paletteSearch(q){
+    q = (q || '').trim().toLowerCase();
+    var res = [];
+    FLAT.forEach(function(it, idx){
+      var name = it.topic.name.toLowerCase();
+      var score = -1, snippet = '', matchedBody = false;
+      if (!q){ score = 1000 - idx; }
+      else if (name.indexOf(q) >= 0){ score = 500 - name.indexOf(q); }
+      else if (fuzzySub(name, q)){ score = 200; }
+      else {
+        var body = (it.topic.html || '').replace(/<[^>]+>/g, ' ').toLowerCase();
+        var pos = body.indexOf(q);
+        if (pos >= 0){ score = 100; snippet = makeSnippet(body, pos, q.length); matchedBody = true; }
+      }
+      if (score >= 0) res.push({ idx: idx, it: it, score: score, snippet: snippet, matchedBody: matchedBody });
+    });
+    res.sort(function(a, b){ return b.score - a.score; });
+    return res.slice(0, 40);
+  }
+
+  /* --- подсветка совпадений в отрендеренной теме + прыжок к первому --- */
+  function escapeRegExp(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function applyHighlight(root, query){
+    if (!root || !query) return;
+    var theory = root.querySelector('.theory'); if (!theory) return;
+    var q = query.trim(); if (!q) return;
+    var rx = new RegExp(escapeRegExp(q), 'gi');
+    var walker = document.createTreeWalker(theory, NodeFilter.SHOW_TEXT, null);
+    var nodes = [], n;
+    while ((n = walker.nextNode())) nodes.push(n);
+    var first = null;
+    nodes.forEach(function(node){
+      var pn = node.parentNode;
+      if (!pn || /^(SCRIPT|STYLE|MARK)$/.test(pn.nodeName)) return;
+      var s = node.nodeValue; rx.lastIndex = 0;
+      if (!rx.test(s)) return; rx.lastIndex = 0;
+      var frag = document.createDocumentFragment(), last = 0, m;
+      while ((m = rx.exec(s))){
+        if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
+        var mk = document.createElement('mark'); mk.className = 'dt-hl'; mk.textContent = m[0];
+        frag.appendChild(mk); if (!first) first = mk;
+        last = m.index + m[0].length;
+        if (m.index === rx.lastIndex) rx.lastIndex++;
+      }
+      if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last)));
+      pn.replaceChild(frag, node);
+    });
+    if (first) first.scrollIntoView({ block: 'center' });
+  }
+
+  /* В режиме докладчика сразу прячем #app (он выше по разметке и уже распарсен),
+     чтобы не мелькнуло окно аудитории до готовности DOM. */
+  if (isPresenter){ var _a = document.getElementById('app'); if (_a) _a.style.display = 'none'; }
+
+  /* init обращается к элементам палитры/докладчика, которые лежат НИЖЕ этого
+     инлайн-скрипта в разметке (перед </body>). На момент выполнения скрипта их
+     ещё нет в DOM, поэтому старт откладываем до DOMContentLoaded. */
+  function boot(){ if (isPresenter) initPresenter(); else initAudience(); }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+
+  /* ========================= окно аудитории ========================= */
+  function initAudience(){
+    var presenterWin = null;
+    var pendingPeek = null;   /* idx темы плана, куда вернуться по Esc после поиска */
+    var peekReturn = -1;      /* где были в момент открытия палитры */
+    var paletteOpen = false, curQuery = '', activeRes = 0, results = [];
+
+    var navBtns = document.querySelector('.nav-btns');
+    if (navBtns){
+      var pbtn = document.createElement('button');
+      pbtn.className = 'nav-arrow'; pbtn.id = 'dt-open-presenter';
+      pbtn.textContent = '🖥 Докладчик'; pbtn.title = 'Открыть окно докладчика (P)';
+      pbtn.onclick = openPresenter;
+      navBtns.insertBefore(pbtn, navBtns.firstChild);
+    }
+    var tb = document.getElementById('topbar');
+    if (tb){
+      var hint = document.createElement('span'); hint.id = 'dt-hint';
+      hint.innerHTML = '<kbd>Ctrl</kbd><kbd>K</kbd> поиск · <kbd>P</kbd> докладчик · <kbd>+</kbd><kbd>-</kbd> масштаб';
+      tb.appendChild(hint);
+    }
+
+    /* обернуть showTopic: синхронизировать окно докладчика + подсветить поиск */
+    var _show = showTopic;
+    showTopic = function(idx, opts){
+      _show(idx);
+      if (opts && opts.highlight) applyHighlight(document.getElementById('content-inner'), opts.highlight);
+      syncPresenter(currentIdx);
+    };
+    applyFontScale();
+
+    var pal = document.getElementById('dt-palette');
+    var input = document.getElementById('dt-palette-input');
+    var resBox = document.getElementById('dt-palette-results');
+
+    function openPalette(){
+      peekReturn = currentIdx; paletteOpen = true; pal.classList.remove('dt-hidden');
+      input.value = ''; curQuery = ''; activeRes = 0;
+      renderResults(paletteSearch('')); input.focus();
+    }
+    function closePalette(){ paletteOpen = false; pal.classList.add('dt-hidden'); }
+    function togglePalette(){ paletteOpen ? closePalette() : openPalette(); }
+
+    input.addEventListener('input', function(){
+      curQuery = input.value; activeRes = 0; renderResults(paletteSearch(curQuery));
+    });
+    input.addEventListener('keydown', function(e){
+      if (e.key === 'ArrowDown'){ e.preventDefault(); activeRes = Math.min(results.length - 1, activeRes + 1); paintActive(); }
+      else if (e.key === 'ArrowUp'){ e.preventDefault(); activeRes = Math.max(0, activeRes - 1); paintActive(); }
+      else if (e.key === 'Enter'){ e.preventDefault(); choose(activeRes); }
+      else if (e.key === 'Escape'){ e.preventDefault(); closePalette(); }
+    });
+    pal.addEventListener('click', function(e){ if (e.target === pal) closePalette(); });
+
+    function renderResults(rs){
+      results = rs; resBox.innerHTML = '';
+      if (!rs.length){ resBox.innerHTML = '<div class="dt-pal-empty">Ничего не найдено</div>'; return; }
+      rs.forEach(function(r, i){
+        var div = document.createElement('div');
+        div.className = 'dt-pal-item' + (i === activeRes ? ' active' : '');
+        var day = escapeHtml(r.it.day.id.replace('day-', 'День '));
+        var extra = r.snippet ? '<div class="dt-pal-snip">' + r.snippet + '</div>' : '';
+        div.innerHTML = '<div class="dt-pal-row"><span class="dt-pal-name">' + escapeHtml(r.it.topic.name) +
+          '</span><span class="dt-pal-day">' + day + '</span></div>' + extra;
+        div.onmouseenter = function(){ activeRes = i; paintActive(); };
+        div.onclick = function(){ choose(i); };
+        resBox.appendChild(div);
+      });
+    }
+    function paintActive(){
+      var kids = resBox.children;
+      for (var i = 0; i < kids.length; i++) kids[i].classList.toggle('active', i === activeRes);
+      if (kids[activeRes]) kids[activeRes].scrollIntoView({ block: 'nearest' });
+    }
+    function choose(i){
+      var r = results[i]; if (!r) return;
+      var ret = peekReturn;
+      closePalette();
+      showTopic(r.idx, r.matchedBody ? { highlight: curQuery } : undefined);
+      pendingPeek = (r.idx !== ret && ret >= 0) ? ret : null;
+    }
+
+    function openPresenter(){
+      var base = location.href.split('#')[0];
+      if (presenterWin && !presenterWin.closed){ presenterWin.focus(); syncPresenter(currentIdx); return; }
+      presenterWin = window.open(base + '#presenter', 'dt-presenter', 'width=760,height=960');
+    }
+    function syncPresenter(idx){
+      try { if (presenterWin && !presenterWin.closed) presenterWin.postMessage({ type: 'dt-sync', idx: idx }, '*'); } catch(e){}
+      try { if (bc) bc.postMessage({ type: 'dt-sync', idx: idx }); } catch(e){}
+      try { localStorage.setItem('dt-sync-idx', idx + '@' + Date.now()); } catch(e){}
+    }
+
+    window.addEventListener('message', function(e){
+      var d = e.data || {};
+      if (d.type === 'dt-ready') syncPresenter(currentIdx);
+      else if (d.type === 'dt-nav' && typeof d.idx === 'number') showTopic(d.idx);
+    });
+    if (bc) bc.onmessage = function(e){
+      var d = e.data || {};
+      if (d.type === 'dt-nav-req' && typeof d.idx === 'number') showTopic(d.idx);
+    };
+
+    document.addEventListener('keydown', function(e){
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')){ e.preventDefault(); togglePalette(); return; }
+      if (paletteOpen) return;
+      var tag = e.target.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === 'p' || e.key === 'P'){ e.preventDefault(); openPresenter(); }
+      else if (e.key === '+' || e.key === '='){ e.preventDefault(); setFont(fontScale + 0.1); }
+      else if (e.key === '-' || e.key === '_'){ e.preventDefault(); setFont(fontScale - 0.1); }
+      else if (e.key === '0'){ e.preventDefault(); setFont(1); }
+      else if (e.key === 'Escape'){ if (pendingPeek != null){ var r = pendingPeek; pendingPeek = null; showTopic(r); } }
+    });
+  }
+
+  /* ========================= окно докладчика ========================= */
+  function initPresenter(){
+    var app = document.getElementById('app'); if (app) app.style.display = 'none';
+    document.title = 'Докладчик · ' + document.title;
+    var root = document.getElementById('dt-presenter'); root.classList.remove('dt-hidden');
+    root.innerHTML =
+      '<div id="dt-pres-wrap">' +
+        '<header id="dt-pres-head">' +
+          '<div class="dt-pres-head-l">' +
+            '<div id="dt-pres-day" class="dt-pres-day"></div>' +
+            '<div id="dt-pres-topic" class="dt-pres-topic"></div>' +
+            '<div id="dt-pres-pos" class="dt-pres-pos"></div>' +
+          '</div>' +
+          '<div class="dt-timer-box">' +
+            '<div id="dt-timer" class="dt-timer">00:00</div>' +
+            '<div id="dt-timer-target" class="dt-timer-target"></div>' +
+            '<div class="dt-timer-ctrls">' +
+              '<button id="dt-timer-btn" class="dt-btn">▶ Старт</button>' +
+              '<button id="dt-timer-reset" class="dt-btn">⟲ Сброс</button>' +
+            '</div>' +
+          '</div>' +
+        '</header>' +
+        '<div id="dt-pres-main">' +
+          '<div id="dt-pres-body" class="dt-pres-body"></div>' +
+          '<aside id="dt-pres-side">' +
+            '<div class="dt-side-title">План дня</div>' +
+            '<div id="dt-pres-plan" class="dt-pres-plan"></div>' +
+            '<div id="dt-pres-next" class="dt-pres-next"></div>' +
+            '<div class="dt-pres-nav">' +
+              '<button id="dt-pres-prev" class="dt-btn">← Пред</button>' +
+              '<button id="dt-pres-next-btn" class="dt-btn">След →</button>' +
+            '</div>' +
+            '<div class="dt-pres-hint">← → темы · Пробел таймер · R сброс · +/- масштаб</div>' +
+          '</aside>' +
+        '</div>' +
+      '</div>';
+
+    var body = document.getElementById('dt-pres-body');
+    var presenterIdx = (typeof currentIdx === 'number' && currentIdx >= 0) ? currentIdx : 0;
+    applyFontScale();
+
+    var timer = { start: 0, acc: 0, running: false, targetMin: null, iv: null };
+    function fmt(ms){ var s = Math.floor(ms / 1000), m = Math.floor(s / 60); s = s % 60; return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s; }
+    function elapsed(){ return timer.acc + (timer.running ? (Date.now() - timer.start) : 0); }
+    function tick(){
+      var el = document.getElementById('dt-timer'); if (!el) return;
+      var ms = elapsed(); el.textContent = fmt(ms);
+      el.classList.toggle('over', !!(timer.targetMin && ms > timer.targetMin * 60000));
+    }
+    function updBtn(){ var b = document.getElementById('dt-timer-btn'); if (b) b.textContent = timer.running ? '⏸ Пауза' : '▶ Старт'; }
+    function startTimer(){ if (timer.running) return; timer.start = Date.now(); timer.running = true; if (!timer.iv) timer.iv = setInterval(tick, 500); updBtn(); tick(); }
+    function pauseTimer(){ if (!timer.running) return; timer.acc = elapsed(); timer.running = false; updBtn(); tick(); }
+    function toggleTimer(){ timer.running ? pauseTimer() : startTimer(); }
+    function resetTimer(){ timer.acc = 0; timer.start = Date.now(); tick(); }
+
+    function cardHtml(topic){
+      var c = topic.card;
+      if (!c || !c.sections || !c.sections.length){
+        return '<div class="dt-nocard">Карточка лектора для этой темы ещё не создана.' +
+          '<span>Появится в пакете Ф2.2. Пока ведите тему по материалу в окне аудитории.</span></div>';
+      }
+      var h = '';
+      if (c.verified){ h += '<div class="dt-card-meta">Сверено: ' + escapeHtml(String(c.verified)) + (c.timing_min ? (' · ориентир ' + c.timing_min + ' мин') : '') + '</div>'; }
+      c.sections.forEach(function(s){
+        h += '<section class="dt-card-sec"><h3>' + escapeHtml(s.title) + '</h3><div class="dt-card-body">' + s.html + '</div></section>';
+      });
+      return h;
+    }
+
+    function renderPresenter(idx){
+      var it = FLAT[idx]; if (!it) return;
+      presenterIdx = idx;
+      document.getElementById('dt-pres-day').textContent = it.day.id.replace('day-', 'День ') + ' · ' + it.day.title;
+      document.getElementById('dt-pres-topic').textContent = it.topic.name;
+      var dayTopics = it.day.topics;
+      var pos = 0;
+      for (var i = 0; i < dayTopics.length; i++){ if (dayTopics[i].id === it.topic.id){ pos = i; break; } }
+      document.getElementById('dt-pres-pos').textContent = 'Тема ' + (pos + 1) + ' из ' + dayTopics.length;
+      body.innerHTML = cardHtml(it.topic);
+      var planEl = document.getElementById('dt-pres-plan'); planEl.innerHTML = '';
+      dayTopics.forEach(function(t){
+        var li = document.createElement('div');
+        li.className = 'dt-plan-item' + (t.id === it.topic.id ? ' cur' : '');
+        li.textContent = t.name; planEl.appendChild(li);
+      });
+      var nxt = FLAT[idx + 1];
+      document.getElementById('dt-pres-next').textContent = nxt
+        ? ('Следующая: ' + nxt.topic.name + (nxt.day.id !== it.day.id ? (' (' + nxt.day.id.replace('day-', 'День ') + ')') : ''))
+        : 'Это последняя тема курса';
+      timer.targetMin = (it.topic.card && it.topic.card.timing_min) ? it.topic.card.timing_min : null;
+      document.getElementById('dt-timer-target').textContent = timer.targetMin ? ('ориентир ' + timer.targetMin + ' мин') : '';
+      resetTimer(); startTimer(); applyFontScale();
+    }
+
+    function navFromPresenter(delta){
+      var t = Math.min(FLAT.length - 1, Math.max(0, presenterIdx + delta));
+      if (t === presenterIdx) return;
+      var asked = false;
+      try { if (window.opener && !window.opener.closed){ window.opener.postMessage({ type: 'dt-nav', idx: t }, '*'); asked = true; } } catch(e){}
+      try { if (bc) bc.postMessage({ type: 'dt-nav-req', idx: t }); } catch(e){}
+      if (!asked && !bc) renderPresenter(t);   /* standalone: нет ни opener, ни BroadcastChannel */
+    }
+
+    document.getElementById('dt-timer-btn').onclick = toggleTimer;
+    document.getElementById('dt-timer-reset').onclick = function(){ resetTimer(); startTimer(); };
+    document.getElementById('dt-pres-prev').onclick = function(){ navFromPresenter(-1); };
+    document.getElementById('dt-pres-next-btn').onclick = function(){ navFromPresenter(1); };
+
+    window.addEventListener('message', function(e){
+      var d = e.data || {};
+      if (d.type === 'dt-sync' && typeof d.idx === 'number') renderPresenter(d.idx);
+    });
+    if (bc) bc.onmessage = function(e){
+      var d = e.data || {};
+      if (d.type === 'dt-sync' && typeof d.idx === 'number') renderPresenter(d.idx);
+    };
+    window.addEventListener('storage', function(e){
+      if (e.key === 'dt-sync-idx' && e.newValue){ var idx = parseInt(e.newValue, 10); if (!isNaN(idx)) renderPresenter(idx); }
+    });
+
+    /* клавиши в capture-фазе: гасим v1-обработчик стрелок в этом окне */
+    document.addEventListener('keydown', function(e){
+      var tag = e.target.tagName; if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight'){ e.preventDefault(); e.stopImmediatePropagation(); navFromPresenter(1); }
+      else if (e.key === 'ArrowLeft'){ e.preventDefault(); e.stopImmediatePropagation(); navFromPresenter(-1); }
+      else if (e.key === ' '){ e.preventDefault(); e.stopImmediatePropagation(); toggleTimer(); }
+      else if (e.key === 'r' || e.key === 'R'){ e.preventDefault(); resetTimer(); startTimer(); }
+      else if (e.key === '+' || e.key === '='){ e.preventDefault(); setFont(fontScale + 0.1); }
+      else if (e.key === '-' || e.key === '_'){ e.preventDefault(); setFont(fontScale - 0.1); }
+      else if (e.key === '0'){ e.preventDefault(); setFont(1); }
+    }, true);
+
+    /* сообщить открывшему окну, что готовы принять текущую тему */
+    try { if (window.opener && !window.opener.closed) window.opener.postMessage({ type: 'dt-ready' }, '*'); } catch(e){}
+    renderPresenter(presenterIdx);
+  }
+})();
+'''
+
+
+def render_v2_html(data: list, build_id: str) -> str:
+    """Собрать v2-HTML из КОПИИ v1-шаблона (сам HTML_TEMPLATE не меняется)."""
+    tpl = HTML_TEMPLATE
+    tpl = tpl.replace(GOOGLE_FONTS_IMPORT, "", 1)      # офлайн: убрать внешний шрифт
+    tpl = tpl.replace("</style>", V2_CSS + "</style>", 1)
+    tpl = tpl.replace("</body>", V2_BODY + "</body>", 1)
+    tpl = tpl.replace("</script>", V2_SCRIPT + "</script>", 1)
+    data_json = json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
+    return tpl.replace("__DATA_PLACEHOLDER__", data_json).replace(
+        "__BUILD_ID__", build_id + " · Presenter"
+    )
+
+
 def main():
+    v2 = "--v2" in sys.argv[1:]
     pre_build_quality_check()
     pre_build_link_check()
     plan = load_plan()
     pages = load_pages()
     data = build_topics_data(plan, pages)
-    data_json = json.dumps(data, ensure_ascii=False)
-    # Экранируем '<' -> '<', чтобы '</script>' (или '<!--') в контенте
-    # страницы не закрывал inline <script> раньше времени и не ломал HTML.
-    # Валидный JSON, при JSON.parse на клиенте символ восстанавливается.
-    data_json = data_json.replace("<", "\\u003c")
     build_id = compute_build_id()
-    html = HTML_TEMPLATE.replace("__DATA_PLACEHOLDER__", data_json).replace(
-        "__BUILD_ID__", build_id
-    )
-    OUT_FILE.write_text(html, encoding="utf-8")
+
+    if v2:
+        data = attach_cards(data)
+        html = render_v2_html(data, build_id)
+        out_file = OUT_FILE_V2
+    else:
+        data_json = json.dumps(data, ensure_ascii=False)
+        # Экранируем '<' -> '<', чтобы '</script>' (или '<!--') в контенте
+        # страницы не закрывал inline <script> раньше времени и не ломал HTML.
+        # Валидный JSON, при JSON.parse на клиенте символ восстанавливается.
+        data_json = data_json.replace("<", "\\u003c")
+        html = HTML_TEMPLATE.replace("__DATA_PLACEHOLDER__", data_json).replace(
+            "__BUILD_ID__", build_id
+        )
+        out_file = OUT_FILE
+
+    out_file.write_text(html, encoding="utf-8")
     total_topics = sum(len(d["topics"]) for d in data)
     with_expl = sum(1 for d in data for t in d["topics"] if t["has_explanation"])
     total_shots = sum(len(t["screenshots"]) for d in data for t in d["topics"])
-    print(f"OK  ->  {OUT_FILE}")
-    print(f"     build-id: {build_id}")
+    print(f"OK  ->  {out_file}")
+    print(f"     build-id: {build_id}{' · Presenter' if v2 else ''}")
     print(
         f"     {len(data)} days, {total_topics} topics ({with_expl} with explanation), {total_shots} screenshots"
     )
-    size_kb = OUT_FILE.stat().st_size / 1024
+    if v2:
+        with_cards = sum(1 for d in data for t in d["topics"] if t.get("card"))
+        print(f"     {with_cards} lecturer cards")
+    size_kb = out_file.stat().st_size / 1024
     print(f"     {size_kb:.1f} KB")
 
 
