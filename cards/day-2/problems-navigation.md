@@ -15,7 +15,7 @@ verified: 2026-07-12
 
 ## ЦИФРЫ
 - На демо-тенанте 71 активная проблема, в списке видно 50 (у вашего тенанта цифры могут быть другими).
-- Пример строки: Http monitor local outage P-26049005, Affected easytravel storebooking, Root cause EasytravelService, длится 10 минут.
+- Пример строки: Http monitor local outage P-26049005, Impacted easytravel storebooking, Root cause EasytravelService, длится 10 минут.
 - Пример алерта БД: Postgres Availability P-26049003, RDS-инстанс на порту 5432, длится 16 минут.
 - Alerting profile сводит проблему по трём scope через AND: Management zones + Severity rules (до 100, между ними OR) + Event filters (до 20).
 

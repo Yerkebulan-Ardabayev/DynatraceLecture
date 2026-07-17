@@ -45,7 +45,7 @@
 
 **Центральная страница** для работы с Application Security. Показывает сводку:
 - Общее число уязвимостей (third-party + code-level).
-- Разбивка по Severity (Critical / High / Medium / Low).
+- Разбивка по Severity (Critical / High / Medium / Low / None).
 - Число активных атак за период.
 - Топ наиболее критичных уязвимостей.
 - Тренды.
@@ -76,7 +76,7 @@
 
 Путь: `/ui/security/code-vulnerabilities`.
 
-*Code-level*: уязвимости в собственном коде, не в библиотеках. Dynatrace анализирует поведение приложения в runtime и ищет типовые проблемы (SQL injection, command injection, SSRF, JNDI injection и подобные insecure data flow). Поддерживаемые стеки и версии OneAgent сведены ниже, в разделе «Поддерживаемые технологии».
+*Code-level*: уязвимости в собственном коде, не в библиотеках. Dynatrace анализирует поведение приложения в runtime и ищет типовые проблемы (SQL injection, command injection, improper input validation, SSRF и подобные insecure data flow). Поддерживаемые стеки и версии OneAgent сведены ниже, в разделе «Поддерживаемые технологии».
 
 *Отличие от SAST.* Runtime-анализ, не статический. Видно, что уязвимость **реально вызывается** в работающем приложении, а не «теоретически есть в коде». Code-level уязвимость закрывается автоматически, когда затронутый процесс перезапущен и OneAgent больше не видит опасных потоков данных к ней (исправлен код, нет трафика или процесс остановлен). Двухчасовое окно «компонент не загружается» относится к third-party уязвимостям (библиотеки), а не к code-level.
 
@@ -154,18 +154,18 @@ Application Security: один из инструментов compliance:
 
 - **Third-party vulnerabilities** (библиотеки): Java, .NET, Node.js, Python, Go, PHP.
 - **Code-level vulnerabilities**: Java 8+, .NET Framework 4.5+, Go (для .NET, Go и Python требуется ручное включение deep monitoring).
-- **Runtime Application Protection (блокировка атак)**: Java 8+ (OneAgent 1.241+), .NET Framework 4.5+ (OneAgent 1.289+), Go (OneAgent 1.311+). Только Windows x86 и Linux x86, только 64-битные процессы.
+- **Runtime Application Protection (блокировка атак)**: Java 8+ (OneAgent 1.241+; только Windows x86 и Linux x86), .NET Framework 4.5+ и .NET Core 3.0+ (OneAgent 1.289+), Go (OneAgent 1.311+). Только 64-битные процессы.
 
 Для других технологий (Ruby, Erlang, Cobol) AppSec не работает: придётся опираться на сторонние SAST/DAST/WAF.
 
 ### Vulnerability feed и Mission Control
 
-Для Managed-кластера обновления базы уязвимостей приходят через подключение к **Cloud Control / Mission Control** (закрытый канал Dynatrace). Источники feed: **Dynatrace Vulnerability feed** (для библиотек и runtime-компонентов в Kubernetes) и **NVD** (для .NET / Java / Node.js runtime). Dynatrace Vulnerability feed объединяет данные OSV.dev, GitHub advisories, NVD, vendor advisories, Snyk и собственных исследований Dynatrace; он заменил прежний feed на базе Snyk. После публикации новой версии feed она доезжает до кластера в течение примерно двух часов; кластер сверяет окружение со свежими данными примерно раз в минуту.
+Для работы Vulnerability Analytics кластер Managed должен быть подключён к **Mission Control**: данные об уязвимостях кластер забирает с endpoint `https://mcsvc.dynatrace.com/vulnerabilityFeed/*`. Источник данных зависит от уязвимого компонента: **Dynatrace Vulnerability feed** либо **NVD**.
 
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/secure/faq -->
+<!-- last-verified: 2026-07-17 source: https://docs.dynatrace.com/managed/secure/application-security/vulnerability-analytics + https://docs.dynatrace.com/managed/secure/faq -->
 
 ### Air-gapped нюансы
 
-- В полностью air-gapped Managed-инсталляции обновление CVE-feed нужно явно прокидывать через разрешённый прокси к Mission Control либо организовывать оффлайн-импорт по согласованию с Dynatrace. Без свежего feed RVA продолжит работать на текущих данных, но новые CVE подхватятся только после следующего обновления.
+- Vulnerability Analytics требует сетевого доступа кластера к Mission Control (endpoint `https://mcsvc.dynatrace.com/vulnerabilityFeed/*`): в закрытом контуре это отдельное явное разрешение в сетевой политике. Офлайн-механизм доставки feed в публичной документации Managed не описан: без доступа к этому endpoint новые CVE в анализ не попадут.
 - **Application Protection blocking** выполняется на стороне OneAgent внутри контура, без обращения наружу.
 - **Внутренние SOC** интегрируются через Webhook / Email / ServiceNow notifications: те же каналы, что в incident-lifecycle.

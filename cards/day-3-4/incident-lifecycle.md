@@ -27,7 +27,7 @@ Problem это готовый инцидент от Davis AI, а тема пок
 ## ЕСЛИ→ТО
 - ЕСЛИ Davis нашёл аномалию по anomaly detection rules → на экране Problems появляется новая Problem с Severity, Affected entity и Root cause; ЕСЛИ аномалии нет → Davis молчит, новой строки нет.
 - ЕСЛИ сервис не привязан ни к одному alerting profile → проблемы по нему никуда не маршрутизируются, это «забытый» сервис.
-- ЕСЛИ создать maintenance window перед плановым релизом → Dynatrace не создаёт проблемы либо не шлёт уведомления (две опции: Suppress problem detection и Suppress alerting), дежурных ночью не будят.
+- ЕСЛИ создать maintenance window перед плановым релизом → Dynatrace не создаёт проблемы либо не шлёт уведомления (режим подавления: только уведомления либо и само обнаружение), дежурных ночью не будят.
 - ЕСЛИ нужно авто-создание тикета на Problem → это Problem notifications → Jira, а Issue-tracking integration только привязывает трекер к Release inventory, автотикетинга там нет.
 
 ## ЗАПАСНОЙ ПЛАН

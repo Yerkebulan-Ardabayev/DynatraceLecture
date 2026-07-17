@@ -58,10 +58,10 @@
 
 - **Главный тумблер сбора метрик контейнеров.** Если выключен: OneAgent не опрашивает runtime, метрик нет. По умолчанию включён.
 - **Фильтры по технологиям**: можно выключить конкретный runtime, если он не используется.
-- **Ignore patterns**: какие контейнеры игнорировать (по имени образа, labels, cgroup path). Нужно для служебных контейнеров K8s (pause, sidecar), которые загромождают интерфейс.
-- **Deep monitoring options**: продвинутый сбор метрик каждого контейнера (per-container I/O, per-container network).
 
-*Типовая настройка.* Все runtime (Docker / containerd / CRI-O) включены: в большой инфраструктуре часто сосуществуют старые Docker-хосты и новые K8s-кластеры с containerd. Ignore patterns добавляются по мере обнаружения шума: pause-контейнеры K8s, контейнеры самого ActiveGate, внутренние build-системы.
+На самой странице только эти тумблеры рантаймов (плюс поле фильтра списка). Исключение конкретных контейнеров из мониторинга настраивается не здесь, а правилами на соседней странице Container monitoring rules (Шаг 2).
+
+*Типовая настройка.* Все runtime (Docker / containerd / CRI-O) включены: в большой инфраструктуре часто сосуществуют старые Docker-хосты и новые K8s-кластеры с containerd. Правила исключения добавляются по мере обнаружения шума: pause-контейнеры K8s, контейнеры самого ActiveGate, внутренние build-системы.
 
 ### Шаг 2: Built-in container monitoring rules
 
@@ -166,7 +166,7 @@
 
 *Задача.* Pause-контейнеры K8s (один на под, без приложенческого кода) создают шум.
 
-*Решение.* В Container monitoring ignore pattern: `image matches registry.k8s.io/pause:*` OR `k8s.gcr.io/pause:*`. Исчезают из интерфейса.
+*Решение.* В Container monitoring rules кастомное правило: условие по имени образа (`registry.k8s.io/pause:*` либо `k8s.gcr.io/pause:*`), действие «не мониторить». Исчезают из интерфейса.
 
 ### Выделить команду продуктов в одну Cloud Application
 
@@ -232,6 +232,6 @@
 
 **Всё работает локально.** OneAgent, ActiveGate, webhooks, CodeModules: всё в кластере. Ничего не ходит в интернет.
 
-**Требование к образам.** Образы Dynatrace Operator и CodeModules должны быть в internal container registry. Dynatrace распространяет их через customer portal. Админ скачивает на машине с интернетом, загружает в свой Harbor / Artifactory. Helm chart Operator'а настраивается с `image.repository=registry.internal/dynatrace/...`. После этого установка идёт без интернета.
+**Требование к образам.** Образы Dynatrace Operator и CodeModules должны быть в internal container registry. Админ скачивает их на машине с интернетом и загружает в свой Harbor / Artifactory. Helm chart Operator'а настраивается с `image.repository=registry.internal/dynatrace/...`. После этого установка идёт без интернета.
 
 **Обновление агентов в K8s.** Новая версия OneAgent → админ скачивает новый образ CodeModules → пушит в свой registry → обновляет Helm values в Operator'e. Operator при следующей перевыкатке подов переходит на новую версию. Управляемый процесс, без автоматического pulling из интернета.

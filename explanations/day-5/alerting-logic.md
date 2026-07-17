@@ -16,9 +16,9 @@
 
 | Что показать | Путь в меню | Прямая ссылка |
 |---|---|---|
-| System notifications (UI-уведомления) | **User menu → System notifications** | `https://guu84124.live.dynatrace.com/ui/system-notifications` |
+| System notifications (UI-уведомления) | **Manage → System Notifications** (левая навигация) | `https://guu84124.live.dynatrace.com/ui/system-notifications` |
 | Problem notifications (интеграции) | **Settings → Integration → Problem notifications** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:problem.notifications` |
-| Issue-tracking integration | **Settings → Releases → Issue-tracking for releases** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:issue-tracking.integration` |
+| Issue-tracking integration | **Settings → Cloud Automation → Issue-tracking for releases** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:issue-tracking.integration` |
 
 ---
 
@@ -53,8 +53,8 @@
 
 **Типы интеграций (по официальной /managed/ документации):**
 
-- **Incident Management:** Opsgenie, VictorOps, PagerDuty, xMatters, Jira: эскалация, on-call rotation, тикеты.
-- **ChatOps:** Slack, Microsoft Teams: через incoming webhook URL мессенджера.
+- **Incident Management:** Opsgenie, VictorOps, PagerDuty, xMatters, Jira (в списке есть и Trello): эскалация, on-call rotation, тикеты.
+- **ChatOps:** Slack: готовая интеграция. Отдельного типа для Microsoft Teams в Managed нет: такие мессенджеры подключают через Custom webhook.
 - **Enterprise Service Management:** ServiceNow: для ITIL-процессов крупных enterprise.
 - **Custom:** Email (SMTP) и Webhook (generic HTTP POST с настраиваемым JSON-payload).
 
@@ -130,7 +130,7 @@
 По официальной документации, push в третью сторону происходит **только при detect и при resolve** проблемы: Dynatrace не дублирует нотификацию на каждое обновление статуса:
 
 - Если проблема «мерцает» (появляется → исчезает → появляется): каждое появление это **новая Problem** с собственной парой detect / resolve, поэтому в каналах будет несколько пар уведомлений на один реальный сбой.
-- Если уведомление не удалось отправить (integration unhealthy), Dynatrace делает retry: состояние интеграции отображается в System notifications (Шаг 1).
+- Если уведомление не удалось отправить (integration unhealthy), сбой интеграции виден в System notifications (Шаг 1); политика повторов в публичной доке не описана.
 
 Жалобы на «дубликаты в каналах»: обычно следствие нестабильного baseline'а, из-за которого одна и та же ситуация распадается на серию мерцающих проблем.
 
@@ -168,7 +168,7 @@ Dynatrace шлёт только начальное уведомление, да�
 
 ### Integration health monitoring
 
-Как узнать, что integration сломалась? Варианты:
+Как узнать, что интеграция сломалась? Варианты:
 
 - **System notifications** (первый экран темы). Dynatrace сам отметит там, что интеграция X упала.
 - **Test notification button.** В настройках интеграции есть кнопка `Send test notification`: шлёт фейковый alert. Использовать регулярно для проверки живости.
@@ -190,7 +190,7 @@ Dynatrace шлёт только начальное уведомление, да�
 |---|---|---|
 | Что делает | Push-уведомление в Slack/Teams/email/PagerDuty/Jira/ServiceNow/webhook | Подтягивает **статистику тикетов** из Jira/GitHub/GitLab/ServiceNow по query на конкретный релиз |
 | Когда срабатывает | На detect и на resolve проблемы | По расписанию / при просмотре Release inventory |
-| Создаёт тикеты? | Да, при наличии integration с trackerom (Jira / ServiceNow): но только при detect | Нет: только читает данные |
+| Создаёт тикеты? | Да, при наличии интеграции с трекером (Jira / ServiceNow), и только в момент обнаружения (detect), не при закрытии | Нет: только читает данные |
 | Закрывает тикеты? | Нет | Нет |
 | Лимит | По alerting profile | До 20 конфигураций на environment |
 

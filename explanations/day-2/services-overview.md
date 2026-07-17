@@ -20,7 +20,7 @@
 |---|---|---|---|
 | Список сервисов | **Application Observability → Services** | `https://guu84124.live.dynatrace.com/ui/services` | Все обнаруженные сервисы с типами, технологиями, метриками |
 | Service detection | **Settings → Service Detection → Service detection rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:service-detection-rules` | Правила разбиения процессов на сервисы |
-| Service Detection v2 for OneAgent | **Settings → Server-side service monitoring → Service Detection v2 for OneAgent** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:service-detection-v2-for-oneagent` | Новая версия механизма детекции (больше возможностей разбиения) |
+| Service Detection v2 for OneAgent | **Settings → Service Detection → Service Detection v2 for OneAgent** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:service-detection-v2-for-oneagent` | Новая версия механизма детекции (больше возможностей разбиения) |
 
 **Типы сервисов в Dynatrace (Service Detection v1, инструментация OneAgent):**
 
@@ -55,7 +55,7 @@
 
 **Service type как практический фильтр.** Когда нужно быстро найти, скажем, «все Kafka-consumer-сервисы в окружении»: применяем фильтр Service type = Messaging service → получаем список. Когда нужно «все backend HTTP-endpoints»: Service type = Web request service.
 
-**Примеры реальных сервисов на демо-тенанте:** `_:9024 nginx`, `_:80,443 nginx ingress-nginx-controller-*`, `:10246 nginx ingress-nginx-controller-*`, это nginx-ingress-контроллеры Kubernetes. Автоматически распознаны как Web service, потому что отвечают на HTTP. Имена формируются по схеме «порт + технология + Kubernetes-имя».
+**Примеры реальных сервисов на демо-тенанте:** `_:9024 nginx`, `_:80,443 nginx ingress-nginx-controller-*`, `:10246 nginx ingress-nginx-controller-*`, это nginx-ingress-контроллеры Kubernetes. Автоматически распознаны как Web request service, потому что отвечают на входящие HTTP-запросы. Имена формируются по схеме «порт + технология + Kubernetes-имя».
 
 **Зачем разные имена у одного сервиса.** Если в кластере запущено два nginx-ingress-controller deployment'а на разных портах (9024 и 80,443), Dynatrace создаёт два Service, по одному на каждый port-сочетание. Это позволяет отдельно видеть метрики каждого endpoint.
 
@@ -101,7 +101,7 @@
 
 ![Service Detection v2: новая версия механизма разбиения процессов на сервисы](screenshots/day-2/services-overview/settings/builtinservice-detection-v2-for-oneagent/Service-Detection-v2-for-OneAgent-Environment-Settings-Demo-live-Demo-Live-Dynat.png)
 
-Путь в меню: **Settings → Server-side service monitoring → Service Detection v2 for OneAgent**.
+Путь в меню: **Settings → Service Detection → Service Detection v2 for OneAgent**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:service-detection-v2-for-oneagent`.
 
 **Что такое v2.** Service Detection v2 (SDv2): переработанный механизм детекции, доступный в Managed начиная с **Cluster version 1.318+**. SDv2 спроектирован для **OpenTelemetry-сервисов** и Adobe Experience Manager; его правила опираются на единый набор `resource attributes` и `span attributes` с условиями. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v2 -->
@@ -116,15 +116,9 @@
 
 Конкретный набор протоколов, для которых v2 даёт более точную сегментацию, и фактическое поведение по конкретной сборке OneAgent: фиксируются в release notes конкретного релиза Managed. До массового включения на prod рекомендуется проверять на dev-сегменте парка.
 
-*Переходный период.* Обычно часть OneAgent старые (v1), часть новые (v2). На этой странице включается глобальное предпочтение использовать v2 там, где доступно. Правила v1 продолжают работать для процессов со старым агентом.
+**Что на странице:** глобальный тумблер активации v2-правил. Отдельного списка правил и статуса применения по парку OneAgent на этом экране нет.
 
-**Что на странице:**
-
-- Глобальный тумблер активации v2-правил.
-- Список v2-правил (синтаксис как в Шаге 2, с расширенными возможностями).
-- Статус применения v2 по парку OneAgent: сколько агентов уже на поддерживающей версии.
-
-*Как делают переключение.* Плановое изменение, обсуждается с командой разработки: названия Service могут поменяться, это повлияет на Alerting profiles и Dashboards. Порядок: сначала обновляются агенты на не-prod хостах, проверяется корректность разбиения, потом массово на prod.
+*Как делают переключение.* Плановое изменение, обсуждается с командой разработки: названия OpenTelemetry-сервисов могут поменяться, это повлияет на Alerting profiles и Dashboards. Сервисы, инструментированные OneAgent, продолжают детектироваться правилами SDv1 независимо от версии агента.
 
 ---
 
@@ -152,16 +146,16 @@
 
 *Решение.* Custom service rule: распознать процесс по command line `python /etl/daily_extract.py`, создать Custom service `Daily ETL`, включить instrumentation: чтобы каждый запуск был транзакцией. После настройки появится в Services с метриками количества запусков, длительности и ошибок.
 
-### Включить v2 на части парка
+### Включить v2 для OpenTelemetry-сервисов
 
-*Задача.* Команда просит улучшенную поддержку gRPC (только в v2). Нужно включить на dev-кластере.
+*Задача.* Команда начинает слать OpenTelemetry-трейсы и хочет управлять разбиением этих сервисов правилами SDv2.
 
 *Шаги:*
 
-1. Обновить OneAgent на dev-хостах до версии с поддержкой v2 (через Update windows).
-2. В Service Detection v2 включить `Enable v2 detection for OneAgent 1.XXX+`.
-3. Проверить, что правила v1 продолжают работать на prod (ещё не обновлён).
-4. После 1-2 недель стабильной работы: обновить prod-агенты постепенно.
+1. Убедиться, что кластер обновлён до версии с поддержкой SDv2 (1.318+).
+2. На странице Service Detection v2 for OneAgent включить тумблер v2-правил.
+3. Проверить на dev-потоке OpenTelemetry-данных, что сервисы детектируются ожидаемо; правила SDv1 для OneAgent-сервисов продолжают работать как раньше.
+4. После 1-2 недель стабильной работы распространять на остальной OpenTelemetry-трафик.
 
 ---
 

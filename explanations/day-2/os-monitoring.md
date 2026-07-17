@@ -176,19 +176,19 @@
 
 ### Базовые метрики хоста, которые всегда доступны
 
-**CPU.** Total usage (процент общей загрузки), Per-core usage (отдельно по каждому ядру: важно для анализа bottleneck в Java с привязкой к ядру), User / System / Iowait / Idle / Steal percentages (последнее важно в виртуализации: сколько процессорного времени крадёт гипервизор), Load average 1m/5m/15m (Linux specific).
+**CPU.** Total usage (процент общей загрузки), Per-core usage (отдельно по каждому ядру: важно для анализа bottleneck в Java с привязкой к ядру), User / System / Iowait / Idle / Steal percentages (последнее важно в виртуализации: сколько процессорного времени крадёт гипервизор), Load average 1m/5m/15m (только Linux).
 
 **Memory.** Total / Used / Available / Free, Cache, Buffers, Swap used, Swap I/O (page in / page out: индикатор катастрофического swapping). На Windows также Committed bytes, Page file usage.
 
-**Disk.** Per-filesystem: free space (absolute и percent), used space, total size, inode usage (на Linux), mount point и тип ФС. Per-block-device: read/write bytes per second, read/write operations per second, average queue length, busy time percent, read/write latency.
+**Disk.** По каждой файловой системе: free space (absolute и percent), used space, total size, inode usage (на Linux), mount point и тип ФС. Per-block-device: read/write bytes per second, read/write operations per second, average queue length, busy time percent, read/write latency.
 
-**Network.** Per-interface: bytes in/out, packets in/out, errors, retransmissions, current connections, listening sockets.
+**Network.** По каждому интерфейсу: bytes in/out, packets in/out, errors, retransmissions, current connections, listening sockets.
 
-**Processes.** Per-process: CPU usage, Memory RSS/VSZ, open file descriptors, thread count, PID, command line, user, parent PID. Агрегация в Process Groups (тема hosts-processes) даёт группы процессов одного приложения.
+**Processes.** По каждому процессу: CPU usage, Memory RSS/VSZ, open file descriptors, thread count, PID, command line, user, parent PID. Агрегация в Process Groups (тема hosts-processes) даёт группы процессов одного приложения.
 
 **OS Services.** Per-service: name, status (Running/Stopped), start type (Auto/Manual/Disabled), executable path, description.
 
-Все эти метрики доступны в Data Explorer по именам `builtin:host.cpu.*`, `builtin:host.mem.*`, `builtin:host.disk.*` (например `builtin:host.disk.throughput.read`, `builtin:host.disk.bytesRead`), `builtin:host.net.*`, `builtin:tech.*`, `builtin:os-services.*`. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/host-monitoring -->
+Все эти метрики доступны в Data Explorer по именам `builtin:host.cpu.*`, `builtin:host.mem.*`, `builtin:host.disk.*` (например `builtin:host.disk.throughput.read`, `builtin:host.disk.bytesRead`), `builtin:host.net.*`, `builtin:tech.*`, а доступность OS-служб: `builtin:osservice.availability`. <!-- last-verified: 2026-07-17 source: https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/host-monitoring + https://docs.dynatrace.com/managed/observe/infrastructure-observability/hosts/monitoring/os-services -->
 
 ### Специфика air-gapped
 

@@ -44,14 +44,14 @@
 **Левая колонка: фильтры:**
 
 - **Analysis over time**: переключает представление между списком сессий и временным графиком.
-- **Application type**: Web / Mobile.
+- **Application type**: Web / Custom / Mobile.
 - **Application versions**: версии приложения, если используется `dtrum.enterAction`.
-- **Applications**: конкретное RUM-приложение (на демо-тенанте видно 5 приложений, созданных через application detection rules).
-- **User experience score**: Apdex: Satisfied / Tolerating / Frustrated.
+- **Applications**: конкретное RUM-приложение (на демо-тенанте в блоке 17 приложений: три видны сразу плюс «+ 14 more»; у вашего тенанта цифры могут быть другими).
+- **User experience score**: session-level оценка Satisfying / Tolerable / Frustrating.
 - **Errors and annoyances**: сессии с JS-ошибками, падениями сети, долгими загрузками.
 - **Conversions and bounces**: сессии с конверсионным action, либо с уходом после первой страницы.
 
-**Правая часть: таблица сессий.** Для каждой сессии: время старта, продолжительность, количество user actions, Apdex, тип (Web / Mobile), платформа, геолокация. Клик по строке открывает карточку сессии с полным списком user actions в хронологическом порядке.
+**Правая часть: таблица сессий.** Колонки со снимка: User session, Replay, User, User experience score, Duration, User action count, Total conversions, Errors and annoyances. Клик по строке открывает карточку сессии с полным списком user actions в хронологическом порядке.
 
 ### Шаг 2: User session query (произвольные запросы по сессиям)
 
@@ -94,12 +94,9 @@ LIMIT 100;
 - **Автоматическая через OneAgent.** Если на бэкенде установлен OneAgent, он перехватывает ответы веб-сервера (NGINX, Apache, IIS, Java app-server) и добавляет тег автоматически. Менять код не нужно.
 - **Ручная.** Администратор вставляет тег в шаблон страницы сам.
 
-**Cost control: лимиты:**
+**Cost control.** По документации расход управляется долей захватываемых сессий (cost and traffic control): процент для RUM и процент для Session Replay, для реплеев итог равен произведению обоих. На снятой env-странице enablement только тумблеры; сами проценты задаются в настройках конкретного приложения.
 
-- **Monthly limit**: сколько user actions примем за месяц (например, 50 млн).
-- **Sampling**: если предел достигнут, какую долю сессий записывать (например, 10%).
-
-*Зачем нужны лимиты.* Managed-лицензия фиксирует максимум user actions в месяц. ЕСЛИ выставить sampling, например, 10% → ТО при достижении месячного лимита Dynatrace начнёт записывать лишь каждую десятую сессию, а остальные отбросит, и квота не «сгорит» за сутки на всплеске трафика (маркетинговая рассылка, чёрная пятница). ЕСЛИ лимит не настроить → ТО один пиковый день рискует выбрать месячную квоту целиком.
+*Зачем это нужно.* Managed-лицензия фиксирует объём RUM. ЕСЛИ держать долю захвата ниже 100% → ТО при всплеске трафика (маркетинговая рассылка, чёрная пятница) пишется только заданная доля сессий, и квота не «сгорает» за сутки. ЕСЛИ ограничение не настроить → ТО один пиковый день рискует выбрать заметную часть месячной квоты.
 
 ### Шаг 4: RUM Mobile enablement (включение мониторинга мобильных приложений)
 
@@ -161,7 +158,7 @@ OneAgent на сервере живёт внутри JVM или process tree и 
 
 Поддержка Internet Explorer 11 прекращена начиная с RUM JavaScript 1.293: для legacy-приложений на IE остаются только OneAgent serverside-данные.
 
-Все эти данные отправляются **beacon'ом**: небольшим HTTP-запросом к Dynatrace cluster (конкретно на ActiveGate или напрямую в cluster node). В Managed тенанте beacon идёт к ActiveGate, который пересылает его в Cluster Management Console.
+Все эти данные отправляются **beacon'ом**: небольшим HTTP-запросом на beacon endpoint кластерного ActiveGate (URL-путь вида `/bf/<id>`), оттуда данные попадают в кластер.
 
 ### User session vs User action
 
@@ -191,7 +188,7 @@ Apdex (Application Performance Index): единая метрика, котора
 
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/apdex-ratings -->
 
-Пороги действий настраиваются на странице **User experience score** (увидим в Теме 2). Помимо action-уровня Apdex, в Dynatrace есть session-level **User Experience Score**, который классифицирует сессию целиком (Satisfying / Tolerating / Frustrating).
+Пороги действий настраиваются на странице **User experience score** (увидим в Теме 2). Помимо action-уровня Apdex, в Dynatrace есть session-level **User Experience Score**, который классифицирует сессию целиком (Satisfying / Tolerable / Frustrating).
 
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings -->
 
@@ -223,9 +220,9 @@ Apdex (Application Performance Index): единая метрика, котора
 
 ### Cost control: почему это важно в Managed
 
-В SaaS Dynatrace лимиты биллятся помесячно, превышение: автоматический overage charge. В Managed лицензия фиксирует максимум User Actions в месяц. При превышении Dynatrace **не прекращает запись**, но начинает сэмплировать: случайно отбрасывает часть сессий.
+В SaaS Dynatrace лимиты биллятся помесячно. В Managed лицензия фиксирует объём RUM за период, а официальный механизм управления расходом: cost and traffic control, доля захватываемых сессий. Поведение платформы при исчерпании лицензионного объёма в публичной документации Managed не детализировано.
 
-*Типовой сценарий.* Обычный день: 500 тыс. user actions. Пиковый день (выплаты, распродажа): 2 млн. При лицензии 30 млн/месяц один пиковый день «съедает» ~7% квоты. Важно либо закладывать буфер при покупке лицензии, либо включать adaptive sampling: Dynatrace автоматически режет cap при приближении к лимиту.
+*Типовой сценарий.* Обычный день: 500 тыс. user actions. Пиковый день (выплаты, распродажа): 2 млн. При лицензии 30 млн/месяц один пиковый день «съедает» ~7% квоты. Поэтому важно закладывать буфер при покупке лицензии и заранее ограничивать долю захвата на пиковые периоды.
 
 ### Ключевые термины
 

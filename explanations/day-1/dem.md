@@ -11,7 +11,7 @@
 > - [User experience score](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/scores-and-ratings/user-experience-score): сессионный рейтинг Frustrating / Tolerable / Satisfying; веса элементов (User action 3 / Error 1 / Rage event 2 / Crash 5000); одно Frustrating-действие не даёт сессии стать Satisfying
 > - [Session Replay](https://docs.dynatrace.com/managed/shortlink/session-replay): захват и воспроизведение сессий пользователя; поддержка Web, Android, iOS (за исключением Cordova / React Native / Flutter / Xamarin / .NET MAUI)
 > - [Synthetic Monitoring](https://docs.dynatrace.com/managed/shortlink/synthetic-monitoring): 4 типа: single-URL browser monitor, browser clickpath, HTTP monitor, NAM monitor
-> - [Data retention periods](https://docs.dynatrace.com/managed/shortlink/data-retention-periods): RUM 35 дней, Session Replay configurable max 35 дней, Synthetic max 35 дней (Classic)
+> - [Data retention periods](https://docs.dynatrace.com/managed/shortlink/data-retention-periods): RUM-сессии 35 дней, Session Replay configurable max 35 дней, Synthetic configurable max 365 дней (Classic)
 
 ## 📍 КАРТА: где живут данные цифрового опыта
 
@@ -89,7 +89,7 @@
 
 В air-gapped Managed работаем с классическим списком сессий: новый Apps-интерфейс (Users & Sessions app) в Managed не активен.
 
-Заголовок **User sessions**, счётчик **First 100 sessions**: по умолчанию выводятся первые сто сессий. Временной период: селектор в правом верхнем углу (на скрине Last 2 hours).
+Заголовок **User sessions**; список показывает ограниченную выборку сессий (счётчик количества виден над таблицей). Временной период: селектор в правом верхнем углу (на скрине Last 2 hours).
 
 **Слева: панель фильтров.** Применяются кликом, сразу сужают таблицу.
 
@@ -112,15 +112,14 @@
 
 **Таблица справа.** Колонки:
 
-- **Session start**: время начала визита.
-- **Browser**: браузер и версия.
-- **Application**: какое приложение.
+- **User session**: идентификация визита и время старта.
+- **Replay**: есть ли запись Session Replay.
 - **User**: анонимный ID по cookie или реальный ID после авторизации.
+- **User experience score**: оценка сессии (Satisfying / Tolerable / Frustrating).
 - **Duration**: длительность от первой до последней активности.
-- **Events**: сколько действий совершил пользователь.
-- **Errors**: сколько ошибок.
-- **Exits**: на скольких страницах заканчивалась сессия.
-- **Conversions**: сколько бизнес-целей пройдено.
+- **User action count**: сколько действий совершил пользователь.
+- **Total conversions**: сколько бизнес-целей пройдено.
+- **Errors and annoyances**: ошибки и раздражители сессии.
 
 **Карточка сессии.** Клик на строку открывает подробную карточку. В ней:
 - Полная хронология действий пользователя.

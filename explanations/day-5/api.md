@@ -16,7 +16,7 @@
 
 | Что показать | Путь в меню | Прямая ссылка |
 |---|---|---|
-| Access tokens (список токенов) | **User menu → Access tokens** | `https://guu84124.live.dynatrace.com/ui/access-tokens` |
+| Access tokens (список токенов) | **Manage → Access Tokens** (левая навигация) | `https://guu84124.live.dynatrace.com/ui/access-tokens` |
 | Token settings (общие настройки) | **Settings → Security → Access token settings** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:tokens.token-settings` |
 
 ---
@@ -29,17 +29,13 @@
 
 Путь: `https://guu84124.live.dynatrace.com/ui/access-tokens`.
 
-*Что видно.* Список всех API-токенов текущего пользователя. Колонки: `Token name`, `Last used`. Кнопки: `Generate new token`, `Show more actions`.
+*Что видно.* Список всех API-токенов текущего пользователя. Колонки: `Token name`, `Last used`, `Created`, `Number of scopes`, `Owner`, `Enabled`; в конце строки действия (`Details`, `Delete`). Кнопки: `Generate new token`, `Show more actions`.
 
-*Что такое API-токен.* Строка из трёх частей через точку: `prefix.publicPortion.secretPortion`. Public-часть: 24 символа, secret-часть: 64 символа. Префикс задаёт тип токена:
+*Что такое API-токен.* Строка из трёх частей через точку: `prefix.publicPortion.secretPortion`. Public-часть: 24 символа, secret-часть: 64 символа. Префикс говорит о типе токена, и здесь дока двухслойна: в таблице префиксов API-токен обозначен как **`dt0s01`**, при этом классические Environment-токены носят префикс **`dt0c01`**, и именно он стоит в примере авторизации самой документации. Остальные префиксы из таблицы (`dt0s02` OAuth2-клиенты Account Management, `dt0s16` Platform tokens) относятся к облачной платформе Dynatrace: в air-gapped Managed они не используются.
 
-- **`dt0s01`**: API tokens для авторизации и SCIM.
-- **`dt0s02`**: OAuth2 clients для Dynatrace Apps.
-- **`dt0s16`**: Platform tokens для programmatic access.
+При вызове API вместо логин/пароль в заголовке идёт `Authorization: Api-Token <токен>` (пример из доки: `Api-Token dt0c01.abc123...`). Public-портион можно безопасно показывать в логах для идентификации; secret-портион требует password-уровня защиты: при утечке токен нужно немедленно ротировать.
 
-При вызове API вместо логин/пароль в заголовке идёт `Authorization: Api-Token dt0s01.<PUBLIC>.<SECRET>`. Public-портион можно безопасно показывать в логах для идентификации; secret-портион требует password-уровня защиты: при утечке токен нужно немедленно ротировать.
-
-<!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/manage/access-control/access-tokens -->
+<!-- last-verified: 2026-07-17 source: https://docs.dynatrace.com/managed/manage/access-control/access-tokens + https://docs.dynatrace.com/managed/dynatrace-api/basics/dynatrace-api-authentication -->
 
 **Зачем несколько токенов.** Каждая интеграция: свой токен с минимально необходимыми правами:
 
@@ -79,11 +75,8 @@ Admin-категория очень ограничительна, только �
 
 - **Maximum token expiration**: максимальный срок действия. Если политика = 90 дней, пользователь не может создать токен «на 1 год». Реализация требования «регулярная ротация секретов».
 - **Require expiration date**: запретить токены без expiration. Для compliance-среды обычно Да.
-- **Allowed scopes per user role**: какие scope-ы пользователь может выдать в зависимости от своей роли. Обычный пользователь не должен выдавать Admin-токены.
-- **Minimum token prefix length**: длина видимого префикса. В логах показывается только префикс, не полный токен.
-- **Token audit logging**: логирование всех операций с токенами. Обязательно для compliance-аудитов.
 
-*Audit log.* Можно включить запись всех использований токенов: кто, когда, какой endpoint вызывал, с какого IP. Критично для расследований после инцидентов безопасности.
+На снятой странице Token settings видны только тумблеры: расширенных полей (scope-политики по ролям, отдельного лога операций с токенами) на этом экране нет.
 
 ---
 

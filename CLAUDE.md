@@ -8,9 +8,9 @@
 
 ### Источники правды (в порядке доверия)
 
-1. **`ui_elements.json` + `pages.jsonl`** — UI-цитирование, headings/buttons/fields дословно. Это ground truth для того, что юзер видит.
-2. **`dtkb` skill** — technical facts (настройки, лимиты, overhead, retention, поведение фич, air-gapped). FTS5 по всем Dynatrace docs. Использовать `mcp__dtkb__dtkb_search`.
-3. **`docs.dynatrace.com/managed/`** — fallback, если в dtkb не нашлось.
+1. **`ui_elements.json` + `pages.jsonl`** — UI-цитирование, headings/buttons/fields дословно. Это ground truth для того, что юзер видит. Ограничение: контент-зона Settings-страниц и body_preview обрезаны, скриншоты на Mac отсутствуют.
+2. **`docs.dynatrace.com/managed/` (живые страницы, WebFetch)** — авторитет для верификации tech-фактов: лимиты, retention, версии, поведение фич, air-gapped. Расхождение с любым локальным источником решает живая дока. Дрейф этих страниц автоматически ловит `scripts/docs_freshness.py` (см. README, «Автообновление»).
+3. **`dtkb` skill** — вспомогательный локальный индекс (личные Dynatrace-заметки и выдержки, НЕ полное зеркало доков; проверено аудитом 2026-07-17). Годится для быстрого поиска, но отсутствие факта в dtkb ничего не доказывает, а найденное перепроверяется по живой доке.
 
 Разделяй: «на captured экране X» vs «в production обычно Y». Никогда не смешивай.
 
@@ -80,6 +80,8 @@ HTML собирается с `<meta name="dt-build-id">` + build-id в `title` (
 Карточки лектора: `cards/<day>/<topic>.md`, 44/44, каждая цифра обязана присутствовать в explanation своей темы. Гейт: `python scripts/quality_check.py --cards` (CARD-детекторы, см. `CONTENT_POLICY.md` §7). Сборка `--v2` вызывает его автоматически, сборка v1 — без `--cards`.
 
 Свежесть: `python scripts/drift_report.py --limit 3` (нужна сессия: `python auth.py` либо `python auth.py --manual`). Памятка запуска — в `README.md`, раздел «Свежесть».
+
+Автообновление по докам: `scripts/docs_freshness.py` — launchd `com.yerke.dt-freshness` дважды в день сверяет 146 docs.dynatrace.com-страниц курса со снапшотом, при изменениях правит текст через `claude -p` (валидатор + гейт + откат), пересобирает v1+v2, пишет `output/freshness_report.md`. Правки не коммитятся — дифф смотрит владелец. Подробности в README, раздел «Автообновление по официальной документации».
 
 ## Если что-то не находится
 

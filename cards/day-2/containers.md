@@ -34,6 +34,6 @@ verified: 2026-07-12
 Навигацию по меню подстраховываю прямой ссылкой по route (например `/ui/settings/builtin:container.technology`), если пункты меню на тенанте расположены иначе.
 
 ## ВОПРОСЫ АУДИТОРИИ
-- «Почему одноразовые build-контейнеры Jenkins/GitLab-Runner висят в списках и шумят?» Ответ: они живут недолго, но попадают в мониторинг; убираются кастомным правилом на Container monitoring rules (image matches jenkins-agent:* → disable) или ignore pattern на странице Container monitoring.
+- «Почему одноразовые build-контейнеры Jenkins/GitLab-Runner висят в списках и шумят?» Ответ: они живут недолго, но попадают в мониторинг; убираются кастомным правилом на Container monitoring rules (условие по image jenkins-agent:*, действие «не мониторить»).
 - «Мониторим Kubernetes через Dynatrace Operator, а Container monitoring rules не срабатывают, почему?» Ответ: при webhook-инъекции (cloudNativeFullStack или applicationMonitoring) эти правила игнорируются, сбор задаётся через DynaKube CR, а не через страницу Settings.
 - «Как контейнерный мониторинг работает в закрытом контуре без интернета?» Ответ: образы Dynatrace Operator и CodeModules заранее кладут во внутренний registry (Harbor/Artifactory), Helm настраивают на него, дальше установка и обновление агентов идут без выхода в интернет.

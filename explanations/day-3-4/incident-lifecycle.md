@@ -69,7 +69,7 @@
 
 Путь: `/ui/settings/builtin:alerting.maintenance-window`.
 
-*Что это.* Периоды, когда Dynatrace **не создаёт проблемы** или **не отправляет уведомления** (две независимые опции: `Suppress problem detection` и `Suppress alerting`). Используется для:
+*Что это.* Периоды, когда Dynatrace **не создаёт проблемы** или **не отправляет уведомления** (режим подавления: только уведомления либо и само обнаружение проблем). Используется для:
 
 - Плановых работ (релиз, бэкап, миграция).
 - Праздничных периодов (в эти дни изменён baseline из-за пониженной активности).
@@ -95,10 +95,10 @@
 
 *Четвёртый этап lifecycle.* Problem попадает под alerting profile и отправляется в настроенные интеграции. По документации Managed доступны:
 
-- **Incident management:** Opsgenie, PagerDuty, VictorOps, xMatters, Jira.
-- **ChatOps:** Slack, Microsoft Teams.
+- **Incident management:** Opsgenie, PagerDuty, VictorOps, xMatters, Jira; в списке интеграций есть и Trello.
+- **ChatOps:** Slack.
 - **Enterprise Service Management:** ServiceNow.
-- **Custom:** Email и Webhook для всего остального.
+- **Custom:** Email и Webhook для всего остального (в том числе для мессенджеров вроде Microsoft Teams, у которых отдельной готовой интеграции в Managed нет).
 
 Проблема покидает Dynatrace и попадает в рабочий процесс команды. Уведомления уходят только в момент **создания** и **закрытия** проблемы, это намеренно, чтобы не флудить промежуточными апдейтами.
 

@@ -6,9 +6,9 @@ verified: 2026-07-12
 ---
 ## ГДЕ
 Тема живёт на трёх экранах доставки уведомлений.
-System notifications (внутренние сообщения платформы): User menu → System notifications, route `/ui/system-notifications`.
+System notifications (внутренние сообщения платформы): Manage → System Notifications (левая навигация), route `/ui/system-notifications`.
 Problem notifications (интеграции с внешними системами): Settings → Integration → Problem notifications, route `/ui/settings/builtin:problem.notifications`.
-Issue-tracking: Settings → Releases → Issue-tracking for releases, route `/ui/settings/builtin:issue-tracking.integration`.
+Issue-tracking: Settings → Cloud Automation → Issue-tracking for releases, route `/ui/settings/builtin:issue-tracking.integration`.
 
 ## ЗАЧЕМ
 Три экрана делят логику оповещений: System notifications это алерты самой платформы (лицензия кончается, интеграция упала, extension сломался), Problem notifications это алерты приложений во внешние системы (сервис упал, БД тормозит), Issue-tracking это статистика тикетов, привязанных к релизу.
@@ -19,14 +19,14 @@ Issue-tracking: Settings → Releases → Issue-tracking for releases, route `/u
 - Issue-tracking: до 20 конфигураций на environment.
 - Issue-tracking читает статистику из 5 систем: Jira on-premises, Jira Cloud, GitHub, GitLab, ServiceNow.
 - System notifications на демо-тенанте: заголовок 0 Notifications, список пуст.
-- Integration failure попадает в System notifications, когда не удалось отправить уведомление 3 раза подряд.
+- Integration failure виден в System notifications; точный порог повторов отправки в доке не зафиксирован.
 - Pull-model для закрытого контура: внутренний poller спрашивает Dynatrace API о новых проблемах каждые 30 секунд, исходящее соединение инициируется изнутри сети.
 
 ## ЕСЛИ→ТО
 - ЕСЛИ проблема «мерцает» (появилась → исчезла → появилась) → каждое появление это новая Problem со своей парой detect / resolve, в канал прилетает серия пар уведомлений на один реальный сбой.
 - ЕСЛИ firewall блокирует исходящий HTTPS к hooks.slack.com → Slack-webhook молчит; решение: ActiveGate как outbound proxy, либо internal webhook receiver, либо только внутренний SMTP.
 - ЕСЛИ нужна эскалация «за 10 минут никто не взял → уровень выше» → её делает внешняя on-call система (PagerDuty, OpsGenie), Dynatrace шлёт только начальное уведомление.
-- ЕСЛИ уведомление не ушло (integration unhealthy) → Dynatrace делает retry, а статус интеграции виден в System notifications.
+- ЕСЛИ уведомление не ушло (integration unhealthy) → сбой виден в System notifications; политика повторов в публичной доке не описана.
 
 ## ЗАПАСНОЙ ПЛАН
 System notifications на демо пуст (0 Notifications): показываю пустой inbox и проговариваю, что сюда платформа пишет license warnings, tenant configuration changes, extension issues, integration failures; в закрытом контуре это единственный ранний сигнал, Mission Control недоступен.

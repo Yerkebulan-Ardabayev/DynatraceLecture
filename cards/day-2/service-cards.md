@@ -8,7 +8,7 @@ verified: 2026-07-12
 Три страницы вокруг детального разбора сервиса.
 Точка входа в карточки: Application Observability → Services, route `/ui/services`.
 Пороги «красного» статуса: Settings → Anomaly detection → Services, route `/ui/settings/builtin:anomaly-detection.services`.
-Метрики по endpoint'ам: Settings → Server-side service monitoring → Endpoint metrics, route `/ui/settings/builtin:unified-services-endpoint-metrics`.
+Метрики по endpoint'ам: Settings → Service Detection → Endpoint metrics, route `/ui/settings/builtin:unified-services-endpoint-metrics`.
 
 ## ЗАЧЕМ
 Карточка сервиса это рабочее место разбора «сервис тормозит»: Response time / Failure rate / Throughput в динамике, сравнение с предыдущим периодом, топ endpoint'ов, PurePath до узкого места.
@@ -17,7 +17,7 @@ verified: 2026-07-12
 ## ЦИФРЫ
 - На демо-тенанте 239 Services, эта страница используется как точка входа в карточку (у вашего тенанта цифры могут быть другими).
 - Карточка сервиса собрана из 7 зон: Overview, Service flow, Top requests, Top backend calls, Top database statements (только для сервисов с БД-клиентами), Instances, Problems.
-- Перцентили 90 / 95 / 99 считаются приближённо по алгоритму t-digest: агрегация без хранения полной истории запросов.
+- Перцентили 90 / 95 / 99 считаются приближённо: потоковая агрегация без хранения полной истории запросов.
 - Failure rate: ошибкой считается HTTP-статус ≥ 500 либо exception в коде.
 - Хранение: Services и Distributed traces до 365 дней (configurable), Metrics Classic до 5 лет, код-уровень insights 10 дней (фикс).
 - Reference period в Anomaly detection по умолчанию Last 7 days.

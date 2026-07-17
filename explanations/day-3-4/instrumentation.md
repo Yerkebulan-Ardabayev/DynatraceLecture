@@ -109,7 +109,7 @@
 ```
 
 Этот JS при загрузке страницы в браузере пользователя:
-1. Собирает данные о загрузке страницы (Core Web Vitals: LCP, FID, CLS).
+1. Собирает данные о загрузке страницы (Core Web Vitals: LCP, INP, CLS).
 2. Отслеживает пользовательские действия (клики, переходы, формы).
 3. Перехватывает XHR/fetch-запросы (с каким временем, какой статус).
 4. Ловит JavaScript-ошибки.
@@ -120,7 +120,7 @@
 **Механика.** В мобильное приложение при сборке встраивается Dynatrace SDK:
 
 - **Android.** Основной путь: Dynatrace Android Gradle plugin (auto-instrumentation). Для тонкой интеграции есть OneAgent SDK for Android (manual).
-- **iOS.** Основной путь: OneAgent for iOS auto-instrumentation, подключение через Swift Package Manager или CocoaPods. Для SwiftUI-приложений есть отдельный SwiftUI instrumentor.
+- **iOS.** Основной путь: OneAgent for iOS auto-instrumentation, подключение через Swift Package Manager (публикация в CocoaPods остановлена). Для SwiftUI-приложений есть отдельный SwiftUI instrumentor.
 - **Гибридные стэки.** Поддерживаются Apache Cordova, Flutter, React Native, Xamarin, .NET MAUI через соответствующие плагины.
 
 SDK при старте приложения:
@@ -133,5 +133,5 @@ SDK при старте приложения:
 ### Air-gapped RUM
 
 - **Web RUM.** RUM-JS отдаётся с веб-сервера (OneAgent там стоит). Данные идут в ActiveGate (обычно в DMZ). Внешний интернет не нужен.
-- **Mobile RUM.** При сборке приложения SDK-библиотека скачивается с customer portal на машине с интернетом, пушится в внутренний Maven / CocoaPods. CI/CD собирает приложение с внутренним SDK.
+- **Mobile RUM.** При сборке приложения SDK-зависимости берутся из публичных источников Dynatrace (Android: Gradle-плагин в Maven Central; iOS: Swift Package Manager) на машине с интернетом и зеркалируются во внутренний репозиторий пакетов. CI/CD собирает приложение из внутреннего зеркала.
 - **Публикация ActiveGate.** Для публичного Web RUM (пользователи из интернета) ActiveGate должен быть опубликован наружу через reverse-proxy или DMZ. Одна из немногих точек, где air-gapped контур открывается наружу, строго контролируется.

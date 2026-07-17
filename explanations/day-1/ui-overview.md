@@ -22,7 +22,7 @@
 | Applications / приложения | **Application Observability → Frontend** | `https://guu84124.live.dynatrace.com/ui/applications` |
 | Databases / базы | **Application Observability → Database Services** | `https://guu84124.live.dynatrace.com/ui/databases` |
 | Problems / инциденты | **Observe and explore → Problems** | `https://guu84124.live.dynatrace.com/ui/problems` |
-| Releases / релизы | **Automations → Releases** | `https://guu84124.live.dynatrace.com/ui/releases` |
+| Releases / релизы | **Infrastructure Observability → Releases** | `https://guu84124.live.dynatrace.com/ui/releases` |
 
 **Структура главного меню слева.**
 
@@ -30,8 +30,8 @@
 |---|---|
 | **Favorites** | Закреплённые пользователем разделы (по умолчанию Dashboards, Deploy Dynatrace, Problems) |
 | **Observe and explore** | Ежедневная работа: Dashboards, Data Explorer, Metrics, Logs, Problems, Smartscape Topology, Reports |
-| **Infrastructure Observability** | Hosts, Technologies & Processes, Kubernetes, Containers, Cloud Foundry, AWS / Azure / GCP / VMware, Host Networking, Extensions |
-| **Automations** | Releases, SLO |
+| **Infrastructure Observability** | Hosts, Technologies & Processes, Kubernetes, Containers, Cloud Foundry, AWS / Azure / GCP / VMware, Host Networking, Releases, Service-Level Objectives, Extensions |
+| **Automations** | Workflows и Site Reliability Guardian: часть Apps-платформы SaaS, в air-gapped Managed не используется |
 | **Application Observability** | Frontend, Services, Distributed Traces, Database Services, Synthetic |
 | **Application Security** | Уязвимости и атаки на приложения |
 | **Digital Experience** | RUM и Synthetic: пользовательский опыт |
@@ -101,7 +101,7 @@
 
 Путь: **Application Observability → Frontend** → `https://guu84124.live.dynatrace.com/ui/applications`.
 
-**Что на экране.** Frontend-сторона платформы. На этом демо-тенанте центральная область пустая, RUM-приложения не настроены.
+**Что на экране.** Frontend-сторона платформы. На снимке вместо списка заглушка «Too many requests»: тенант ограничил частоту запросов при съёмке. RUM-приложения на демо есть (в Теме 4 их списком видно 24), так что пустой центр здесь это сбой загрузки конкретного снимка, а не отсутствие настройки.
 
 **Что бывает на боевой инсталляции.** Список веб- и мобильных приложений с RUM-данными. На каждой карточке: число активных пользователей, медианное время загрузки страницы, процент сессий с ошибками, распределение по браузерам и географии.
 
@@ -118,7 +118,7 @@
 
 **ЕСЛИ → ТО: почему центр пустой или заполнен.**
 - ЕСЛИ все три условия выше выполнены → приложения появляются в списке.
-- ЕСЛИ OneAgent на веб-сервере не установлен → RUM-сниппет не внедряется, список пустой (как на этом демо).
+- ЕСЛИ OneAgent на веб-сервере не установлен → RUM-сниппет не внедряется, список пустой.
 - ЕСЛИ OneAgent есть, но приложение в `https://guu84124.live.dynatrace.com/ui/settings/applications-web` не создано → данные не привязываются к карточке.
 
 Полная механика: Тема 4 (Digital Experience Monitoring).

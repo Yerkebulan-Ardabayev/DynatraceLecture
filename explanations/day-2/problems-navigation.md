@@ -45,13 +45,13 @@
 
 На экране демо-тенанта **71 активная проблема, в списке показано 50**. Это реальные продолжающиеся инциденты демо-тенанта, на них удобно проходить путь «проблема → корневая причина → сущность → метрика».
 
-Примеры из списка. Первая строка: `Http monitor local outage P-26049005: Availability`. Affected: `easytravel storebooking`. Root cause: `EasytravelService`. Началась 21 апреля в 11:11, длится 10 минут. Вторая: `Postgres Availability P-26049003`, Affected: AWS RDS-инстанс `pg-16-dynatrace-demo.ckhuiwsqmnv8.us-east-1.rds.amazonaws.com:5432`, длится 16 минут. Каждая запись: потенциальная точка входа в расследование.
+Примеры из списка. Первая строка: `Http monitor local outage P-26049005: Availability`. Impacted: `easytravel storebooking`. Root cause: `EasytravelService`. Началась 21 апреля в 11:11, длится 10 минут. Вторая: `Postgres Availability P-26049003`, Impacted: AWS RDS-инстанс `pg-16-dynatrace-demo.ckhuiwsqmnv8.us-east-1.rds.amazonaws.com:5432`, длится 16 минут. Каждая запись: потенциальная точка входа в расследование.
 
 **Колонки для навигации:**
 
 - **Problem**: заголовок и идентификатор `P-NNNNNNNN`.
-- **Impacted**: количество затронутых сущностей.
-- **Affected**: главная затронутая сущность. Кликабельна, ведёт в карточку сущности в обход карточки проблемы.
+- **Impacted**: главная затронутая сущность. Кликабельна, ведёт в карточку сущности в обход карточки проблемы.
+- **Affected**: количество затронутых сущностей.
 - **Root cause**: первопричина по Davis AI. Кликабельна, ведёт в карточку первопричины.
 - **Alerting profiles**: сработавшие профили. Видно, в какие интеграции проблема уже ушла. На скриншоте: `ServiceNow Default Problem Notification Profile`, `ServiceNow Default Problem Notification - ven07742 Profile`, `Default`.
 

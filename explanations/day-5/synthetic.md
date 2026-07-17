@@ -56,12 +56,7 @@
 
 Путь: `https://guu84124.live.dynatrace.com/ui/settings/builtin:synthetic.synthetic-availability-settings`.
 
-*Что настраивает.* Общие параметры availability для всех synthetic-мониторов:
-
-- **Global availability calculation**: как считается общий availability: среднее по всем локациям, worst-case (худший из локаций), медиана.
-- **Maintenance windows awareness**: игнорировать падения во время maintenance window. Иначе плановая работа ломает availability-статистику.
-- **Retry policy**: сколько раз повторить проверку перед засчитыванием fail. По умолчанию 2 retry с паузой 30 сек. Отсекает случайные сетевые сбои.
-- **Location health**: если отдельная локация умерла (ActiveGate упал), её fail-ы не засчитывать как проблему приложения.
+*Что настраивает.* На снятой странице один тумблер; отдельных полей расчёта availability, ретраев и здоровья локаций на этом экране нет. Правила превращения сбоев в проблемы задаются в outage handling (Шаги 3-4) и в настройках самих мониторов.
 
 ### Шаг 3: Browser monitor outage handling
 
@@ -76,11 +71,12 @@
 - **Global outage**: монитор упал во всех локациях. Реальное падение приложения.
 - **Local outage**: монитор упал в одной-двух локациях, в остальных работает. Региональная проблема (например CDN).
 
-**Параметры:**
+**Параметры (на снятой странице: тумблеры global/local outage; численные пороги задаются в настройках самих мониторов):**
 
-- **Consecutive failures before outage**: сколько подряд fail-ов считать падением. По умолчанию 3-5, отсекает случайные сбои.
-- **Failure threshold**: процент локаций в fail state для global outage. По умолчанию 100% (все локации).
-- **Recovery threshold**: сколько успешных проверок подряд для восстановления. Обычно 2-3.
+- **Consecutive failures before outage**: сколько подряд fail-ов считать падением: отсекает случайные сбои.
+- **Global vs local outage**: сколько локаций в fail state считать глобальным падением.
+
+Точные дефолты порогов публичная дока не фиксирует.
 
 ### Шаг 4: HTTP monitor outage handling
 
@@ -91,8 +87,8 @@
 Аналогично Шагу 3, но для HTTP-мониторов:
 
 - **Consecutive failures before outage**: сколько fail-ов подряд.
-- **Global vs local outage detection**: количество локаций в fail state.
-- **Expected HTTP codes override**: какие коды считать успехом. По умолчанию 2xx. Можно настроить 401 как успех для защищённого endpoint, это доказательство, что сервис жив, просто требует auth.
+- **Global vs local outage**: количество локаций в fail state.
+- **Допустимые коды ответа**: настройка самого HTTP-монитора (не этой env-страницы). По умолчанию успех это 2xx, но можно объявить успехом и 401 для защищённого endpoint: доказательство, что сервис жив, просто требует auth.
 
 ---
 
@@ -173,7 +169,7 @@ Synthetic-проблемы, это обычные Davis Problems, подчиня
 - Profile `synthetic-critical-uptime`.
 - Filter: monitor type = synthetic AND monitor name IN (`prod-auth-monitor`, `prod-payment-monitor`, `prod-login-monitor`).
 - Severity: Critical.
-- Routing: PagerDuty → on-call team.
+- Маршрутизация: PagerDuty → дежурная команда.
 
 Это независимый алерт-канал «сайт упал с точки зрения робота», не зависит от наличия реального трафика.
 
@@ -229,4 +225,4 @@ Synthetic: идеальный источник данных для SLO:
 - **ActiveGate Synthetic role**: роль ActiveGate'а для запуска мониторов.
 - **Outage**: падение монитора (global / local).
 - **Consecutive failures**: количество fail'ов для срабатывания alert.
-- **Retry policy**: сколько раз повторить перед finaл fail.
+- **Retry policy**: сколько раз повторить проверку до финального признания сбоя (final fail).

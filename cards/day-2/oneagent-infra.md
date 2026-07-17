@@ -16,7 +16,7 @@ OneAgent собирает инфраструктуру тремя слоями (
 - Три слоя сбора: OS (CPU, Memory, Disk, Network), Process, Feature (eBPF, SNMP, container runtimes).
 - Metrics Classic хранятся до 5 лет с лестницей: 0-14 дней шаг 1 мин, 14-28 дней 5 мин, 28-400 дней 1 час, 400 дней до 5 лет 1 день.
 - Трейсы до 365 дней (настраивается), Code-level insights 10 дней фикс.
-- RUM-сессии 35 дней фикс, Log Monitoring Classic 35 дней.
+- RUM-сессии 35 дней фикс, Log Monitoring Classic настраивается, максимум 90 дней.
 - Davis problems и events 14 месяцев; OneAgent diagnostics по умолчанию 30 дней.
 
 ## ЕСЛИ→ТО

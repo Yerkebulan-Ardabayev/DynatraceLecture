@@ -18,7 +18,7 @@ Service, это логический образ работы процесса и
 ## ЦИФРЫ
 - Список на снимке темы: 241 Services (у вашего тенанта цифры могут быть другими).
 - Четыре экрана темы: Services, Rules for Full Web Services, Rules for External Web Services, Service splitting.
-- Правила Full Web Services, четыре типа: по имени WSDL-сервиса и operation, по SOAP-action header, по URL-паттерну, по имени Java-класса SOAP-endpoint.
+- Правила Full Web Services: переименование и объединение сервисов; базовая идентификация по имени сервиса и targetNamespace из WSDL.
 - Splitting-пример: один Tomcat-процесс с 3 web-приложениями (`/retail-api`, `/corporate-api`, `/admin`) даёт три Service вместо одного.
 - Механизм в Managed Classic: классический Service Detection v1 (SDv1); Service Detection v2 со сплиттингом по resource attributes для OpenTelemetry не задействован.
 

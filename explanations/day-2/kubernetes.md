@@ -44,7 +44,7 @@
 
 **Что настраивается:**
 
-- **Подключение к кластеру.** URL API server, токен ServiceAccount с правами чтения ресурсов, CA-сертификат. Эти данные использует ActiveGate для опроса API.
+- **Подключение к кластеру.** Настраивается в отдельном флоу подключений (не на этой странице тумблеров): URL API server, токен ServiceAccount с правами чтения ресурсов, CA-сертификат. Эти данные использует ActiveGate для опроса API.
 - **Интервалы опроса.** ActiveGate с ролью Kubernetes monitoring периодически опрашивает API server. Конкретные значения по умолчанию для разных типов ресурсов в публичной документации Dynatrace не зафиксированы: управление интервалом находится на стороне ActiveGate и подстраивается под нагрузку.
 - **Типы собираемых ресурсов.** Можно отключить конкретные (например, Jobs / CronJobs, если их много и они создают шум).
 - **Ограничения по namespaces.** Список, который НЕ мониторить: `kube-system`, `kube-public` и другие системные, если не нужны.
@@ -76,7 +76,7 @@
 - Какие дополнительные labels и annotations включать (например, кастомные `company/product`, `company/team`).
 - Формат имён: как ключ называется в метриках Dynatrace, чтобы совпадать с соглашениями команды.
 
-*Практическая польза.* После настройки enrichment в Data Explorer можно написать `builtin:service.response.time:filter(dt.entity.cloud_application.k8s.namespace.name=="retail-prod")` и получить метрики только ретейл-продакшна. Без enrichment такой запрос невозможен.
+*Практическая польза.* После настройки enrichment в Data Explorer можно отфильтровать метрику по namespace: `builtin:service.response.time:filter(eq(k8s.namespace.name,"retail-prod"))` (синтаксис Metrics API v2: условия задаются функциями eq/ne/in, оператор `==` селектор не принимает) и получить метрики только ретейл-продакшна. Без enrichment такой запрос невозможен.
 
 ### Шаг 3: Security Posture Management: Kubernetes
 
@@ -288,7 +288,7 @@ Dynatrace поддерживает все эти уровни как отдел�
 
 **Требования:**
 
-- Registry внутри контура для образов Dynatrace (Operator, OneAgent, CodeModules). Harbor, Artifactory или другой. Админ регулярно скачивает новые версии с customer portal и загружает в свой registry.
+- Registry внутри контура для образов Dynatrace (Operator, OneAgent, CodeModules). Harbor, Artifactory или другой. Админ регулярно скачивает новые версии образов на машине с интернетом и загружает в свой registry.
 - ActiveGate с ролью `kubernetes_monitoring`: в отдельном namespace с сетевым доступом к API server мониторимых кластеров.
 - Токены ServiceAccount кластеров хранятся в Dynatrace Credential Vault с ограниченной областью действия.
 - Сертификаты API server: внутренние CA, доверенные и в кластере, и в ActiveGate.

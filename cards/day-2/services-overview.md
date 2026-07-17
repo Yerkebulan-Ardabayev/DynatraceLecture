@@ -8,7 +8,7 @@ verified: 2026-07-12
 Три экрана.
 Список сервисов: Application Observability → Services, route `/ui/services`. Все обнаруженные сервисы с типами, технологиями и метриками.
 Правила детекции: Settings → Service Detection → Service detection rules, route `/ui/settings/builtin:service-detection-rules`. Классический механизм (SDv1), как разбить процесс на сервисы.
-Новый механизм: Settings → Server-side service monitoring → Service Detection v2 for OneAgent, route `/ui/settings/builtin:service-detection-v2-for-oneagent`.
+Новый механизм: Settings → Service Detection → Service Detection v2 for OneAgent, route `/ui/settings/builtin:service-detection-v2-for-oneagent`.
 
 ## ЗАЧЕМ
 Service это логическая backend-единица (процесс или его часть). Тип сервиса (Web request, Database, Messaging, Queue listener, Remote call, External, Background activity, Custom) это метка, по которой строишь алерты и дашборды и понимаешь, какие метрики применимы.

@@ -12,9 +12,9 @@
 
 | Класс утверждения | Источник |
 |---|---|
-| UI (heading, button, путь в меню, URL) | `output/data/ui_elements.json` + `output/data/pages.jsonl` — captured с `guu84124.live.dynatrace.com` |
-| Technical facts про Managed (overhead %, retention, лимиты, дефолты, поведение фич, air-gapped) | **`dtkb` skill** (личный FTS5-индекс Dynatrace docs) |
-| Fallback tech-facts | `docs.dynatrace.com/managed/` через WebFetch |
+| UI (heading, button, путь в меню, URL) | `ui_elements.json` + `output/data/pages.jsonl` — captured с `guu84124.live.dynatrace.com` |
+| Technical facts про Managed (overhead %, retention, лимиты, дефолты, поведение фич, air-gapped) | **Живые страницы `docs.dynatrace.com/managed/`** через WebFetch; дрейф автоматически отслеживает `scripts/docs_freshness.py` |
+| Быстрый локальный поиск (вспомогательно) | `dtkb` skill: личные заметки и выдержки, не полное зеркало доков; найденное перепроверять по живой доке |
 
 **Инвентарь tech-claims** — `scripts/extract_tech_claims.py` вытаскивает все numeric-утверждения из `explanations/*.md`; результат в `tech_claims_verification.md` с колонками: claim / file:line / источник подтверждения / действие (подтверждён / смягчён / удалён).
 

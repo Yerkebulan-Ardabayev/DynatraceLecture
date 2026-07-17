@@ -47,14 +47,7 @@
 
 Отличается от **Web request service** (обычный HTTP без явной схемы), который Dynatrace идентифицирует по триплету *web server name + context root + web application ID*.
 
-**Типы правил на странице**: как переименовать или объединить Full Web Services:
-
-- По имени WSDL-сервиса и operation.
-- По SOAP-action header.
-- По URL-паттерну с параметрами.
-- По имени Java-класса SOAP-endpoint.
-
-Правила оцениваются **сверху вниз, срабатывает первое совпавшее**: порядок имеет значение.
+**Правила на странице**: переименование и объединение Full Web Services. Конкретный набор полей правила в публичной документации не расписан; базовая идентификация по доке: имя сервиса и `targetNamespace` из WSDL. Правила оцениваются **сверху вниз, срабатывает первое совпавшее**: порядок имеет значение.
 
 *Типовое применение.* Интеграции с legacy-системами (АБС, T24 Temenos, карточный процессинг), у которых SOAP-интерфейс с WSDL. Тонкие правила разделяют бизнес-операции одного endpoint-а на отдельные Service.
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/application-observability/services/service-detection/service-detection-v1/service-types -->

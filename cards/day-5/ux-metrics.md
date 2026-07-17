@@ -8,7 +8,7 @@ verified: 2026-07-12
 Три живых экрана.
 Список приложений с UX-метриками: Application Observability → Frontend → Applications, route `/ui/applications`.
 Пороги Apdex и session-score: Settings → Web and mobile monitoring → User experience score, route `/ui/settings/builtin:rum.user-experience-score`.
-Раздражители (rage / dead / error clicks, slow activity, conversions): Settings → Web and mobile monitoring → Usability analytics, route `/ui/settings/builtin:usability-analytics`.
+Раздражители (rage clicks) и conversions: Settings → Web and mobile monitoring → Usability analytics, route `/ui/settings/builtin:usability-analytics`.
 
 ## ЗАЧЕМ
 UX-метрики это мост между техникой (response time, error rate) и бизнесом (retention, conversion): дают общий язык с бизнесом.
@@ -20,7 +20,7 @@ UX-метрики это мост между техникой (response time, er
 - Формула на уровне действия: `Apdex = (Satisfied + 0.5 × Tolerating) / Total`; действия с JS-ошибкой сразу во Frustrated.
 - Зоны по времени: ≤ T это Satisfied, от T до 4T это Tolerating, больше 4T это Frustrated. Порог T задаёте вы: T = 1 сек значит Frustrated дольше 4 сек, T = 0.5 сек значит дольше 2 сек.
 - User experience score сессии считается из весов: User action 3, Error 1, Rage event 2, Crash 5000.
-- Rage click: серия кликов по одному элементу с интервалом меньше 1 сек; Slow activity: действие в 4+ раза дольше среднего по приложению.
+- Rage click: серия быстрых кликов по одному элементу (точные пороги детекции в доке не зафиксированы); conversions настраиваются в приложении (Behavior analytics → Conversion goals).
 - Web Vitals это LCP / INP / CLS (FID устарел, заменён INP); типовой таргет ДБО: Apdex > 0.85, LCP < 2.5 сек на 75-м перцентиле.
 
 ## ЕСЛИ→ТО
@@ -31,7 +31,7 @@ UX-метрики это мост между техникой (response time, er
 
 ## ЗАПАСНОЙ ПЛАН
 На демо-тенанте список приложений может отдавать плашку «Connection issues: trying to reconnect» с кнопками Try to restore connection now и Try again: это ожидаемо для статичного дампа (SPA не достучалась до WebSocket backend), показываю снимок из курса и проговариваю колонки Name, Apdex, User actions per minute, Response time median, JS errors, Problems.
-Страницы порогов User experience score и Usability analytics открываю в Settings → Web and mobile monitoring; если они серые без write-прав, конкретные пороги по памяти не называю, проговариваю логику (action-пороги Apdex, session-пороги, фильтры rage / dead / error clicks) и отсылаю к значениям на самой странице тенанта.
+Страницы порогов User experience score и Usability analytics открываю в Settings → Web and mobile monitoring; если они серые без write-прав, конкретные пороги по памяти не называю, проговариваю логику (action-пороги Apdex, session-пороги, rage clicks) и отсылаю к значениям на самой странице тенанта.
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем Apdex отличается от Web Vitals?» Ответ: Apdex это агрегированная метрика для бизнеса и SLA (дашборд руководству), Web Vitals это технические метрики для инженеров (LCP / INP / CLS для оптимизации фронта).

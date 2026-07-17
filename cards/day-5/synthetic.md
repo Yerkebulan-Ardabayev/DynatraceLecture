@@ -16,9 +16,9 @@ Synthetic это искусственный трафик роботами по �
 ## ЦИФРЫ
 - Четыре типа мониторов: Single-URL Browser, Browser clickpath, HTTP (в т.ч. Multi-step цепочка с извлечением токена), NAM (ICMP-ping · TCP-connect · DNS-lookup, только private locations).
 - Single-URL Browser: минимальная частота 5 минут или реже; потолок любого монитора 1 запуск в минуту.
-- Retry policy (availability settings): по умолчанию 2 retry с паузой 30 сек, отсекает случайные сетевые сбои.
-- Browser/HTTP outage handling: по умолчанию 3-5 fail подряд = outage, recovery после 2-3 успешных подряд, global outage при 100% локаций в fail.
-- HTTP expected codes: по умолчанию 2xx; 401 можно назначить успехом для защищённого endpoint (сервис жив, просто требует auth).
+- Availability settings на env-уровне: один тумблер; правила падений и ретраи задаются в настройках самих мониторов.
+- Browser/HTTP outage handling: тумблеры global/local outage; численные пороги задаются в настройках мониторов, дефолты в публичной доке не зафиксированы.
+- Допустимые коды ответа (настройка самого HTTP-монитора): по умолчанию 2xx; 401 можно назначить успехом для защищённого endpoint (сервис жив, просто требует auth).
 - Synthetic-enabled ActiveGate: Environment 1.169+ или Cluster 1.176+, держит и browser, и HTTP; capacity локации в UI: зелёный <80%, красный >90%.
 
 ## ЕСЛИ→ТО

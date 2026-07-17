@@ -16,9 +16,9 @@
 
 | Что показать | Путь в меню | Прямая ссылка | Состояние на этом тенанте |
 |---|---|---|---|
-| Smartscape Topology (классический вид) | **Observe and explore → Smartscape Topology** | `https://guu84124.live.dynatrace.com/ui/apps/dynatrace.classic.smartscape` | **404**: на свежих сборках Managed классический вид убран |
-| Hosts / хосты | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/ui/entity/list/HOST` | Замена уровня хостов |
-| Services / сервисы | **Application Observability → Services** | `https://guu84124.live.dynatrace.com/ui/services` | Замена уровня сервисов |
+| Smartscape Topology (классический вид) | **Observe and explore → Smartscape Topology** | `https://guu84124.live.dynatrace.com/ui/apps/dynatrace.classic.smartscape` | **404 на снимке**: Apps-роут демо-тенанта не открылся при съёмке; сам Smartscape в Managed жив |
+| Hosts / хосты | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/ui/entity/list/HOST` | Уровень хостов списком |
+| Services / сервисы | **Application Observability → Services** | `https://guu84124.live.dynatrace.com/ui/services` | Уровень сервисов списком |
 | Process Groups / группы процессов | **Infrastructure Observability → Technologies & Processes** | `https://guu84124.live.dynatrace.com/ui/technologies` | Процессы и группы |
 | Distributed Traces / распределённые трейсы | **Application Observability → Distributed Traces** | `https://guu84124.live.dynatrace.com/ui/diagnostictools/purepaths` | Карта вызовов между сервисами |
 
@@ -41,7 +41,7 @@
 
 **Что на экране.** 404 с сообщением `We can't find this page`. Внизу идентификатор окружения `guu84124` и версия платформы `1.336.55.20260417-205630`.
 
-**Почему 404.** Classic Smartscape был единым графическим приложением, отрисовывающим всю инфраструктуру в виде четырёх горизонтальных слоёв (Applications → Services → Process Groups → Hosts → Data Centers). На больших инсталляциях такой монолитный вид становится нечитаемым: тысячи сервисов в одном графе превращаются в месиво. Поэтому в новых сборках Dynatrace Managed Smartscape разбит на специализированные экраны: отдельный для каждого уровня, с переходами между ними по клику на сущность.
+**Почему 404 на снимке.** Ссылка со снимка ведёт на Apps-роут SaaS-демо-тенанта (`/ui/apps/dynatrace.classic.smartscape`), и при съёмке он не открылся. Это особенность снимка, а не судьба фичи: в документации Managed Smartscape описан как живой экран (топология за последние 72 часа), а пункт «Smartscape Topology» присутствует в боковом меню. На больших инсталляциях единый граф читается тяжело, поэтому в ежедневной работе чаще пользуются специализированными списками уровней с переходами по клику на сущность.
 
 **Как работать с топологией сейчас.** Вместо одного экрана Smartscape используется комбинация:
 - Список **Hosts**: `https://guu84124.live.dynatrace.com/ui/entity/list/HOST`.

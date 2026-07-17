@@ -13,7 +13,7 @@ Routes (`/ui/settings/`): builtin:deployment.oneagent.default-mode, builtin:depl
 Архитектурная теория была в Теме 1, здесь управление ею.
 
 ## ЦИФРЫ
-- Лицензия: Full Stack по лестнице 16/32/48 GiB → 1/2/3 HU; Infrastructure 0.3 HU @ 16 GiB.
+- Лицензия: Full Stack до 1.0 HU за 16 GiB (меньше памяти: дробные ступени 0.10 / 0.25 / 0.50), далее +1 HU за каждые 16 GiB; Infrastructure 0.3 HU @ 16 GiB.
 - Окно обновления агентов: рекомендованный минимум 3 часа, оптимум 4–5.
 - В рабочей инсталляции обычно 2–4 Environment ActiveGate.
 - Токен: три части `<prefix>.<24-символьный public>.<64-символьный secret>`; префикс dt0s01 это API tokens.

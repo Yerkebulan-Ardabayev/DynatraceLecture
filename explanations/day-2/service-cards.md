@@ -21,7 +21,7 @@
 |---|---|---|---|
 | Список сервисов как точка входа | **Application Observability → Services** | `https://guu84124.live.dynatrace.com/ui/services` | Отсюда кликаем в конкретный сервис для анализа |
 | Anomaly detection for services | **Settings → Anomaly detection → Services** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:anomaly-detection.services` | Пороги, от которых зависит, когда карточка сервиса загорается «красным» |
-| Endpoint metrics | **Settings → Server-side service monitoring → Endpoint metrics** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:unified-services-endpoint-metrics` | Какие метрики собирать на уровне отдельных endpoint'ов сервиса |
+| Endpoint metrics | **Settings → Service Detection → Endpoint metrics** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:unified-services-endpoint-metrics` | Какие метрики собирать на уровне отдельных endpoint'ов сервиса |
 
 ---
 
@@ -94,21 +94,14 @@
 
 ![Endpoint metrics: настройка сбора метрик на уровне отдельных endpoint сервиса](screenshots/day-2/service-cards/settings/builtinunified-services-endpoint-metrics/Endpoint-metrics-Environment-Settings-Demo-live-Demo-Live-Dynatrace.png)
 
-Путь в меню: **Settings → Server-side service monitoring → Endpoint metrics**.
+Путь в меню: **Settings → Service Detection → Endpoint metrics**.
 Прямая ссылка: `https://guu84124.live.dynatrace.com/ui/settings/builtin:unified-services-endpoint-metrics`.
 
 *Что такое Endpoint metrics.* Сервис может иметь десятки-сотни endpoint'ов. По умолчанию Dynatrace агрегирует все запросы в общие метрики сервиса. Endpoint metrics позволяет **собирать отдельные метрики для каждого endpoint'а**: Response time, Throughput, Failure rate per endpoint.
 
 Нужно, когда часть endpoint'ов значительно отличается от остальных. Пример: `/api/reports/heavy` медленный по дизайну, `/api/simple` быстрый. Общие метрики сервиса смешивают оба и не показывают реальную картину каждого.
 
-*Что на странице.* Заголовков на странице нет, это тумблеры и правила.
-
-Типовая логика:
-
-- **Глобальный тумблер** Endpoint metrics. По умолчанию может быть выключен: даёт большой объём метрик.
-- **Правила включения**: для каких сервисов включать. Критерии: Service type, Technology, Management zone, теги.
-- **Лимиты на число endpoint'ов**: если у сервиса 1000 уникальных URL, отдельная метрика для каждого нецелесообразна. Лимит (например, 100) определяет, сколько самых частых выделяется отдельно, остальные идут в агрегированный `other`.
-- **Naming rules**: как именовать endpoint в метриках. Нужно, чтобы `/user/123/account` и `/user/456/account` сгруппировались в `/user/{id}/account`.
+*Что на странице.* Единственный тумблер включения Endpoint metrics; дополнительных правил, лимитов и naming-полей на этом экране нет. Включение даёт заметный объём дополнительных метрик, поэтому решение принимают осознанно.
 
 *Типовое применение.* Включают для критичных public API (интернет-банк, мобильный фронт), где SLA считается на уровне конкретного endpoint. Для внутренних микросервисов обычно выключено: общая метрика сервиса достаточна, данных меньше.
 
@@ -169,7 +162,7 @@
 
 **Failure rate.** Процент запросов с ошибкой от общего числа. Ошибка определяется по HTTP-статусу (≥500) и по exception в коде. Для каждого exception OneAgent фиксирует stack trace: потом можно группировать ошибки по типу.
 
-**Percentiles (90 / 95 / 99).** Считаются по алгоритму **t-digest** (компактная структура данных для приближённого расчёта перцентилей по потоку значений). Позволяет агрегировать без хранения полной истории запросов. Компромисс: точные перцентили требуют слишком много памяти, приближённые достаточны для практики.
+**Percentiles (90 / 95 / 99).** Считаются приближённо, потоковой агрегацией без хранения полной истории запросов. Компромисс: точные перцентили требуют слишком много памяти, приближённые достаточны для практики.
 
 ### Service flow: как строится
 

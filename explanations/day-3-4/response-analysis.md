@@ -79,7 +79,7 @@ Dynatrace детектит для сервиса четыре типа аном�
 
 - Programming exceptions (Java / .NET / Node.js / PHP), прерывающие service call.
 - Error pages, отдаваемые web container.
-- HTTP 500–599 (server-side errors).
+- HTTP 500–599 (ошибки на стороне сервера).
 - HTTP 400–599: со стороны клиента (client-side perspective).
 
 **Глобальные параметры на странице (HTTP + General):**
