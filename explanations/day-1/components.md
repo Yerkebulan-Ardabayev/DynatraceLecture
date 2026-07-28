@@ -1,4 +1,4 @@
-> 📅 **День 1: Введение в систему Dynatrace** → Тема 2 из 11: «Компоненты системы: OneAgent, ActiveGate, серверная часть»
+> 📅 **День 1: Введение в систему Dynatrace** → Тема 2 из 14: «Компоненты системы: OneAgent, ActiveGate, серверная часть»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/deployment -->
 >
 > 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: все ссылки на /docs/ убраны, оставлены только страницы из раздела `/managed/`. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
@@ -17,7 +17,7 @@
 
 | Что показать | Путь в меню | Прямая ссылка |
 |---|---|---|
-| Где скачать установщик | **Manage → Deploy Dynatrace** | `https://guu84124.live.dynatrace.com/ui/deployment` |
+| Где скачать установщик | **Manage → Deploy Dynatrace** | `https://guu84124.live.dynatrace.com/#deploy` (живой адрес пункта меню, сверено 2026-07-28: заголовок «Deploy Dynatrace», кнопка «Start installation»; маршрут снапшота `/ui/deployment`) |
 | Статус всех агентов | **Manage → Deployment status** | `https://guu84124.live.dynatrace.com/ui/deploymentstatus` |
 | Режим новых OneAgent | **Settings → Preferences → OneAgent default mode** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:deployment.oneagent.default-mode` |
 | Целевая версия OneAgent + статус парка | **Settings → Updates → OneAgent updates** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:deployment.oneagent.updates` |
@@ -310,6 +310,14 @@
 - В Environment UI удалить нельзя.
 - CMC → ActiveGates → найти по имени или IP → Remove.
 - Там же стоит проверить, нет ли зависших записей после предыдущих миграций.
+
+---
+
+## 📝 Практика (2-3 минуты, без тенанта)
+
+Прикинуть и записать для своей инсталляции: сколько Environment ActiveGate понадобится и под какие роли (зоны сети: прод-зона, DMZ, удалённая площадка; отдельный шлюз под синтетику; отдельный под расширения).
+
+Что должно получиться: короткий список вида «зона → сколько шлюзов → роль» и устный ответ, в какой подсети встанет первый Environment ActiveGate и почему именно там.
 
 ---
 

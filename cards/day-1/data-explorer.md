@@ -28,6 +28,7 @@ verified: 2026-07-12
 Экран не построил график или пуст: показываю снимок Data Explorer из курса и проговариваю три зоны (слева запрос, центр график и шаблоны, справа отображение) и тумблер Advanced mode.
 Про каталог: показываю снимок Metrics, объясняю связку «нашёл ключ в Metrics, вставил в Data Explorer, split by, Pin to dashboard».
 Если кто-то тянется к DQL: сразу проговариваю, что в Managed это Metrics Selector, и показываю пример `builtin:service.response.time:avg`.
+Лекторский сценарий: workshop/day-1.md, блок 8. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Почему тут нет DQL, как в облаке?» Ответ: DQL работает поверх Grail, это SaaS-платформа; в air-gapped Managed её нет, сложные запросы к метрикам пишутся на Metrics Selector.

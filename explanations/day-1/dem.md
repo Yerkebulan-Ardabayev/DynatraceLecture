@@ -1,4 +1,4 @@
-> 📅 **День 1: Введение в систему Dynatrace** → Тема 4 из 11: «Цифровой опыт (Digital Experience Monitoring): основные принципы»
+> 📅 **День 1: Введение в систему Dynatrace** → Тема 4 из 14: «Цифровой опыт (Digital Experience Monitoring): основные принципы»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/applications -->
 >
 > 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: все ссылки на /docs/, /platform/ удалены, оставлены только страницы из раздела `/managed/`. В air-gapped Managed Apps-интерфейс «Users & Sessions» не активирован: используется Classic UI. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
@@ -17,7 +17,7 @@
 
 | Что показать | Путь в меню | Прямая ссылка |
 |---|---|---|
-| Список приложений | **Application Observability → Frontend → Applications** | `https://guu84124.live.dynatrace.com/#uemapplications` |
+| Список приложений | **Application Observability → Frontend → Applications** | `https://guu84124.live.dynatrace.com/#uemapplications` (наполненный экран живёт на этом классическом адресе; `/ui/applications` из соседних тем может открыться пустой оболочкой) |
 | Пользовательские сессии | **Application Observability → Frontend → User sessions** | `https://guu84124.live.dynatrace.com/ui/user-sessions` |
 | Настройки RUM для приложения | **Settings → Web and mobile monitoring → Application settings** | `https://guu84124.live.dynatrace.com/ui/settings/applications-web` |
 | Synthetic Monitoring | **Application Observability → Digital Experience → Synthetic** | `https://guu84124.live.dynatrace.com/ui/synthetic` |

@@ -1,4 +1,4 @@
-> 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 8 из 14: «Ключевые пользовательские действия + дополнительные свойства»
+> 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 8 из 15: «Ключевые пользовательские действия + дополнительные свойства»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/settings/builtin:user-action-custom-metrics -->
 <!-- revision: 2026-04-27 -->
 
@@ -11,6 +11,7 @@
 - [Applications: Web/Mobile/Custom](https://docs.dynatrace.com/managed/observe/digital-experience/rum-concepts/applications)
 - [Custom applications: OpenKit](https://docs.dynatrace.com/managed/observe/digital-experience/custom-applications)
 - [Create calculated metrics for web applications](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/rum-calculated-metrics-web)
+- [Configure key user actions for web applications](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-key-user-actions-web): пометка Mark as key user action, лимиты 100 на приложение / 500 на окружение
 
 ## 📍 КАРТА: четыре страницы про настройку user actions и resources
 
@@ -121,6 +122,26 @@
 
 **Когда что.** Business events: когда важны атомарные события с полной трассировкой (каждый совершённый платёж как отдельная запись с суммой, ID транзакции, признаком фрода). Custom metrics: для агрегированных показателей по user actions, которые нужно строить графиками и использовать в SLO.
 
+### Ключевые действия в буквальном смысле: Mark as key user action
+
+Тема называется «ключевые пользовательские действия», и у платформы для этого есть прямая механика (по [доке Configure key user actions](https://docs.dynatrace.com/managed/observe/digital-experience/web-applications/additional-configuration/configure-key-user-actions-web)):
+
+- **Как пометить.** Карточка приложения → блок Top 3 user actions → **View full details** → выбрать действие → кнопка **Mark as key user action**.
+- **Что даёт пометка.** Собственные пороги Apdex для каждого ключевого действия (логин и оплата оцениваются своими порогами, а не общими для приложения) и отдельная плитка на дашборде для трендов этого действия.
+- **Лимиты.** До **100** ключевых действий на приложение, до **500** на окружение.
+
+Типовой набор для банка: логин, просмотр счёта, платёж, перевод: действия, деградацию которых бизнес почувствует первыми.
+
 ### Air-gapped specifics
 
 Всё локально. Custom metrics хранятся в Cassandra как любые метрики Dynatrace. OpenKit-библиотеки (для Custom applications) распространяются как отдельный артефакт: банку нужно держать их в своём внутреннем Maven / npm / GitHub-зеркале.
+
+---
+
+## 📝 Практика (2 минуты; кнопка пометки на демо может быть недоступна из-за read-only)
+
+1. Открыть карточку приложения `www.angular.easytravel.com` → Top 3 user actions → View full details.
+2. Найти в карточке действия кнопку **Mark as key user action** (на демо не нажимать сохранение: аккаунт read-only).
+3. Назвать три действия своей системы, которые вы пометили бы первыми.
+
+Что должно получиться: список из трёх кандидатов в key user actions для своей инсталляции (типовой банк: логин, платёж, перевод).

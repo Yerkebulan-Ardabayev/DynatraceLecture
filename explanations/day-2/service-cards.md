@@ -52,6 +52,20 @@
 
 **Зона 7: Problems.** Активные и недавние проблемы, связанные с этим сервисом.
 
+### Дословный состав живой карточки (сверено на живом тенанте 2026-07-28)
+
+Канонический адрес карточки: `/#services/serviceOverview;id=SERVICE-...` (пример: карточка `easyTravel Customer Frontend`). Секции сверху вниз, названия дословно:
+
+- **Properties and tags**: свойства и теги сервиса.
+- Плитки блока **Dynamic web requests**: Response time, Failure rate, CPU, Throughput; под ними кнопка **View dynamic requests**.
+- **Resource requests** с кнопкой **View resource requests**.
+- Секция проблем (на досверке «2 Problems») и **Problematic requests**.
+- **Multidimensional analysis views** с кнопкой **Create analysis view**.
+- **Understand dependencies**: кнопки **View service flow**, **View backtrace**, **View distributed traces**, **View web requests**, **View related logs**. Это главный «пульт» переходов: поток обслуживания, обратная трассировка «кто меня вызвал», трейсы, запросы и связанные логи в один клик.
+- **Events**: события сервиса (деплои, изменения конфигурации).
+
+Концептуальные «зоны» выше и дословные секции: одно и то же с разной детализацией; на живом показе называйте элементы по дословным именам.
+
 ### Сравнение периодов: ключевая механика карточки
 
 *Как работает.* В верхней панели селектор временного диапазона (Last 2 hours / Last 24 hours / Custom). Выбор применяется к дашборду. В карточке сервиса добавлена механика **сравнения с предыдущим периодом той же длительности**.
@@ -191,3 +205,13 @@ Service flow: самое крупнозернистое представлени
 **Долгосрочное хранение метрик.** Metrics Classic хранятся до **5 лет** с той же лестницей прореживания, что приведена выше в разделе про Response time. Distributed traces: конфигурируется, **до 365 дней** максимум; код-уровень insights детально 10 дней (фикс). Services: Requests and request attributes: конфигурируется, **до 365 дней** максимум. Точные параметры: в [Data retention periods: Managed](https://docs.dynatrace.com/managed/shortlink/data-retention-periods). Расширения retention в Managed настраиваются в лицензии через CMC, либо через экспорт в отдельную долгосрочную систему через API. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/shortlink/data-retention-periods -->
 
 **Метаданные облачных хостов.** Если хост в частном облаке (AWS / Azure / GCP): Dynatrace видит облачные метаданные только при наличии Cloud ActiveGate с соответствующей ролью. В полностью on-premises контуре ограничение не применяется.
+
+---
+
+## 📝 Практика (3 минуты, выполнимо на demo-тенанте)
+
+1. Открыть **Application Observability → Services** → карточка `easyTravel Customer Frontend`.
+2. Найти секцию **Understand dependencies** и прочитать вслух пять кнопок переходов.
+3. Через **View distributed traces** открыть трассировки и найти любой трейс с ошибкой.
+
+Что должно получиться: имя сервиса, на котором ошибка загорелась. Контрольный вопрос себе: медиана времени отклика невысокая, а 99-й перцентиль в разы выше; о ком из пользователей рассказывает перцентиль и почему среднему верить нельзя.

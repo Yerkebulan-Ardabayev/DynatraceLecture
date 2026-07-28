@@ -188,3 +188,12 @@
 - **Правила Service detection** хранятся в кластере и применяются всем агентам. Ничего внешнего не требуется.
 - **Обновление правил при апгрейде OneAgent.** Если новая версия агента поддерживает v2 и новые типы: правила обновляет администратор вручную через Settings. Автоматически в air-gapped правила не скачиваются.
 - **SDv1 vs SDv2 в Managed.** Service Detection v1 (SDv1): основной классический механизм для OneAgent-инструментированных сервисов, поддержаны технологические типы сервисов (Web request, Web (full/WSDL), Database, Messaging, Queue listener, Remote call (RMI/RPC), External, Background activity, Custom). Service Detection v2 (SDv2) появилась с Cluster 1.318+ и применяется в первую очередь для OpenTelemetry-сервисов; OneAgent-сервисы в Managed по-прежнему работают через SDv1 + Custom service / Web request rules. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/applications-and-microservices/services/service-detection-v1 -->
+
+---
+
+## 📝 Практика (2 минуты, выполнимо на demo-тенанте)
+
+1. Открыть **Application Observability → Services** (`/ui/services`).
+2. Найти в списке сервис `JourneyService` и определить его тип (Service type).
+
+Что должно получиться: названный вслух тип сервиса. Контрольный вопрос себе: на хосте работают nginx, Java-бэкенд и cron-скрипт; сколько сервисов увидит Dynatrace и почему, скорее всего, не три (сервис рождается из запросов: фоновый cron без входящих запросов останется на уровне процесса).

@@ -1,4 +1,4 @@
-> 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 11 из 14: «SLI, SLO, SLA: подходы и реализация»
+> 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 11 из 15: «SLI, SLO, SLA: подходы и реализация»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/slo -->
 <!-- revision: 2026-04-27 -->
 
@@ -18,7 +18,7 @@
 
 | Что показать | Путь в меню | Прямая ссылка |
 |---|---|---|
-| SLO dashboard | **Automations → Service-Level Objectives** | `https://guu84124.live.dynatrace.com/ui/slo` |
+| SLO dashboard | **Infrastructure Observability → Service-Level Objectives** (пункт в хвосте группы, между Extensions и группой Application Observability, рядом с Automations и Releases; расположение сверено вживую 2026-07-28) | `https://guu84124.live.dynatrace.com/ui/slo` |
 | SLO definitions | **Settings → Service-level objectives → Definition** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:monitoring.slo` |
 | SLO setup | **Settings → Service-level objectives → Setup** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:monitoring.slo.normalization` |
 
@@ -47,6 +47,10 @@
 - Error budget remaining (сколько осталось «нарушать» до срыва SLO).
 - Trend (растёт или падает).
 - Warning/Critical/OK: цвет статуса.
+
+**Живое состояние экрана (сверено на живом тенанте 2026-07-28).** Экран не пустой: на досверке «55 SLOs», среди них живые примеры `Hourly SLO for easytravel.com homepage` и `hourly SLO www.easytravel.com`; колонки списка: **Name / Status / Actions / Details** (число SLO на вашем тенанте будет своим).
+
+**Живая иллюстрация ломкой привязки.** Часть строк списка показывает ошибку `At least one operand in the given metric expression provides no data`: это SLO, чья метрика ссылается на переименованный или удалённый сервис. Учебная ценность строк: привязывайте SLO к идентификатору сущности или тегу, а не к имени; переименованный сервис молча превращает SLO в пустоту.
 
 **Каждый SLO** имеет карточку с историей изменения, с графиком budget burn rate.
 
@@ -128,3 +132,12 @@
 ### Air-gapped нюансы
 
 Все SLO вычисляются локально в кластере на метриках из Cassandra. Внешних сервисов нет. SLO-дашборды живут в кластере, статус и burn rate тянутся через Service-level objectives API во внутренние BI-системы банка.
+
+---
+
+## 📝 Практика (3 минуты, счёт на бумаге + один экран)
+
+1. Посчитать бюджет ошибок для цели 99.5% за 30 дней: 30 × 24 × 60 × 0.005 = **216 минут** допустимого даунтайма (сверить с примером 99.9% → 43.2 минуты выше).
+2. Открыть **Service-Level Objectives** (`/ui/slo`) и найти строку с ошибкой `At least one operand...`: живое напоминание, почему привязка по имени ломается.
+
+Что должно получиться: число 216 и устный ответ на вопрос «в договоре SLA 99.5%: какую цель SLO поставить себе внутри и почему не ту же самую» (строже, чтобы внутренний сигнал срабатывал раньше санкций).

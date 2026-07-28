@@ -103,6 +103,30 @@ days:
           - /ui/settings/builtin:dashboards.presets
           - /ui/settings/builtin:dashboards.image.allowlist
 
+      - id: installation
+        name: "Установка OneAgent и контроль парка"
+        kind: live
+        notes: "Живой вход /#deploy сверен 2026-07-28; экран мастера после Start installation не сверен, реальная установка не выполняется."
+        routes:
+          - /#deploy
+          - /ui/deploymentstatus
+          - /ui/diagnostictools/healthstate
+
+      - id: auto-tagging
+        name: "Автотеги (Automatically applied tags)"
+        kind: live
+        notes: "Экран сверен вживую 2026-07-28; демо-аккаунт read-only: разбор существующих тегов, формы без сохранения."
+        routes:
+          - /ui/settings/builtin:tags.auto-tagging
+
+      - id: management-zones
+        name: "Зоны управления (Management zones)"
+        kind: live
+        notes: "Экран сверен вживую 2026-07-28; демо на существующей зоне EasyTravel Angular, создание read-only."
+        routes:
+          - /ui/settings/builtin:management-zones
+          - /ui/services
+
   # ====================== DAY 2 ======================
   - id: day-2
     title: "Инфраструктура, контейнеры, базы данных, сети"
@@ -337,6 +361,14 @@ days:
           - /ui/settings/builtin:appsec.third-party-vulnerability-rule-settings
           - /ui/settings/builtin:appsec.notification-alerting-profile
           - /ui/settings/builtin:appsec.notification-attack-alerting-profile
+
+      - id: request-attributes
+        name: "Атрибуты запросов (Request attributes)"
+        kind: live
+        notes: "Классический маршрут /#settings/server/requestattributes сверен 2026-07-28; на демо список пуст и права read-only, результат показывается готовым MDA-видом."
+        routes:
+          - /#settings/server/requestattributes
+          - /ui/diagnostictools
 
   # ====================== DAY 5 ======================
   - id: day-5

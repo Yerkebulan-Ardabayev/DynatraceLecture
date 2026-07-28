@@ -1,4 +1,4 @@
-> 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 14 из 14: «Обзор Security Module (Application Security)»
+> 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 14 из 15: «Обзор Security Module (Application Security)»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/security/overview -->
 <!-- revision: 2026-04-27 -->
 

@@ -32,6 +32,7 @@ Observability стоит на трёх типах данных: метрики (
 Если кто-то ждёт строку запроса DQL как в SaaS: показываю классический Logs UI, поиск по словам плюс фильтры (`ERROR AND service.name=payment-service`), проговариваю, что DQL и Grail в air-gapped Managed не работают, сессии разбираются через USQL.
 Если Distributed Traces на демо пуст: показываю снимок PurePath из курса и на waterfall-диаграмме разбираю дерево спанов, где именно сидит задержка.
 Retention называю из курса как Classic-цифры (метрики 5 лет, логи настраиваются до 90 дней, трейсы до 365 дней); SaaS/Grail сроки (10 лет, 15 месяцев) к Managed Classic осознанно не отношу.
+Лекторский сценарий: workshop/day-2.md, блоки 6 и 9. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Почему в Managed нет DQL?» Ответ: DQL это язык нового SaaS-стэка поверх Grail; в air-gapped Managed он не работает, логи разбираются классическим Logs UI и фильтрами, сессии через USQL.

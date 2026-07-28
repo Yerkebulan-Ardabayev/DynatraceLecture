@@ -5,7 +5,7 @@ timing_min: 22
 verified: 2026-07-12
 ---
 ## ГДЕ
-Список инцидентов: Observe and explore → Problems, route `/ui/problems`.
+Список инцидентов: Observe and explore → Problems, route `/ui/problems`. Панель фильтров: кнопка Toggle Global Filter panel, заголовок «Filter by» (сверено 2026-07-28); окно времени: кнопка Edit timeframe.
 Настройки рядом: Problem notifications (`/ui/settings/builtin:problem.notifications`), Ready-made alerts category update (`/ui/settings/builtin:anomaly.detection.alerts-category-update`), Alerting profiles, Maintenance windows.
 
 ## ЗАЧЕМ
@@ -15,21 +15,22 @@ Problem это целостный инцидент от Davis AI, а не наб
 ## ЦИФРЫ
 - В классическом мониторинге при инциденте прилетает 50-200 писем; в Dynatrace одно письмо на Problem с ID вида P-NNNNNNNN.
 - Davis сворачивает связанные симптомы: деградация базы даёт десять медленных сервисов, но одну Problem с корневой причиной, а не одиннадцать алертов.
-- Проблема закрывается автоматически через 5 минут стабильной работы (статус Closed).
+- Проблема закрывается автоматически, когда Davis фиксирует устойчивое восстановление (статус Closed); конкретный таймер закрытия дока не фиксирует.
 - Impact level это четыре уровня (Infrastructure, Services, Application, Environment); Severity это шесть характеров нарушения (Monitoring unavailable, Availability, Error, Slowdown, Resource, Custom).
 
 ## ЕСЛИ→ТО
 - ЕСЛИ деградировала база и с ней десять зависимых сервисов → Davis даёт одну Problem с корневой причиной «база», остальное как следствия, а не одиннадцать алертов.
 - ЕСЛИ включить Ready-made alerts category update не сверив Alerting profiles → у тех, кто завязан на старую классификацию, алерт может перестать приходить.
 - ЕСЛИ контур полностью изолирован (air-gapped) → allowlist исходящих IP не нужен, уведомления идут во внутренний SMTP, Jira, Teams банка.
-- ЕСЛИ нажать Acknowledge → проблема уходит из Open-списка, но остаётся активной (взял в работу).
+- ЕСЛИ ночная проблема к утру закрылась и «исчезла» из списка → расширить окно кнопкой Edit timeframe до 72 часов и переключить Status на Closed: проблема найдётся.
 
 ## ЗАПАСНОЙ ПЛАН
 Экран Problem notifications на демо пуст: нажимаю + Set up notifications, выбираю тип (Email или Slack), показываю форму параметров и закрываю без сохранения, чтобы слушатель увидел поля.
 Сверху промо-плашка про новое приложение Problems: проговариваю, что в Managed работаем с классическим интерфейсом на снимке.
 Ready-made alerts category update на демо серый или в дефолте: объясняю смысл по снимку (принять обновлённую классификацию только после сверки профилей).
+Лекторский сценарий: workshop/day-1.md, блок 10 и workshop/day-2.md, блок 2. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Почему одно письмо, а не сотня?» Ответ: Davis агрегирует связанные симптомы в одну Problem с корневой причиной; классический мониторинг шлёт по письму на метрику (при крупном инциденте 50-200 штук).
 - «Куда уходят уведомления в закрытом контуре?» Ответ: во внутренние системы банка (SMTP, внутренний Jira, ServiceNow, Teams, Slack, Webhook), в интернет ничего не уходит.
-- «Что делает Acknowledge?» Ответ: помечает «взял в работу», проблема уходит из Open-списка, но остаётся активной до восстановления.
+- «Какой из шести типов Severity вы бы будили ночью звонком, а какой ждёт утра?» Ответ на обсуждение: Monitoring unavailable и Availability будят всегда (система слепа или лежит), Error и Resource зависят от импакта, Slowdown и Custom чаще ждут утра; главное, чтобы у команды это было решено заранее в Alerting profiles.

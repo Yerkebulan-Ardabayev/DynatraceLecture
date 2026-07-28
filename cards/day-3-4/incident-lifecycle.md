@@ -22,7 +22,7 @@ Problem это готовый инцидент от Davis AI, а тема пок
 - Event filters в alerting profile: до 20 правил.
 - Maintenance windows: до 2000 окон на окружение.
 - Issue-tracking конфигураций: до 20 на окружение.
-- Slowdown: уведомление с задержкой 5 минут, чтобы отделить шум.
+- Slowdown: рекомендация курса (не лимит продукта): слать уведомление с задержкой 5 минут, чтобы отделить шум.
 
 ## ЕСЛИ→ТО
 - ЕСЛИ Davis нашёл аномалию по anomaly detection rules → на экране Problems появляется новая Problem с Severity, Affected entity и Root cause; ЕСЛИ аномалии нет → Davis молчит, новой строки нет.
@@ -34,6 +34,7 @@ Problem это готовый инцидент от Davis AI, а тема пок
 Если список Problems пуст: проговариваю, что пустой список значит отсутствие активных проблем, а не выключенный мониторинг, показываю снимок со счётчиком из курса.
 Если Alerting profiles, Problem notifications или Maintenance windows на демо пусты либо без write-прав: иду по снимкам из курса и провожу все пять экранов цикла по порядку (Problems → Alerting profiles → Maintenance windows → Problem notifications → Issue tracking), лимиты называю только задокументированные.
 SaaS-плашку про новое приложение Problems проговариваю как неактуальную для Managed: работаем в Classic UI.
+Лекторский сценарий: workshop/day-4.md, блок 6. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Придёт ли уведомление на каждое изменение проблемы?» Ответ: нет, уведомления уходят только при создании и закрытии Problem, промежуточные апдейты намеренно не шлются.

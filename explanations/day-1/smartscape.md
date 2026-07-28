@@ -1,4 +1,4 @@
-> 📅 **День 1: Введение в систему Dynatrace** → Тема 6 из 11: «Топология Smartscape»
+> 📅 **День 1: Введение в систему Dynatrace** → Тема 6 из 14: «Топология Smartscape»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/diagnostictools/purepaths -->
 >
 > 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: ссылки на /docs/, /platform/, /apps/ удалены, оставлены только страницы из раздела `/managed/`. Stale-entity timeout 72 часа (с пунктирной линией для 2 часов) подтверждено в Сессии 4. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
@@ -16,8 +16,8 @@
 
 | Что показать | Путь в меню | Прямая ссылка | Состояние на этом тенанте |
 |---|---|---|---|
-| Smartscape Topology (классический вид) | **Observe and explore → Smartscape Topology** | `https://guu84124.live.dynatrace.com/ui/apps/dynatrace.classic.smartscape` | **404 на снимке**: Apps-роут демо-тенанта не открылся при съёмке; сам Smartscape в Managed жив |
-| Hosts / хосты | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/ui/entity/list/HOST` | Уровень хостов списком |
+| Smartscape Topology (классический вид) | **Observe and explore → Smartscape Topology** | `https://guu84124.live.dynatrace.com/#smartscape` | **Работает** (сверено на живом тенанте 2026-07-28: заголовок «Smartscape topology»); Apps-роут снапшота `/ui/apps/dynatrace.classic.smartscape` давал 404 |
+| Hosts / хосты | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/#newhosts` | Уровень хостов списком (живой адрес пункта меню, сверено 2026-07-28) |
 | Services / сервисы | **Application Observability → Services** | `https://guu84124.live.dynatrace.com/ui/services` | Уровень сервисов списком |
 | Process Groups / группы процессов | **Infrastructure Observability → Technologies & Processes** | `https://guu84124.live.dynatrace.com/ui/technologies` | Процессы и группы |
 | Distributed Traces / распределённые трейсы | **Application Observability → Distributed Traces** | `https://guu84124.live.dynatrace.com/ui/diagnostictools/purepaths` | Карта вызовов между сервисами |
@@ -33,26 +33,26 @@
 
 ## 🎬 Работа со Smartscape на текущей версии тенанта
 
-### Шаг 1: Классический Smartscape Topology (статус 404)
+### Шаг 1: Классический Smartscape Topology (живой экран)
 
-![Smartscape Topology: страница возвращает 404](screenshots/day-1/smartscape/apps/dynatrace.classic.smartscape/404-We-cant-find-this-page-Demo-live-Demo-Live-Dynatrace.png)
+Путь: **Observe and explore → Smartscape Topology** → живой адрес `https://guu84124.live.dynatrace.com/#smartscape`.
 
-Путь: **Observe and explore → Smartscape Topology** → `https://guu84124.live.dynatrace.com/ui/apps/dynatrace.classic.smartscape`.
+**Что на экране (живая досверка 2026-07-28).** Экран работает: заголовок «Smartscape topology», пять слоёв (Applications, Services, Processes, Hosts, Data centers) с живыми счётчиками сущностей (числа читаются с экрана и на каждом тенанте свои), тумблеры **Show problems** и **Show third-party vulnerabilities**.
 
-**Что на экране.** 404 с сообщением `We can't find this page`. Внизу идентификатор окружения `guu84124` и версия платформы `1.336.55.20260417-205630`.
+**Про 404 на снимке курса.** Снимок ниже был сделан по Apps-роуту `/ui/apps/dynatrace.classic.smartscape`, который на демо-тенанте не открылся. Это была особенность снимка, а не судьба фичи: живой вход идёт через пункт меню «Smartscape Topology» и классический адрес `/#smartscape`. Урок навигации: при 404 идти через пункт меню, а не по сохранённой ссылке.
 
-**Почему 404 на снимке.** Ссылка со снимка ведёт на Apps-роут SaaS-демо-тенанта (`/ui/apps/dynatrace.classic.smartscape`), и при съёмке он не открылся. Это особенность снимка, а не судьба фичи: в документации Managed Smartscape описан как живой экран (топология за последние 72 часа), а пункт «Smartscape Topology» присутствует в боковом меню. На больших инсталляциях единый граф читается тяжело, поэтому в ежедневной работе чаще пользуются специализированными списками уровней с переходами по клику на сущность.
+![Smartscape Topology: снимок по устаревшему Apps-роуту возвращал 404](screenshots/day-1/smartscape/apps/dynatrace.classic.smartscape/404-We-cant-find-this-page-Demo-live-Demo-Live-Dynatrace.png)
 
-**Как работать с топологией сейчас.** Вместо одного экрана Smartscape используется комбинация:
-- Список **Hosts**: `https://guu84124.live.dynatrace.com/ui/entity/list/HOST`.
+**Запасной путь, если карта не открылась или нечитаема** (на больших инсталляциях единый граф читается тяжело):
+- Список **Hosts**: пункт меню Hosts, живой адрес `https://guu84124.live.dynatrace.com/#newhosts`.
 - Список **Process Groups**: `https://guu84124.live.dynatrace.com/ui/technologies`.
 - Список **Services**: `https://guu84124.live.dynatrace.com/ui/services`.
 - Список **Applications**: `https://guu84124.live.dynatrace.com/ui/applications`.
 - Карта вызовов между сервисами: **Distributed Traces** `https://guu84124.live.dynatrace.com/ui/diagnostictools/purepaths`.
 
-В карточке каждой сущности есть раздел **Service flow** или **Topology**: показывает прямые связи этой сущности (кто её вызывает и кого она вызывает). Это локальный вид того, что классический Smartscape давал глобально.
+В карточке каждой сущности есть раздел **Service flow** или **Topology**: показывает прямые связи этой сущности (кто её вызывает и кого она вызывает). Это локальный вид того, что Smartscape даёт глобально.
 
-Поиск по имени: глобальный поиск в верхней панели (Ctrl+Shift+F). Начинаем вводить имя хоста, сервиса или приложения, выбираем из выпадающего списка, открывается карточка.
+Поиск по имени: поле глобального поиска в верхней панели («Search &lt;имя окружения&gt;...», хоткей Ctrl+Shift+F). Начинаем вводить имя хоста, сервиса или приложения, выбираем из выпадающего списка, открывается карточка.
 
 ---
 
@@ -69,7 +69,7 @@ Smartscape, это **карта зависимостей всей инфраст
 
 Эти данные OneAgent отправляет в кластер через ActiveGate. Кластер собирает данные со всех хостов в единый граф и обновляет его постоянно: новое соединение появляется на карте сразу. По [официальной странице Smartscape](https://docs.dynatrace.com/managed/shortlink/smartscape) карта отображает данные за **последние 72 часа** (timeframe selector не применяется); если соединение или сервис не получают активности более **72 часов**, узел или связь исчезает. Промежуточный сигнал: **пунктирная линия** для соединений без запросов более **2 часов**. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/shortlink/smartscape -->
 
-**ЕСЛИ → ТО: что значат эти три числа на практике.** Окно жёсткое и непоказуемо одним кадром (на этом тенанте classic-вид 404), но поведение проверяемо по карточкам сущностей из таблицы КАРТА:
+**ЕСЛИ → ТО: что значат эти три числа на практике.** Окно жёсткое и непоказуемо одним кадром, но поведение проверяемо на живой карте `/#smartscape` и по карточкам сущностей из таблицы КАРТА:
 
 - ЕСЛИ соединение без запросов дольше **2 часов** → ТО связь рисуется **пунктирной линией**: процесс ещё жив, но трафик по этому пути сейчас не идёт.
 - ЕСЛИ активности нет дольше **72 часов** → ТО узел или связь **пропадает** с карты: вернётся сам при первом же новом запросе.
@@ -107,3 +107,13 @@ Smartscape, это **карта зависимостей всей инфраст
 Smartscape не зависит от интернета. Всё строится на данных OneAgent и ActiveGate внутри контура: работает одинаково с облачной версией.
 
 Единственное ограничение: сущности **без OneAgent** (старые сетевые маршрутизаторы, legacy-системы без поддержки агента). Они видны только как дальний конец соединения («какой-то наш сервис ходит на IP X»), без деталей. Чтобы дополнить картину, используются Extensions 2.0: плагины на ActiveGate, снимающие данные через SNMP, JMX, SQL (раздел [Extend Dynatrace → Extensions 2.0](https://docs.dynatrace.com/managed/ingest-from/extensions)). Данные от Extensions появляются в Smartscape как отдельные узлы, и карта становится полной.
+
+---
+
+## 📝 Практика (2-3 минуты, выполнимо на demo-тенанте)
+
+1. Открыть **Observe and explore → Smartscape Topology** (живой адрес `/#smartscape`).
+2. Пройти слои сверху вниз: Applications → Services → Processes → Hosts → Data centers, прочитать счётчик каждого слоя с экрана.
+3. Кликнуть на любой сервис и посмотреть его связи (кто вызывает, кого вызывает).
+
+Что должно получиться: устный ответ на вопрос «на каком этаже лестницы вы начнёте искать причину, если хост здоров, а пользователи страдают» (сверху, от приложения вниз по связям).

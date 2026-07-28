@@ -6,7 +6,7 @@ verified: 2026-07-12
 ---
 ## ГДЕ
 Три страницы вокруг детального разбора сервиса.
-Точка входа в карточки: Application Observability → Services, route `/ui/services`.
+Точка входа в карточки: Application Observability → Services, route `/ui/services`; карточка сервиса живёт на адресе вида `/#services/serviceOverview;id=SERVICE-...` (сверено 2026-07-28).
 Пороги «красного» статуса: Settings → Anomaly detection → Services, route `/ui/settings/builtin:anomaly-detection.services`.
 Метрики по endpoint'ам: Settings → Service Detection → Endpoint metrics, route `/ui/settings/builtin:unified-services-endpoint-metrics`.
 
@@ -16,7 +16,7 @@ verified: 2026-07-12
 
 ## ЦИФРЫ
 - На демо-тенанте 239 Services, эта страница используется как точка входа в карточку (у вашего тенанта цифры могут быть другими).
-- Карточка сервиса собрана из 7 зон: Overview, Service flow, Top requests, Top backend calls, Top database statements (только для сервисов с БД-клиентами), Instances, Problems.
+- Карточка сервиса собрана из 7 зон: Overview, Service flow, Top requests, Top backend calls, Top database statements (только для сервисов с БД-клиентами), Instances, Problems. Дословные секции живой карточки (сверено 2026-07-28): Properties and tags; плитки Dynamic web requests (Response time, Failure rate, CPU, Throughput); Resource requests; Problems; Problematic requests; Multidimensional analysis views; Understand dependencies (View service flow / View backtrace / View distributed traces / View web requests / View related logs); Events.
 - Перцентили 90 / 95 / 99 считаются приближённо: потоковая агрегация без хранения полной истории запросов.
 - Failure rate: ошибкой считается HTTP-статус ≥ 500 либо exception в коде.
 - Хранение: Services и Distributed traces до 365 дней (configurable), Metrics Classic до 5 лет, код-уровень insights 10 дней (фикс).
@@ -32,8 +32,10 @@ verified: 2026-07-12
 Демо недоступно или карточка сервиса пустая: показываю снимок Services из курса (заголовок с числом сервисов, вход в карточку) и на снимке проговариваю 7 зон.
 Live-клик в конкретный сервис и PurePath waterfall не всегда доступны (нет свежего трафика): разбираю пример из курса, показываю общее время запроса и его разбивку по шагам (время на сервере, backend-вызовы, SQL), проговариваю, где ищется узкое место.
 Пороги Anomaly detection и тумблеры Endpoint metrics на демо могут быть серыми (нет write-прав): показываю снимок и проговариваю, что на боевом это настраивает админ.
+Лекторский сценарий: workshop/day-2.md, блоки 3 и 6. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Сравнение с предыдущим периодом врёт ночью, что делать?» Ответ: беру кастомный Timeframe «то же время прошлой недели», это отделяет сезонность от разового отклонения.
-- «Перцентили 90/95/99 точные?» Ответ: нет, они приближённые по t-digest, чтобы считать без хранения всей истории запросов; для практики точности достаточно.
+- «Перцентили 90/95/99 точные?» Ответ: нет, они приближённые: потоковая агрегация без хранения полной истории запросов; для практики точности достаточно.
+- «Медиана невысокая, а 99-й перцентиль в разы выше: это норма или тревога?» Ответ на обсуждение: перцентиль рассказывает про худший процент реальных пользователей; хвост в разы длиннее медианы это повод искать узкое место (GC-паузы, редкий медленный SQL, конкретный endpoint), даже когда «в среднем всё хорошо».
 - «Зачем Endpoint metrics, если есть общая метрика сервиса?» Ответ: общая метрика смешивает быстрые и медленные endpoint'ы; для SLA на конкретный endpoint (например публичный API интернет-банка) нужна отдельная метрика именно этого endpoint'а.

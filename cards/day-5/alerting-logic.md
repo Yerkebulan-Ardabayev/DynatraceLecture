@@ -32,6 +32,7 @@ Issue-tracking: Settings → Cloud Automation → Issue-tracking for releases, r
 System notifications на демо пуст (0 Notifications): показываю пустой inbox и проговариваю, что сюда платформа пишет license warnings, tenant configuration changes, extension issues, integration failures; в закрытом контуре это единственный ранний сигнал, Mission Control недоступен.
 Problem notifications: если форма пуста, открываю тип интеграции (Email или Webhook), показываю поля Name, URL / credentials, Alerting profile filter, Custom payload и закрываю без сохранения.
 Issue-tracking: по снимку показываю, что это чтение статистики open / closed тикетов по релизу, а не создание тикетов; само создание тикета настраивается в Problem notifications.
+Лекторский сценарий: workshop/day-3.md, блок 9. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем System notifications отличается от Problem notifications?» Ответ: System это алерты самой платформы (лицензия, упавшая интеграция, extension), Problem это алерты приложений (сервис упал, БД тормозит) во внешние системы.

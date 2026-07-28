@@ -32,6 +32,7 @@ Web идёт через JavaScript-сниппет: OneAgent на веб-серв
 На Web enablement показываю главный тумблер RUM for Web и блок Cost control, на RUM JavaScript updates проговариваю три политики версии (Latest stable, Previous stable, Custom).
 Mobile показываю как аналог Web, отдельно проговариваю, что установка Mobile RUM это интеграция SDK при сборке, а не тумблер в UI.
 Конкретные версии RUM JS сверх задокументированных по памяти не называю, отсылаю к значению на самой странице тенанта.
+Лекторский сценарий: workshop/day-4.md, блок 3. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Как RUM-скрипт попадает на страницу?» Ответ: OneAgent на веб-сервере (Apache, Nginx, IIS) перехватывает HTML-ответы и сам вставляет `<script src="/ruxitagentjs_...">` в `<head>`, вручную встраивать ничего не нужно.

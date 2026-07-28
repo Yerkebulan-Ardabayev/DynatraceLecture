@@ -5,7 +5,7 @@ timing_min: 26
 verified: 2026-07-12
 ---
 ## ГДЕ
-Три экрана. SLO dashboard (статус всех SLO): Automations → Service-Level Objectives, route `/ui/slo`.
+Три экрана. SLO dashboard (статус всех SLO): пункт Service-Level Objectives в хвосте группы Infrastructure Observability (между Extensions и Application Observability, рядом Automations и Releases; сверено 2026-07-28), route `/ui/slo`. Экран живой: на досверке «55 SLOs», колонки Name / Status / Actions / Details.
 SLO definitions (создание SLO через wizard): Settings → Service-level objectives → Definition, route `/ui/settings/builtin:monitoring.slo`.
 SLO setup (нормализация бюджета): Settings → Service-level objectives → Setup, route `/ui/settings/builtin:monitoring.slo.normalization`.
 
@@ -28,11 +28,13 @@ SLO переводит «надёжность» в измеримую цель �
 - ЕСЛИ надо сравнивать остаток бюджета между SLO с разными target → включаю Normalize error budget, всё приводится к шкале 0–100%.
 
 ## ЗАПАСНОЙ ПЛАН
-Если на демо SLO не настроены и dashboard пуст: показываю снимок из курса и проговариваю колонки строки SLO (имя, target, current value, остаток error budget, trend, статус OK/Warning/Critical).
+Dashboard на демо живой (55 SLOs, easytravel-примеры). Строки с ошибкой «At least one operand in the given metric expression provides no data» не прячу: это учебная иллюстрация ломкой привязки по имени (привязывать по идентификатору или тегу). Если экран всё же пуст: снимок из курса и колонки строки SLO (имя, target, current value, остаток error budget, trend, статус OK/Warning/Critical).
 Если нет write-прав создать SLO: по снимку разбираю структуру одного SLO (имя, SLI-метрика вида builtin:service.successes / builtin:service.requestCount.total, target, evaluation timeframe, error budget и burn rate считаются автоматически, два типа alerting).
 Отдельно проговариваю air-gapped акцент: все SLO вычисляются локально в кластере на метриках из Cassandra, внешних сервисов нет, статус и burn rate уходят во внутренние BI-системы банка через Service-level objectives API.
+Лекторский сценарий: workshop/day-2.md, блок 10. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем SLO отличается от SLA?» Ответ: SLO это внутренняя цель команды (можно ужесточить или смягчить), SLA это внешний контракт с клиентом с финансовыми санкциями, и SLA обычно слабее SLO для запаса (например SLA 99.5% при SLO 99.9%).
 - «Что такое error budget и зачем он?» Ответ: допустимый объём нарушений за период (при target 99.9% за 30 дней это 43.2 минуты даунтайма в месяц); израсходован, замораживаем рискованные выкаты, остался, катим смелее.
 - «Работают ли SLO в закрытом контуре?» Ответ: да, всё считается локально в кластере на метриках из Cassandra без внешних сервисов, наружу статус отдаётся через Service-level objectives API во внутренние BI-системы.
+- «В договоре SLA 99.5%: какую цель SLO поставите внутри?» Ответ: строже, например 99.9%: внутренний сигнал должен срабатывать раньше санкций; бюджет ошибок для 99.5% за 30 дней = 216 минут, и тратить его целиком до порога SLA нельзя.

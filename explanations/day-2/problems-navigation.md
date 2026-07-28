@@ -126,3 +126,15 @@ Davis определяет Root cause не по простому совпаде�
 **Alerting profiles в списке.** Колонка функциональная, не декоративная. Видно, в какие интеграции (Email / Jira / ServiceNow / Slack / Opsgenie / PagerDuty / Teams) ушла проблема. Профиль фильтрует problems по трём scope-компонентам, объединённым AND: Management zones + Severity rules (до 100, между ними OR) + Event filters (до 20). Каждое окружение содержит неудаляемый профиль `Default`. Если проблема критичная, а Alerting profiles пусто: она не попала ни в одну интеграцию, дежурный о ней не знает. Ревью: фильтр «высокий Impact level + пустые Alerting profiles» → разобраться, почему не рассылается. <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe-and-explore/notifications-and-alerting/alerting-profiles -->
 
 **Air-gapped контекст.** Workflow одинаков в облачном Dynatrace и в изолированном Managed. Данные переходов полностью локальные, наружу ничего не уходит. Если интеграция уведомлений настроена на внутренний Jira или Slack: Alerting profiles шлют туда, переход из письма/чата в интерфейс Dynatrace идёт по внутренней ссылке.
+
+**Блоки живой карточки проблемы (сверено на живом тенанте 2026-07-28).** Внутри карточки сверху вниз: хронология с оценкой окна (дословная строка UI: «Davis evaluates performance across timeframe (for example, 3 of 5 minutes show anomalous performance)»); **Business impact analysis** (affected users, affected service calls, affected sessions; кнопка «Replay sessions»); **Root cause** (внутри «Metric anomalies detected» и кнопка «Analyze metric anomalies»); **Visual resolution path** с подписью «Click to see how we figured this out»; **Comments**. Полный разбор блоков: тема «Incident Lifecycle» (День 3-4).
+
+---
+
+## 📝 Практика (3 минуты, выполнимо на demo-тенанте)
+
+1. Открыть **Observe and explore → Problems**, при пустом списке расширить окно кнопкой Edit timeframe до 72 часов.
+2. Открыть любую проблему и найти блок **Root cause**.
+3. Назвать имя первопричинной сущности (сервис, база, хост).
+
+Что должно получиться: пара «P-номер проблемы → имя первопричины». Контрольный вопрос себе: на каком шаге спуска вы остановитесь и передадите задачу дальше, если вы первая линия, и на каком, если инженер сопровождения.

@@ -20,7 +20,7 @@
 
 | Что показать | Путь в меню | Прямая ссылка | Зачем |
 |---|---|---|---|
-| Список хостов (как точка входа) | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/ui/entity/list` | 404 на старом адресе: используется `/ui/entity/list/HOST` |
+| Список хостов (как точка входа) | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/#newhosts` | Живой адрес пункта меню (сверено на живом тенанте 2026-07-28, заголовок «Hosts»); маршрут снапшота `/ui/entity/list/HOST` |
 | Process grouping rules | **Settings → Processes and containers → Process grouping rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:process-grouping-rules` | Правила превращения процессов в группы для отображения |
 | Simple detection rules | **Settings → Processes and containers → Process group detection → Simple detection rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:process-group.simple-detection-rule` | Простые правила распознавания: имя + один критерий |
 | Advanced detection rules | **Settings → Processes and containers → Advanced detection rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:process-group.advanced-detection-rule` | Продвинутые правила с составными условиями |
@@ -37,10 +37,11 @@
 ![Entity list: страница возвращает 404, для хостов используется `/ui/entity/list/HOST`](screenshots/day-2/hosts-processes/entity/list/404-We-cant-find-this-page-Demo-live-Demo-Live-Dynatrace.png)
 
 Путь в меню: **Infrastructure Observability → Hosts**.
+Живой адрес пункта меню: `https://guu84124.live.dynatrace.com/#newhosts` (сверено на живом тенанте 2026-07-28: заголовок «Hosts», живой хост `easytravel`, Linux, VMware).
 Прямая ссылка (устаревшая): `https://guu84124.live.dynatrace.com/ui/entity/list`.
-Прямая ссылка (рабочая): `https://guu84124.live.dynatrace.com/ui/entity/list/HOST`.
+Прямая ссылка со снимка: `https://guu84124.live.dynatrace.com/ui/entity/list/HOST`.
 
-Универсальный entity list на этом тенанте возвращает 404 (аналогично Теме 1 Дня 2). Для работы с хостами используется типизированный вариант с суффиксом `/HOST`.
+Универсальный entity list на этом тенанте возвращает 404 (аналогично Теме 1 Дня 2). На снимке курса для хостов работал типизированный вариант с суффиксом `/HOST`; при живой досверке 2026-07-28 пункт меню Hosts ведёт на классический адрес `/#newhosts`. Надёжный путь: идти через пункт меню, а не по сохранённой ссылке.
 
 **Ключевые поля карточки хоста, которые связывают его с процессами.**
 

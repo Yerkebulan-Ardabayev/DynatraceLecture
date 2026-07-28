@@ -1,4 +1,4 @@
-> 📅 **День 1: Введение в систему Dynatrace** → Тема 5 из 11: «Обзор интерфейса и навигации»
+> 📅 **День 1: Введение в систему Dynatrace** → Тема 5 из 14: «Обзор интерфейса и навигации»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/dashboards -->
 >
 > 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: ссылки на /docs/, /platform/, /apps/ удалены, оставлены только страницы из раздела `/managed/`. В air-gapped Managed Apps-интерфейс / Notebooks / Workflows / Davis Problems app не активированы. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
@@ -30,15 +30,15 @@
 |---|---|
 | **Favorites** | Закреплённые пользователем разделы (по умолчанию Dashboards, Deploy Dynatrace, Problems) |
 | **Observe and explore** | Ежедневная работа: Dashboards, Data Explorer, Metrics, Logs, Problems, Smartscape Topology, Reports |
-| **Infrastructure Observability** | Hosts, Technologies & Processes, Kubernetes, Containers, Cloud Foundry, AWS / Azure / GCP / VMware, Host Networking, Releases, Service-Level Objectives, Extensions |
-| **Automations** | Workflows и Site Reliability Guardian: часть Apps-платформы SaaS, в air-gapped Managed не используется |
+| **Infrastructure Observability** | Hosts, Technologies & Processes, Kubernetes, Containers, Cloud Foundry, AWS / Azure / GCP / VMware, Host Networking, Extensions; в хвосте группы (между Extensions и группой Application Observability) пункты Automations, Releases, Service-Level Objectives (расположение сверено вживую 2026-07-28) |
+| **Automations** (пункт в хвосте Infrastructure Observability) | Workflows и Site Reliability Guardian: часть Apps-платформы SaaS, в air-gapped Managed не используется |
 | **Application Observability** | Frontend, Services, Distributed Traces, Database Services, Synthetic |
 | **Application Security** | Уязвимости и атаки на приложения |
 | **Digital Experience** | RUM и Synthetic: пользовательский опыт |
 | **Business Analytics** | Бизнес-события и Session segmentation |
 | **Manage** | Hub, Deploy Dynatrace, Settings |
 
-**Верхняя панель.** Глобальный поиск (Ctrl+Shift+F: по именам хостов, сервисов, метрик, настроек). Фильтр **Management zones** (сегментация окружения по командам или бизнес-зонам). Выбор временного диапазона (по умолчанию Last 2 hours). Индикатор активных проблем и уведомлений.
+**Верхняя панель.** Глобальный поиск: текстовое поле «Search &lt;имя окружения&gt;...» (на демо «Search Demo live: Demo Live...»; хоткей Ctrl+Shift+F; ищет по именам хостов, сервисов, метрик, настроек). Запасной способ навигации: поле «Filter menu...» в самом левом меню (фильтрует пункты меню). Фильтр **Management zones** (сегментация окружения по командам или бизнес-зонам). Выбор временного диапазона (по умолчанию Last 2 hours). Индикатор активных проблем и уведомлений.
 
 ---
 
@@ -180,7 +180,7 @@
 
 ![Releases: инвентарь версий приложений](screenshots/day-1/ui-overview/releases/Releases-Demo-live-Demo-Live-Dynatrace.png)
 
-Путь: **Automations → Releases** → `https://guu84124.live.dynatrace.com/ui/releases`.
+Путь: **Infrastructure Observability → Releases** (пункт в хвосте группы, рядом с Automations и Service-Level Objectives; сверено вживую 2026-07-28) → `https://guu84124.live.dynatrace.com/ui/releases`.
 
 **Что на экране.** Инвентарь всех версий приложений, которые когда-либо работали в этом окружении. Важен для банка при работе с change management и регуляторными требованиями: какая версия сервиса была в такой-то момент, что в ней было, были ли проблемы.
 
@@ -225,6 +225,6 @@
 3. Открыть Databases → увидеть список всех баз, к которым ходят сервисы.
 4. Открыть Problems → увидеть активные проблемы и их приоритеты.
 5. Открыть Releases → увидеть, что выкатывалось за последние сутки.
-6. Использовать глобальный поиск (Ctrl+Shift+F) для перехода к любому объекту.
+6. Использовать глобальный поиск (поле «Search &lt;имя окружения&gt;...» в верхней панели, хоткей Ctrl+Shift+F) для перехода к любому объекту; если пункт меню не находится, набрать его имя в поле «Filter menu...» левого меню.
 7. Переключить временной диапазон с Last 2 hours на Last 24 hours и посмотреть, как меняется картина.
 8. Применить Management zone-фильтр и увидеть, как сужается весь интерфейс до выбранной зоны.

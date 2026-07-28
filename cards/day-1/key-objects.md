@@ -5,8 +5,8 @@ timing_min: 18
 verified: 2026-07-12
 ---
 ## ГДЕ
-Четыре типа объектов: Hosts (Infrastructure Observability → Hosts), Process Groups (`/ui/technologies`), Services `/ui/services`, Applications `/ui/applications`.
-Универсальный route темы `/ui/entity/list` отдаёт 404: вместо него типизированные списки на каждый тип или глобальный поиск Ctrl+Shift+F.
+Четыре типа объектов: Hosts (Infrastructure Observability → Hosts, живой route `/#newhosts`, сверено 2026-07-28), Process Groups (`/ui/technologies`), Services `/ui/services`, Applications `/ui/applications`.
+Универсальный route темы `/ui/entity/list` отдаёт 404: вместо него пункты меню по типам сущностей или глобальный поиск Ctrl+Shift+F.
 
 ## ЗАЧЕМ
 Иерархия Application → Service → Process Group → Host (плюс Data Center) это цепочка любого разбора: вверх «кто пострадал», вниз «где сломалось».
@@ -25,9 +25,10 @@ verified: 2026-07-12
 - ЕСЛИ путать метрики уровней (`builtin:host.cpu.usage` против `builtin:service.response.time`) → они в разных measurement scope, к объекту не привяжутся.
 
 ## ЗАПАСНОЙ ПЛАН
-`/ui/entity/list` отдаёт 404, это ожидаемо: показываю снимок 404 из курса и веду по типизированным спискам (Hosts, Services, Databases, Technologies).
+`/ui/entity/list` отдаёт 404, это ожидаемо: показываю снимок 404 из курса и веду через пункты меню (Hosts `/#newhosts`, Services, Databases, Technologies).
 Applications на демо может быть заглушкой Connection issues / Too many requests: это лимит демо-окружения, объясняю по снимку боевого списка.
 Hosts и Technologies & Processes в набор снимков не вошли: описываю их колонки словами (имя, OS, версия OneAgent, CPU, Memory, число процессов, Management Zone), без живого экрана.
+Лекторский сценарий: workshop/day-1.md, блок 7. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем группа процессов отличается от процесса?» Ответ: Process Group это логическое объединение одинаковых процессов (все инстансы одного Java-приложения на всех хостах), связи строит OneAgent автоматически.

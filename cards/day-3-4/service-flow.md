@@ -6,7 +6,7 @@ verified: 2026-07-12
 ---
 ## ГДЕ
 Один живой экран: список сервисов, Application Observability → Services, route `/ui/services`.
-Service Flow открывается не по отдельному URL, а из карточки конкретного сервиса: клик на сервис → блок Understand dependencies → кнопка View service flow.
+Service Flow открывается не по отдельному URL, а из карточки конкретного сервиса: клик на сервис → блок Understand dependencies → кнопка View service flow. Соседние кнопки блока (сверено 2026-07-28): View backtrace (кто меня вызывал), View distributed traces, View web requests, View related logs.
 
 ## ЗАЧЕМ
 Service Flow это граф реальных вызовов сервиса за выбранный период: слева клиенты, кто его вызывает (upstream), в центре сам сервис, справа его backend-зависимости (downstream: сервисы, базы, внешние API, очереди).
@@ -29,6 +29,7 @@ Service Flow это граф реальных вызовов сервиса за
 Если список Services или сам граф не открывается вживую на демо: показываю снимок Services из курса (заголовок 241 Services) и на нём проговариваю, что вход в Service Flow идёт из карточки сервиса через блок Understand dependencies → View service flow, а не по отдельной ссылке.
 По снимку разбираю чтение графа: слева клиенты (upstream), центр сам сервис, справа backend (downstream), ширина ребра это частота вызовов, цвет это состояние; наведение на ребро даёт число вызовов, среднее время и процент ошибок, клик уводит в drill down к конкретным запросам.
 Про закрытый контур говорю честно: Service Flow целиком работает на локальных данных, PurePath лежат в Cassandra кластера, агрегация на лету при открытии карточки, внешних вызовов нет.
+Лекторский сценарий: workshop/day-2.md, блок 7. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем Service Flow отличается от Smartscape?» Ответ: Smartscape это структурный near real-time снимок всех сущностей за окно ~72 часа (пять уровней: Applications → Services → Processes → Hosts → Data centers), Service Flow это операционный взгляд только на service-level за выбранный timeframe по реальным PurePath.

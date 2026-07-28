@@ -28,6 +28,7 @@ verified: 2026-07-12
 Home dashboards и Limit preset visibility на демо без правил (No data to display): это ожидаемо, показываю по снимку, где стоит + Add mapping на боевом окружении.
 Allowed URL pattern rules помечен Early adopter, набор опций может отличаться по сборке; на демо одно остаточное правило на dropbox, проговариваю, что в бою его убирают.
 Если список дашбордов не грузится: показываю снимок с 618 и разбираю колонки (Popularity, дата изменения, Owner, метка Preset).
+Лекторский сценарий: workshop/day-3.md, блок 7 и workshop/day-4.md, блок 7. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Можно ли править пресет?» Ответ: нет, только Clone (копия в свои), её уже редактируют; удобный сбор виджета через Pin to dashboard из Data Explorer.

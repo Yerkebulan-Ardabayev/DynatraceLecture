@@ -1,4 +1,4 @@
-> 📅 **День 1: Введение в систему Dynatrace** → Тема 8 из 11: «Встроенные метрики, Data Explorer»
+> 📅 **День 1: Введение в систему Dynatrace** → Тема 8 из 14: «Встроенные метрики, Data Explorer»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/data-explorer?gf=all -->
 >
 > 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: все /docs/-ссылки удалены, оставлены только страницы из раздела `/managed/`. **Важно для Managed:** Data Explorer Advanced mode использует **Metrics Selector** (синтаксис Dynatrace), DQL: SaaS-only для Grail и в air-gapped Managed недоступен. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
@@ -73,7 +73,7 @@
 
 **Advanced mode**: тумблер справа. Включает редактор **Metrics Selector** для сложных выражений: деление метрик, соотношения, агрегации по нескольким метрикам одновременно. Это не DQL: DQL живёт на SaaS-платформе поверх Grail, в Managed пока недоступен.
 
-**Start with a template**: готовые шаблоны визуализаций. На этом демо-тенанте представлены: Container restarts over time, Server-side response time, Web request/service failure rate, Kubernetes-дашборды, Disk space used %, Crash-free user rate, Core web vitals (LCP / CLS / FID), Application satisfaction SLO. Клик по шаблону моментально строит график на данных текущего окружения: удобно как стартовая точка или как референс синтаксиса.
+**Start with a template**: готовые шаблоны визуализаций. На этом демо-тенанте представлены: Container restarts over time, Server-side response time, Web request/service failure rate, Kubernetes-дашборды, Disk space used %, Crash-free user rate, Core web vitals (LCP / CLS / FID), Application satisfaction SLO. Названия шаблонов процитированы с экрана как есть; заметка на полях: в актуальном наборе веб-стандарта Core Web Vitals показатель FID заменён на INP, шаблон отражает состояние сборки. Клик по шаблону моментально строит график на данных текущего окружения: удобно как стартовая точка или как референс синтаксиса.
 
 **Settings** в правой панели:
 - Тип линии.
@@ -195,3 +195,14 @@
 3. **Pin to dashboard**: закрепить на общем дашборде, если график полезен команде.
 
 Если график нужен разово: остался в Data Explorer, не сохранён. Если постоянный показатель: попадает на дашборд и обновляется в реальном времени.
+
+---
+
+## 📝 Практика (3 минуты, выполнимо на demo-тенанте)
+
+1. Открыть **Observe and explore → Metrics** (`/ui/metrics`), набрать в фильтре `cpu`, скопировать ключ `builtin:host.cpu.usage`.
+2. Открыть **Observe and explore → Data Explorer** (`/ui/data-explorer`), вставить метрику.
+3. Собрать график по правилу «метрика → агрегация → разбивка → фильтр»: агрегация Average, разбивка (split by) по хостам, фильтр по хостам `easytravel*`.
+4. Переименовать график по-своему.
+
+Что должно получиться: график CPU, где каждая линия это отдельный easytravel-хост, а не «средняя температура по больнице». Контрольный вопрос себе: какую одну метрику вы вывели бы на экран дежурной смены первой и почему.

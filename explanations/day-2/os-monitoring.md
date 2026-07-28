@@ -31,7 +31,7 @@
 
 | Что показать | Путь в меню | Прямая ссылка | Статус на снимке |
 |---|---|---|---|
-| Список хостов (entity list) | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/ui/entity/list` | **404**: старый универсальный entity list отключён |
+| Список хостов | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/#newhosts` | Живой адрес пункта меню (сверено 2026-07-28, заголовок «Hosts»); старый универсальный `/ui/entity/list` даёт **404** |
 | OS services monitoring | **Settings → Monitoring → OS services monitoring** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:os-services-monitoring` | Мониторинг Windows-служб и Linux systemd units |
 | Disk options | **Settings → Preferences → Disk options** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:disk.options` | Глобальные опции работы с дисками |
 | Custom disk-detection rules | **Settings → Anomaly detection → Disk anomaly detection rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:anomaly-detection.disk-rules` | Пользовательские правила аномалий по дискам |
@@ -59,7 +59,7 @@
 
 На этом тенанте страница возвращает 404: `We can't find this page. The page no longer exists or the link you clicked may be old and no longer available`. Версия платформы `1.336.55.20260417-205630`. Универсальный entity list заменён на типизированные списки по типу сущности.
 
-Для работы с хостами используется `https://guu84124.live.dynatrace.com/ui/entity/list/HOST`. Список показывает все машины с установленным OneAgent.
+На снимке курса для хостов работал типизированный адрес `https://guu84124.live.dynatrace.com/ui/entity/list/HOST`; при живой досверке 2026-07-28 пункт меню **Infrastructure Observability → Hosts** ведёт на классический адрес `https://guu84124.live.dynatrace.com/#newhosts` (заголовок «Hosts»). Надёжный путь: через пункт меню. Список показывает все машины с установленным OneAgent.
 
 **Колонки:** имя хоста, ОС, статус OneAgent (Active / Disabled), версия OneAgent, CPU, Memory, активные проблемы.
 
@@ -207,3 +207,13 @@
 **Подготовка к пиковому дню** (зарплаты, пенсии, праздники). Дашборд с top-20 критичных хостов, проверка запаса: CPU до 50% в норме, Memory до 60%, Disk до 70%. Где не хватает: добавить ресурсы или перераспределить нагрузку.
 
 **Анализ причин перезагрузки хоста.** После инцидента: карточка хоста → Events → событие `Host restart` с временем. Метрики за минуту до события: резкий рост iowait и CPU, активный swap. Top processes этого периода: приложение съело память, начало swapping, каскадная деградация. Репорт команде разработки с прямой ссылкой на метрики.
+
+---
+
+## 📝 Практика (2-3 минуты, выполнимо на demo-тенанте)
+
+1. Открыть **Infrastructure Observability → Hosts** (живой адрес `/#newhosts`).
+2. Найти хост `easytravel` (Linux, VMware).
+3. Открыть его карточку и посчитать, сколько процессов на нём под мониторингом (блок Processes).
+
+Что должно получиться: конкретное число процессов, прочитанное с экрана (у вашего тенанта оно будет своим). Контрольный вопрос себе: зачем дежурному спускаться на уровень хоста, если алерт пришёл про сервис?

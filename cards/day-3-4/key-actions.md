@@ -22,6 +22,7 @@ Custom RUM через OpenKit закрывает точки контакта б�
 - Лимит user action custom metrics считается по enabled: до 500 enabled на окружение, до 100 enabled на приложение.
 - Четыре настроечных экрана темы: User action custom metrics, Custom RUM Enablement, Resource types, Resource URL cleanup rules.
 - Два механизма для бизнес-данных: Custom metrics (метрики поверх user actions RUM) и Business events (отдельный поток атомарных событий через API).
+- Пометка Mark as key user action (карточка приложения → Top 3 user actions → View full details): свой Apdex-порог на действие; лимиты до 100 ключевых действий на приложение и до 500 на окружение.
 
 ## ЕСЛИ→ТО
 - ЕСЛИ метрику создаёте только сейчас → в неё попадут только новые данные, историю задним числом Dynatrace не пересчитывает (нужны платежи за прошлый месяц, метрику надо было завести месяц назад).

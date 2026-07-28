@@ -77,7 +77,7 @@ HTML собирается с `<meta name="dt-build-id">` + build-id в `title` (
 
 Второй вариант курса живёт в ветке `v2-presenter`. `plan_html.py --v2` собирает `output/training_v2.html` (палитра Ctrl+K, окно докладчика по клавише P с карточками и таймером, синхронизация окон, масштаб). **Дефолтная `plan_html.py` без флага не меняется** — v2 трансформирует КОПИЮ шаблона, `HTML_TEMPLATE` не трогается.
 
-Карточки лектора: `cards/<day>/<topic>.md`, 44/44, каждая цифра обязана присутствовать в explanation своей темы. Гейт: `python scripts/quality_check.py --cards` (CARD-детекторы, см. `CONTENT_POLICY.md` §7). Сборка `--v2` вызывает его автоматически, сборка v1 — без `--cards`.
+Карточки лектора: `cards/<day>/<topic>.md`, 48/48, каждая цифра обязана присутствовать в explanation своей темы. Гейт: `python scripts/quality_check.py --cards` (CARD-детекторы, см. `CONTENT_POLICY.md` §7). Сборка `--v2` вызывает его автоматически, сборка v1 — без `--cards`.
 
 Свежесть: `python scripts/drift_report.py --limit 3` (нужна сессия: `python auth.py` либо `python auth.py --manual`). Памятка запуска — в `README.md`, раздел «Свежесть».
 

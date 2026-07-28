@@ -1,4 +1,4 @@
-> 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 13 из 14: «Incident Lifecycle: от детекции до Root Cause Analysis»
+> 📅 **День 3-4: Архитектура сквозного мониторинга и Observability** → Тема 13 из 15: «Incident Lifecycle: от детекции до Root Cause Analysis»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/problems -->
 <!-- revision: 2026-04-27 -->
 
@@ -37,6 +37,16 @@
 На экране демо-тенанта счётчик в заголовке читается как **69 Problems showing 50**: всего 69 проблем под текущим фильтром, в списке показаны первые 50. Пустой список означает, что активных проблем нет, а не что мониторинг выключен.
 
 **Фаза 1: Детекция.** ЕСЛИ Davis обнаружил аномалию по anomaly detection rules (правила обнаружения аномалий, пороговые или авто-адаптивные baseline) → ТО на этом экране появляется новая Problem с автоматически рассчитанным Severity (Critical/Warning/Info), полем Affected entity (затронутая сущность) и Root cause (корневая причина, если определима). ЕСЛИ аномалии нет → ТО Davis молчит, новой строки не появляется.
+
+**Внутри карточки проблемы (блоки сверены на живом тенанте 2026-07-28, названия дословно).** Это экранная опора фаз Response и Resolution:
+
+- **Хронология** по минутам; строка UI об оценке окна: «Davis evaluates performance across timeframe (for example, 3 of 5 minutes show anomalous performance)».
+- **Business impact analysis**: affected users, affected service calls, affected sessions; кнопка **Replay sessions**. Быстрый ответ «пострадали ли пользователи»: если нет, боль внутри бэка и время на разбор есть.
+- **Root cause**: первопричина; внутри «Metric anomalies detected» и кнопка **Analyze metric anomalies».
+- **Visual resolution path** с подписью «Click to see how we figured this out»: анимированная реконструкция, как деградация распространялась по топологии и как Davis пришёл к выводу.
+- **Comments**: журнал разбора для команды.
+
+Порядок чтения карточки инженером: хронология → импакт (кто задет) → Root cause → спуск в первопричинную сущность; Visual resolution path помогает проверить вывод Davis собственными глазами.
 
 ### Шаг 2: Alerting profiles
 

@@ -379,7 +379,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
   <aside id="sidebar">
     <div id="sidebar-header">
       <div class="brand">DYNATRACE MANAGED</div>
-      <div class="sub">Обучающий курс — 5 дней, 44 темы</div>
+      <div class="sub">Обучающий курс — 5 дней, 48 тем</div>
     </div>
     <div id="search-wrap">
       <input id="search" type="text" placeholder="Поиск по темам / контенту..." autocomplete="off">
@@ -804,7 +804,7 @@ V2_SCRIPT = r'''
     applyFontScale(); fontBadge();
   }
 
-  /* --- поиск для палитры (по 44 темам + полнотекст по DATA) --- */
+  /* --- поиск для палитры (по 48 темам + полнотекст по DATA) --- */
   function fuzzySub(text, q){
     var ti = 0;
     for (var i = 0; i < q.length; i++){ ti = text.indexOf(q[i], ti); if (ti < 0) return false; ti++; }

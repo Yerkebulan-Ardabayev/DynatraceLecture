@@ -1,4 +1,4 @@
-> 📅 **День 1: Введение в систему Dynatrace** → Тема 7 из 11: «Хосты, процессы, сервисы, приложения: обзор ключевых объектов»
+> 📅 **День 1: Введение в систему Dynatrace** → Тема 7 из 14: «Хосты, процессы, сервисы, приложения: обзор ключевых объектов»
 <!-- live-ui: https://guu84124.live.dynatrace.com/ui/entity/list/HOST -->
 >
 > 🔖 **Редакция от 2026-04-27.** Блок Источников переведён в строгий Managed-режим: ссылки на /docs/ удалены, оставлены только страницы из раздела `/managed/`. Все ссылки проверены `scripts/link_check.py`. <!-- revision: 2026-04-27 -->
@@ -17,7 +17,7 @@
 
 | Сущность | Путь в меню | Прямая ссылка |
 |---|---|---|
-| **Hosts / хосты** | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/ui/entity/list/HOST` |
+| **Hosts / хосты** | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/#newhosts` (живой адрес пункта меню, сверено 2026-07-28; маршрут снапшота `/ui/entity/list/HOST`) |
 | **Process Groups / группы процессов** | **Infrastructure Observability → Technologies & Processes** | `https://guu84124.live.dynatrace.com/ui/technologies` |
 | **Services / сервисы** | **Application Observability → Services** | `https://guu84124.live.dynatrace.com/ui/services` |
 | **Applications / приложения** | **Application Observability → Frontend** | `https://guu84124.live.dynatrace.com/ui/applications` |
@@ -149,4 +149,16 @@ Data Center (ДЦ или облачный регион)
 
 **Правильный выбор метрик.** Метрики разных уровней разные. `builtin:host.cpu.usage`, это метрика хоста. `builtin:service.response.time`: метрика сервиса. `builtin:apps.web.actionDuration`: метрика приложения. Путать их нельзя: они живут в разных measurement scope.
 
-**Management Zones.** [Management zones](https://docs.dynatrace.com/managed/shortlink/management-zones): сегментация сущностей по зонам ответственности (Retail Banking, Corporate Banking, Treasury): работает на всех уровнях одновременно. Выбрал в верхнем фильтре zone «Retail»: видны только хосты, процессы, сервисы, приложения этой зоны. По умолчанию в окружении можно создать до **5 000 management zones**; правила задаются через UI или текстом через entity selector Environment API v2. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/shortlink/management-zones -->
+**Management Zones.** [Management zones](https://docs.dynatrace.com/managed/shortlink/management-zones): сегментация сущностей по зонам ответственности (Retail Banking, Corporate Banking, Treasury): работает на всех уровнях одновременно. Выбрал в верхнем фильтре zone «Retail»: видны только хосты, процессы, сервисы, приложения этой зоны. По умолчанию в окружении можно создать до **5 000 management zones**; правила задаются через UI или текстом через entity selector Environment API v2. Подробный разбор зон и автотегов: темы «Автотеги» и «Зоны управления» этого же дня. <!-- last-verified: 2026-04-27 source: docs.dynatrace.com/managed/shortlink/management-zones -->
+
+---
+
+## 📝 Практика (2-3 минуты, выполнимо на demo-тенанте)
+
+Пройти лестницу сущностей снизу вверх руками:
+
+1. **Infrastructure Observability → Hosts** (живой адрес `/#newhosts`) → открыть хост `easytravel`.
+2. Из карточки хоста провалиться в любой его процесс (блок Processes).
+3. **Application Observability → Services** → открыть `easyTravel Customer Frontend`.
+
+Что должно получиться: назвать вслух, на каком уровне живёт каждый открытый объект (хост → процесс → сервис) и почему сервис нельзя отождествлять с процессом (один процесс может нести несколько сервисов).

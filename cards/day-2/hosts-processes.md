@@ -5,7 +5,7 @@ timing_min: 30
 verified: 2026-07-12
 ---
 ## ГДЕ
-Точка входа, список хостов: Infrastructure Observability → Hosts, рабочий route `/ui/entity/list/HOST` (голый `/ui/entity/list` отдаёт 404, как в первой теме дня).
+Точка входа, список хостов: Infrastructure Observability → Hosts, живой route `/#newhosts` (сверено 2026-07-28, заголовок «Hosts»); route снапшота `/ui/entity/list/HOST`, голый `/ui/entity/list` отдаёт 404, как в первой теме дня.
 Шесть страниц настройки в Settings → Processes and containers (префикс `/ui/settings/`): Process grouping rules `builtin:process-grouping-rules`, Simple detection rules `builtin:process-group.simple-detection-rule`, Advanced detection rules `builtin:process-group.advanced-detection-rule`, Custom process monitoring rules `builtin:process.custom-process-monitoring-rule`, Process availability `builtin:processavailability`, Process instance snapshots `builtin:process-visibility`.
 
 ## ЗАЧЕМ
@@ -27,9 +27,10 @@ Process Group это слой между конкретным процессом
 - ЕСЛИ в Process grouping rules задать стабильное правило (Merge по имени deployment вместо случайных имён подов) → ТО Process Group живёт дольше недели и Davis копит baseline; ЕСЛИ группа рождается раз в день → ТО baseline не формируется и аномалии не детектируются.
 
 ## ЗАПАСНОЙ ПЛАН
-Голый `/ui/entity/list` отдаёт 404: сразу открываю типизированный `/ui/entity/list/HOST`, показываю карточку хоста и разбираю Running processes, Technology overview, Smartscape.
+В список хостов иду через пункт меню Hosts (живой адрес `/#newhosts`): голый `/ui/entity/list` отдаёт 404, типизированный `/ui/entity/list/HOST` это маршрут снапшота. Дальше показываю карточку хоста и разбираю Running processes, Technology overview, Smartscape.
 Если на демо нет write-прав на страницах Settings → Processes and containers: не создаю правило вживую, показываю форму (Rule name, Property, Action, Scope) и проговариваю на примере из курса, как split по environment variable разводит prod и dev в разные Process Groups.
 Если список процессов на хосте пуст: разбираю концепцию на снимке, 200 копий одного .jar на 50 хостах сворачиваются в одну Process Group, метрики агрегируются с возможностью провалиться в конкретный инстанс.
+Лекторский сценарий: workshop/day-2.md, блок 8. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем процесс отличается от Process Group?» Ответ: процесс это конкретный бинарник с PID, Process Group это логическое объединение одинаковых процессов одного приложения, одна группа содержит N инстансов.
