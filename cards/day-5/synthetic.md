@@ -31,7 +31,7 @@ Synthetic это искусственный трафик роботами по �
 Страница `/ui/synthetic` на демо-тенанте отдаёт 403 (модуль не активирован или у роли нет прав на synthetic-зону): показываю снимок 403 из курса и проговариваю, что на боевом Managed здесь список всех мониторов, а доступ настраивается через IAM (Management zones, Permissions).
 Четыре типа и метрики монитора (Availability, Response time, Location) разбираю по общему знанию платформы плюс снятые настройки.
 Три страницы Settings (availability settings, browser и HTTP outage handling) на демо открываются: показываю их живьём; дефолты (retry, consecutive failures, expected codes) читаю прямо со страницы тенанта, если поля серые из-за отсутствия write-прав.
-Лекторский сценарий: workshop/day-3.md, блок 10. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-3.md, блок [2:05-2:15] «Синтетика и безопасность приложений». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «RUM уже стоит, зачем ещё Synthetic?» Ответ: RUM молчит, когда нет трафика (ночь, редкие страницы), synthetic бьёт по расписанию 24/7 и ловит падение до жалоб; RUM для аналитики опыта, synthetic для SLO.

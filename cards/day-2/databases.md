@@ -30,7 +30,7 @@ verified: 2026-07-12
 Если список `/ui/databases` пуст: проверяю timeframe (по умолчанию Last 2 hours) и снимаю фильтры слева, показываю снимок темы (заголовок 30 Databases на демо) и разбираю колонки Response time median, Slowest 10%, Failure rate, Requests.
 На странице аномалий вживую виден только заголовок Reference period, остальные блоки свёрнуты: проговариваю их по смыслу (Response time, Failure rate, Database failed connects, Load drops/spikes), конкретные дефолтные пороги по памяти не называю, значения на самой странице тенанта authoritative.
 Если на демо нет write-прав: показываю снимок и говорю, что переопределение для конкретной БД делается в её карточке → Settings, а глобальная страница задаёт дефолт.
-Лекторский сценарий: workshop/day-2.md, блок 7. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-2.md, блок [1:35-1:47] «Бэктрейс, Service flow, Database Services». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем Database Service отличается от Database Host?» Ответ: Service это БД глазами клиента через драйвер (время ответа на запрос), Host это хост с процессом БД (CPU, Memory, Disk I/O); связаны через Smartscape, но сущности разные, список `/ui/databases` показывает именно Services.

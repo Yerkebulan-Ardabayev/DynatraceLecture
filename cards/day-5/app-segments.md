@@ -31,7 +31,7 @@ Provider breakdown: Settings → Web and mobile monitoring → Provider breakdow
 Если на демо нет write-прав и правило не создать: показываю таблицу Detection rules по снимку и на примере домена с четырьмя частями (публичный сайт, ДБО для физлиц, ДБО для юрлиц, блог) проговариваю, как path-based правила разносят трафик по отдельным приложениям.
 Кнопку Check URL проговариваю как способ проверить, какое правило сработает и активен ли RUM, даже без прав на изменение.
 Beacon origins for CORS и Provider breakdown показываю по снимкам: подчёркиваю, что список origin-ов задаётся конкретными доменами без wildcard, а в Managed важно, на какой endpoint браузер шлёт beacon (при agentless это Cluster ActiveGate, путь `/bf`).
-Лекторский сценарий: workshop/day-3.md, блок 2. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-3.md, блок [0:05-0:20] «Зачем RUM + заведение приложений». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем приложение отличается от Management zone?» Ответ: application detection создаёт отдельную Dynatrace-сущность со своим Apdex, метриками и ID, а management zone только фильтрует существующие сущности и своих метрик не имеет; приложение это уровень фронта, management zone сквозной разрез фронт плюс бэк плюс инфра.

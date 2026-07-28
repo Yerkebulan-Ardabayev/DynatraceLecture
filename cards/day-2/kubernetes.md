@@ -34,7 +34,7 @@ Kubernetes в Dynatrace это первоклассная сущность: кл
 Если открываю страницу Kubernetes app: проговариваю, что в изолированном Managed новое приложение недоступно (нужна Apps-платформа), вся работа идёт в Classic UI и на пяти экранах anomaly detection, которые в Classic полностью функциональны.
 Если показываю Security Posture Management: говорю честно, что в air-gapped Managed рабочего compliance-результата по этой странице нет (findings некуда складывать без платформенного слоя), страница в Settings остаётся, а проверку конфигурации кластера закрываю сторонними инструментами (kube-bench по CIS, Trivy, Falco) и при необходимости завожу их отчёты в Dynatrace как логи или события.
 Если страница дефолтов anomaly detection пуста или серая (нет write-прав на демо): не называю пороги по памяти сверх задокументированных, отсылаю к значениям на самой странице тенанта.
-Лекторский сценарий: workshop/day-2.md, блок 8. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-2.md, блок [1:47-1:57] «Инфраструктура сжато: Hosts, Containers, Kubernetes». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Откуда Dynatrace берёт данные о Kubernetes?» Ответ: из трёх источников: OneAgent на ноде (метрики контейнеров через cgroup и kubelet), Dynatrace Operator через API кластера (Deployments, Services, Namespaces, Events), автоинъекция CodeModules mutating-webhook'ом без правки Docker-образа.

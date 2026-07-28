@@ -32,7 +32,7 @@ UX-метрики это мост между техникой (response time, er
 ## ЗАПАСНОЙ ПЛАН
 На демо-тенанте список приложений может отдавать плашку «Connection issues: trying to reconnect» с кнопками Try to restore connection now и Try again: это ожидаемо для статичного дампа (SPA не достучалась до WebSocket backend), показываю снимок из курса и проговариваю колонки Name, Apdex, User actions per minute, Response time median, JS errors, Problems.
 Страницы порогов User experience score и Usability analytics открываю в Settings → Web and mobile monitoring; если они серые без write-прав, конкретные пороги по памяти не называю, проговариваю логику (action-пороги Apdex, session-пороги, rage clicks) и отсылаю к значениям на самой странице тенанта.
-Лекторский сценарий: workshop/day-3.md, блок 3. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-3.md, блок [0:20-0:40] «Карточка приложения www.angular.easytravel.com». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем Apdex отличается от Web Vitals?» Ответ: Apdex это агрегированная метрика для бизнеса и SLA (дашборд руководству), Web Vitals это технические метрики для инженеров (LCP / INP / CLS для оптимизации фронта).

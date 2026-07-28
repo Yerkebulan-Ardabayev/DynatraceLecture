@@ -30,7 +30,7 @@ Dynatrace API это REST поверх HTTPS с JSON-ответами: чере�
 Если `/ui/access-tokens` закрыт (на демо нет прав на управление токенами), вживую токен не создаю: показываю снимок Access tokens из курса, проговариваю колонки Token name и Last used и кнопку Generate new token.
 Строение токена prefix.public.secret объясняю на маскированном примере `dt0c01.ABC***XYZ`, реальный secret-портион на экран не вывожу.
 Экран Token settings при отсутствии доступа тоже разбираю по снимку из курса: Maximum token expiration и Require expiration date.
-Лекторский сценарий: workshop/day-3.md, блок 11. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-3.md, блок [2:15-2:22] «API и токены». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем отличаются префиксы dt0c01, dt0s01, dt0s02, dt0s16?» Ответ: dt0c01 это классический Environment-токен (он в примере авторизации доки), dt0s01 в таблице префиксов обозначен как API token, а dt0s02 (OAuth2) и dt0s16 (Platform tokens) относятся к облачной платформе и в air-gapped Managed не используются.

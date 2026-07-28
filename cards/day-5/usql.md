@@ -30,7 +30,7 @@ Managed-акцент: для сессий это штатный рабочий �
 Если редактор не открывается или запрос не отдаёт результат: показываю снимок User Session Query из курса, проговариваю три части экрана (текст запроса, кнопки Run query и Copy, таблица результата) и разбираю готовый пример `SELECT userExperienceScore, count(*) FROM usersession GROUP BY userExperienceScore`.
 Если кто-то тянется к DQL: сразу говорю, что запросы к сессиям в Managed идут на USQL, а Grail и DQL это SaaS, здесь их нет. <!-- qc:ignore=SAAS -->
 Историю глубже 35 дней по сессиям не обещаю: для долгого хранения показываю связку через API-экспорт `/table` во внешний BI.
-Лекторский сценарий: workshop/day-3.md, блок 6. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-3.md, блок [1:10-1:25] «USQL: запросы к сессиям». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Почему у нас нет DQL и Grail, как в документации?» Ответ: DQL работает поверх Grail, это SaaS-хранилище; в air-gapped Managed его нет, запросы к сессиям пишем на USQL. <!-- qc:ignore=SAAS -->

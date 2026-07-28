@@ -30,7 +30,7 @@ Usability analytics: Settings → Web and mobile monitoring → Usability analyt
 На демо-тенанте центр списка Applications часто пустой или показывает Connection issues (нет активных RUM-приложений): показываю карточку приложения по снимку из курса, проговариваю Apdex, Response time, Core Web Vitals, Distribution по браузерам и странам.
 Страницы User experience score и Usability analytics без write-прав открываю на чтение: показываю, какие факторы, веса и пороги настраиваются, ничего не меняю.
 Конкретные пороги классификации по памяти сверх снимка не называю, отсылаю к значениям на самой странице тенанта.
-Лекторский сценарий: workshop/day-3.md, блок 3. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-3.md, блок [0:20-0:40] «Карточка приложения www.angular.easytravel.com». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем Apdex отличается от User experience score?» Ответ: Apdex меряет только скорость (0-1, пять уровней, на уровне действий), а User experience score добавляет ошибки, rage clicks и поведение и делит сессии на Satisfactory / Tolerable / Frustrating.

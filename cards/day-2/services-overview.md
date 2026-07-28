@@ -32,7 +32,7 @@ Service detection это правила, по которым OneAgent режет
 Экран Services пуст или нужных сервисов не видно: показываю снимок из курса (239 сервисов) и проговариваю левую панель фильтров, точнее фильтр Service type.
 На страницах Service detection нет write-прав (демо): показываю снимок правил и проговариваю пример, как один Tomcat разбивается по URL-префиксам (`/api/payments/*`, `/api/accounts/*`, `/admin/*`) на три логических сервиса.
 Тумблер Service Detection v2 серый: проговариваю, что это глобальный переключатель тенанта, а не пофазное включение по хостам; включают планово, предварительно проверив на dev-потоке OpenTelemetry, потому что названия Service могут поменяться и это заденет Alerting profiles и Dashboards.
-Лекторский сценарий: workshop/day-2.md, блок 4. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-2.md, блок [0:50-1:05] «Сервисы: что это, типы, Service Detection». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем Web service отличается от Web request service?» Ответ: Web request service это прямой входящий HTTP (современные backend-ы), а Web service (full) остался для WSDL-описанных SOAP / JAX-WS.

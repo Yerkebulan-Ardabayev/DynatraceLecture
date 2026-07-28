@@ -28,7 +28,7 @@ verified: 2026-07-12
 `/ui/entity/list` отдаёт 404, это ожидаемо: показываю снимок 404 из курса и веду через пункты меню (Hosts `/#newhosts`, Services, Databases, Technologies).
 Applications на демо может быть заглушкой Connection issues / Too many requests: это лимит демо-окружения, объясняю по снимку боевого списка.
 Hosts и Technologies & Processes в набор снимков не вошли: описываю их колонки словами (имя, OS, версия OneAgent, CPU, Memory, число процессов, Management Zone), без живого экрана.
-Лекторский сценарий: workshop/day-1.md, блок 7. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-1.md, блок [1:15-1:35] «Тур по интерфейсу и лестница сущностей». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем группа процессов отличается от процесса?» Ответ: Process Group это логическое объединение одинаковых процессов (все инстансы одного Java-приложения на всех хостах), связи строит OneAgent автоматически.

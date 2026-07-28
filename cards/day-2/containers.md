@@ -32,7 +32,7 @@ verified: 2026-07-12
 Тумблеры и встроенные правила на демо серые (нет write-прав): это ожидаемо, показываю снимок из курса, проговариваю главный тумблер сбора метрик и три встроенных правила, ничего не переключаю.
 Если список Cloud Applications / Workloads пуст (на демо нет живого Kubernetes): показываю снимок страницы Cloud application and workload detection из курса и на пальцах разбираю связку Cloud Application · Workload · Pod, сущности не выдумываю.
 Навигацию по меню подстраховываю прямой ссылкой по route (например `/ui/settings/builtin:container.technology`), если пункты меню на тенанте расположены иначе.
-Лекторский сценарий: workshop/day-2.md, блок 8. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-2.md, блок [1:47-1:57] «Инфраструктура сжато: Hosts, Containers, Kubernetes». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Почему одноразовые build-контейнеры Jenkins/GitLab-Runner висят в списках и шумят?» Ответ: они живут недолго, но попадают в мониторинг; убираются кастомным правилом на Container monitoring rules (условие по image jenkins-agent:*, действие «не мониторить»).

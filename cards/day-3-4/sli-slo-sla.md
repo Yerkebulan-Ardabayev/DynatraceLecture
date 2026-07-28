@@ -31,7 +31,7 @@ SLO переводит «надёжность» в измеримую цель �
 Dashboard на демо живой (55 SLOs, easytravel-примеры). Строки с ошибкой «At least one operand in the given metric expression provides no data» не прячу: это учебная иллюстрация ломкой привязки по имени (привязывать по идентификатору или тегу). Если экран всё же пуст: снимок из курса и колонки строки SLO (имя, target, current value, остаток error budget, trend, статус OK/Warning/Critical).
 Если нет write-прав создать SLO: по снимку разбираю структуру одного SLO (имя, SLI-метрика вида builtin:service.successes / builtin:service.requestCount.total, target, evaluation timeframe, error budget и burn rate считаются автоматически, два типа alerting).
 Отдельно проговариваю air-gapped акцент: все SLO вычисляются локально в кластере на метриках из Cassandra, внешних сервисов нет, статус и burn rate уходят во внутренние BI-системы банка через Service-level objectives API.
-Лекторский сценарий: workshop/day-2.md, блок 10. <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
+Лекторский сценарий: workshop/day-2.md, блок [2:07-2:20] «SLO и бюджет ошибок». <!-- qc:ignore=CARD_UNSOURCED_NUMBER -->
 
 ## ВОПРОСЫ АУДИТОРИИ
 - «Чем SLO отличается от SLA?» Ответ: SLO это внутренняя цель команды (можно ужесточить или смягчить), SLA это внешний контракт с клиентом с финансовыми санкциями, и SLA обычно слабее SLO для запаса (например SLA 99.5% при SLO 99.9%).
