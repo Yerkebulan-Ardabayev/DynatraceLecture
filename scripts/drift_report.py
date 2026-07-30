@@ -179,11 +179,38 @@ def build_tasks(plan: dict, routes_filter: str | None, limit: int | None) -> lis
                     "topic_name": t["name"],
                     "route": r.strip(),
                 })
+    tasks += unverified_tasks()
     if routes_filter:
         tasks = [t for t in tasks if task_matches(t, routes_filter)]
     if limit is not None:
         tasks = tasks[:limit]
     return tasks
+
+
+def unverified_tasks() -> list[dict]:
+    """Адреса, которые routes_check не смог подтвердить офлайн.
+
+    Часть адресов курса не проверить ни снапшотом, ни Settings API v2: это
+    UI-маршруты без своей схемы и без типа сущности (например /ui/technologies).
+    Единственный способ узнать, живы ли они, открыть их в сессии. Раз этот
+    скрипт всё равно ходит по тенанту, пусть заодно отвечает и на этот вопрос:
+    иначе адрес остаётся вечной сноской «не сверено» в отчёте routes_check.
+    """
+    try:
+        sys.path.insert(0, str(ROOT / "scripts"))
+        from routes_check import UNVERIFIED
+    except ImportError:  # pragma: no cover — скрипт должен работать и без него
+        return []
+    return [
+        {
+            "day_id": "—",
+            "topic_id": "routes_check",
+            "topic_name": "адреса без офлайн-подтверждения",
+            "route": route.strip(),
+        }
+        for route in sorted(UNVERIFIED)
+        if route.startswith("/ui/")
+    ]
 
 
 # ---------- сравнение (чистая логика, без браузера) ----------
@@ -229,6 +256,23 @@ def diff_headings(
 
     real_added, real_removed = live_left, base_left
     return real_added, real_removed, counter_changes
+
+
+def _has_missing_headings(baseline_entry: dict | None, cap: "LiveCapture") -> bool:
+    """Есть ли заголовки, которые были в эталоне и не попали в живое снятие.
+
+    Признак для анти-флак-повтора: пропажа заголовков почти всегда означает, что
+    снимок сделан до конца отрисовки, а не что элемент убрали из продукта.
+    """
+    if not baseline_entry:
+        return False
+    base = [
+        (h.get("level", ""), h.get("text", ""))
+        for h in (baseline_entry.get("ui") or {}).get("headings") or []
+    ]
+    live = [(h.get("level", ""), h.get("text", "")) for h in cap.headings or []]
+    _added, removed, _counters = diff_headings(base, live)
+    return bool(removed)
 
 
 def compare_route(task: dict, baseline_entry: dict | None, cap: LiveCapture) -> DriftEntry:
@@ -307,7 +351,62 @@ def classify_status(http_status: int | None, body_text: str) -> str:
     return "ok"
 
 
-async def capture_route(page, task: dict) -> LiveCapture:
+RENDER_POLL_MS = 1000  # шаг опроса (заголовок, число h1-h4)
+RENDER_STABLE_SAMPLES = 3  # столько одинаковых замеров подряд считаем «дорисовалось»
+RENDER_MIN_SETTLE_MS = 4000  # раньше не снимаем даже при «стабильных» замерах
+RENDER_STABLE_TIMEOUT_MS = 20000  # верхняя граница ожидания
+RENDER_RETRY_SETTLE_MS = 6000  # доп. пауза при повторном снятии подозрительного роута
+
+
+async def wait_render_stable(page) -> str:
+    """Ждёт, пока SPA догрузит экран: заголовок И число подзаголовков перестают меняться.
+
+    Зачем отдельное ожидание. Прежнее условие готовности (innerText длиннее 40
+    символов) выполняется мгновенно одной навигационной оболочкой, поэтому
+    заголовок и подзаголовки снимались до отрисовки контент-зоны. Итог: все
+    Settings-страницы попадали в отчёт как CHANGED с вырожденным заголовком
+    «Settings - <окружение>», то есть отчёт кричал о дрейфе на каждом прогоне.
+    Тревога, которая срабатывает всегда, ничего не значит и приучает её
+    игнорировать.
+
+    Замер 2026-07-30 на `/ui/settings/builtin:deployment.oneagent.updates`: при
+    прямой загрузке правильный заголовок появляется за 3 секунды и дальше не
+    меняется, то есть дело было в моменте снятия, а не в тенанте.
+
+    Одного заголовка мало. На `/ui/user-sessions` он становится «Session List»
+    почти сразу, а панель фильтров подтягивается позже, поэтому в отчёте
+    «пропадали» все 12 её заголовков разом на шести маршрутах. Прямая проверка
+    2026-07-30 показала, что на живой странице они на месте. Поэтому ждём
+    стабилизации пары (заголовок, число h1-h4): пока разметка достраивается,
+    второе значение растёт, и снимок не делается.
+
+    Двух одинаковых замеров подряд тоже мало: оболочка успевает застыть на доли
+    секунды, пока панель фильтров ещё не пришла. Прямая проверка 2026-07-30: в
+    сериализованном HTML все 12 заголовков появляются примерно к 9-й секунде.
+    Поэтому требуем RENDER_STABLE_SAMPLES одинаковых замеров подряд и не снимаем
+    раньше RENDER_MIN_SETTLE_MS, даже если замеры уже совпали.
+    """
+    last: tuple[str, int] | None = None
+    same = 0
+    waited = 0
+    while waited < RENDER_STABLE_TIMEOUT_MS:
+        try:
+            current = (await page.title(), await page.locator("h1,h2,h3,h4").count())
+        except Exception:
+            return last[0] if last else ""
+        same = same + 1 if current == last else 0
+        last = current
+        if current[0] and same >= RENDER_STABLE_SAMPLES and waited >= RENDER_MIN_SETTLE_MS:
+            return current[0]
+        try:
+            await page.wait_for_timeout(RENDER_POLL_MS)
+        except Exception:
+            return last[0] if last else ""
+        waited += RENDER_POLL_MS
+    return last[0] if last else ""
+
+
+async def capture_route(page, task: dict, extra_settle_ms: int = 0) -> LiveCapture:
     url = normalize_url(TENANT_URL + task["route"])
     identity = dict(
         day_id=task["day_id"], topic_id=task["topic_id"],
@@ -337,6 +436,15 @@ async def capture_route(page, task: dict) -> LiveCapture:
     except Exception:
         pass
 
+    # Оболочка уже отрисована, но экран маршрута может быть ещё пуст: дожидаемся,
+    # пока заголовок и разметка перестанут меняться (см. докстринг wait_render_stable).
+    await wait_render_stable(page)
+    if extra_settle_ms:
+        try:
+            await page.wait_for_timeout(extra_settle_ms)
+        except Exception:
+            pass
+
     body_text = ""
     try:
         body_text = await page.evaluate("() => (document.body && document.body.innerText) || ''")
@@ -358,7 +466,11 @@ async def capture_route(page, task: dict) -> LiveCapture:
     )
 
 
-async def run_capture(tasks: list[dict], headless: bool) -> list[LiveCapture]:
+async def run_capture(
+    tasks: list[dict],
+    headless: bool,
+    baseline: dict[tuple[str, str, str], dict] | None = None,
+) -> list[LiveCapture]:
     captures: list[LiveCapture] = []
     async with async_playwright() as p:
         # Специально БЕЗ дополнительных launch-args и БЕЗ user_agent: и то, и
@@ -377,6 +489,21 @@ async def run_capture(tasks: list[dict], headless: bool) -> list[LiveCapture]:
         for i, task in enumerate(tasks, 1):
             log(f"[{i}/{len(tasks)}] {task['day_id']}/{task['topic_id']} -> {task['route']}")
             cap = await capture_route(page, task)
+
+            # Анти-флак: «пропавшие заголовки», это единственное направление, в
+            # котором отчёт врёт. Ленивая отрисовка успевает не всё, и панель,
+            # которая физически на месте, попадает в отчёт как удалённая (проверено
+            # 2026-07-30 на /ui/user-sessions: в полном прогоне 12 фильтров
+            # «исчезали», в точечном те же роуты чистые). Добавлений это не
+            # касается: лишнего разметка не придумывает. Поэтому только при
+            # пропажах снимаем роут повторно, с запасом по времени, и берём
+            # вторую попытку. Стоимость: один лишний заход на подозрительный роут.
+            baseline_entry = (baseline or {}).get(
+                (task["day_id"], task["topic_id"], task["route"])
+            )
+            if cap.status == "ok" and _has_missing_headings(baseline_entry, cap):
+                log("    пропали заголовки — повторное снятие с запасом")
+                cap = await capture_route(page, task, extra_settle_ms=RENDER_RETRY_SETTLE_MS)
 
             if cap.status == "session_expired":
                 await browser.close()
@@ -563,7 +690,7 @@ def main() -> int:
 
     log(f"drift_report: тенант={TENANT_URL} роутов={len(tasks)} headless={args.headless}")
 
-    captures = asyncio.run(run_capture(tasks, headless=args.headless))
+    captures = asyncio.run(run_capture(tasks, headless=args.headless, baseline=baseline))
 
     entries = [
         compare_route(task, baseline.get((task["day_id"], task["topic_id"], task["route"])), cap)

@@ -65,7 +65,9 @@
 
 **Фильтры слева:** разрез по ОС (Linux / Windows / AIX), по хост-группам, по тегам, по облачному провайдеру (AWS / Azure / GCP).
 
-**Клик на имя** открывает карточку хоста. Блоки:
+**Карточка хоста: как открыть.** Где: список хостов, **Infrastructure Observability → Hosts** (надёжнее через меню: живой адрес `https://guu84124.live.dynatrace.com/#newhosts`, типизированный маршрут снимка `https://guu84124.live.dynatrace.com/ui/entity/list/HOST`). Что нажать: имя машины в колонке имени хоста. Как вернуться: кнопка «назад» браузера либо снова **Infrastructure Observability → Hosts**.
+
+**Что внутри карточки хоста:**
 
 - **Overview**: сводка CPU / Memory / Disk / Network в реальном времени.
 - **Infrastructure**: графики каждой метрики: CPU per-core, Memory breakdown (Used/Cache/Buffers), Disk I/O, Network in/out.

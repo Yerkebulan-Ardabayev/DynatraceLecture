@@ -20,8 +20,8 @@
 | OneAgent features / все возможности агента | **Settings → Preferences → OneAgent features** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:oneagent.features` |
 | Process group monitoring / главный переключатель | **Settings → Processes and containers → Process group monitoring** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:process.process-monitoring` |
 | Built-in rules / встроенные правила | **Settings → Processes and containers → Built-in process monitoring rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:process.built-in-process-monitoring-rule` |
-| Custom rules / кастомные правила | **Settings → Processes and containers → Custom process monitoring** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:process.custom-process-monitoring` |
-| Process grouping rules / группировка | **Settings → Processes and containers → Process grouping rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:process-group.detection-rule` |
+| Custom rules / кастомные правила | **Settings → Processes and containers → Custom process monitoring rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:process.custom-process-monitoring-rule` |
+| Process grouping rules / группировка | **Settings → Processes and containers → Process grouping rules** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:process-grouping-rules` |
 
 **Термины темы.**
 
@@ -78,7 +78,7 @@
 
 **Ограничение в air-gapped.** Возможности привязаны к версии OneAgent. Чтобы иметь все свежие фичи, парк агентов должен быть на актуальной сборке. В закрытом контуре сборки появляются только после ручной загрузки через CMC. Фича из последнего релиза доступна только после того, как администратор перенёс пакет OneAgent с интернет-машины, загрузил в кластер и дал парку обновиться в ближайшее окно обслуживания. ЕСЛИ в колонке Min. OneAgent version стоит номер выше текущего парка → ТО фича в air-gapped пока недоступна: тумблер нажимается, но не сработает, пока администратор не перенесёт пакет OneAgent через CMC и парк не обновится. ЕСЛИ номер не выше парка → ТО фича включается сразу.
 
-**Работа с отдельной фичей.** Клик по стрелке в колонке Details раскрывает карточку с расширенным описанием: какие процессы на хосте будут инструментироваться, какие данные начнут собираться, какие параметры у сенсора, ссылка на документацию. В некоторых карточках есть дополнительные переключатели: например, для Business Events можно отдельно включить сбор событий по HTTP-запросам и по логам.
+**Работа с отдельной фичей.** Где: страница OneAgent features, **Settings → Preferences → OneAgent features** → `https://guu84124.live.dynatrace.com/ui/settings/builtin:oneagent.features`. Что нажать: стрелку в колонке **Details** в строке нужной фичи. Страница не меняется, строка раскрывается на месте и показывает расширенное описание: какие процессы на хосте будут инструментироваться, какие данные начнут собираться, какие параметры у сенсора, ссылка на документацию. В некоторых карточках есть дополнительные переключатели: например, для Business Events можно отдельно включить сбор событий по HTTP-запросам и по логам.
 
 **Связь с Host settings.** Тумблеры на этой странице действуют на уровне всего окружения. Включение = фича активна для всех хостов с достаточно новым OneAgent. Для точечного отключения на конкретном хосте используется **Host settings → OneAgent features**: переопределение глобальных решений для отдельной машины. На практике нужно редко, обычно для серверов, где определённая инструментация конфликтует с приложением.
 
@@ -152,7 +152,7 @@
 - **Условия**: логический набор проверок для применения правила (командная строка содержит строку, процесс слушает порт, переменная окружения имеет значение).
 - **Действие**: что OneAgent делает с процессом: как его назвать, в какую группу поместить, какие метрики снимать.
 
-**Редактирование встроенных правил.** Нельзя. Администратор может только включать и выключать. Для изменения поведения: **Custom process monitoring** (`https://guu84124.live.dynatrace.com/ui/settings/builtin:process.custom-process-monitoring`). Там собственные правила с теми же возможностями, но с приоритетом выше встроенных.
+**Редактирование встроенных правил.** Нельзя. Администратор может только включать и выключать. Для изменения поведения: **Custom process monitoring** (`https://guu84124.live.dynatrace.com/ui/settings/builtin:process.custom-process-monitoring-rule`). Там собственные правила с теми же возможностями, но с приоритетом выше встроенных.
 
 **Типичные сценарии работы.**
 

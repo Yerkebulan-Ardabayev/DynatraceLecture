@@ -19,7 +19,7 @@
 | Smartscape Topology (классический вид) | **Observe and explore → Smartscape Topology** | `https://guu84124.live.dynatrace.com/#smartscape` | **Работает** (сверено на живом тенанте 2026-07-28: заголовок «Smartscape topology»); Apps-роут снапшота `/ui/apps/dynatrace.classic.smartscape` давал 404 |
 | Hosts / хосты | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/#newhosts` | Уровень хостов списком (живой адрес пункта меню, сверено 2026-07-28) |
 | Services / сервисы | **Application Observability → Services** | `https://guu84124.live.dynatrace.com/ui/services` | Уровень сервисов списком |
-| Process Groups / группы процессов | **Infrastructure Observability → Technologies & Processes** | `https://guu84124.live.dynatrace.com/ui/technologies` | Процессы и группы |
+| Process Groups / группы процессов | **Infrastructure Observability → Technologies & Processes** | `https://guu84124.live.dynatrace.com/ui/entity/list/PROCESS_GROUP` (сверено вживую 2026-07-30, заголовок «Process Groups») | Процессы и группы |
 | Distributed Traces / распределённые трейсы | **Application Observability → Distributed Traces** | `https://guu84124.live.dynatrace.com/ui/diagnostictools/purepaths` | Карта вызовов между сервисами |
 
 **Термины темы.**
@@ -45,7 +45,7 @@
 
 **Запасной путь, если карта не открылась или нечитаема** (на больших инсталляциях единый граф читается тяжело):
 - Список **Hosts**: пункт меню Hosts, живой адрес `https://guu84124.live.dynatrace.com/#newhosts`.
-- Список **Process Groups**: `https://guu84124.live.dynatrace.com/ui/technologies`.
+- Список **Process Groups**: пункт меню **Infrastructure Observability → Technologies & Processes**, прямой адрес `https://guu84124.live.dynatrace.com/ui/entity/list/PROCESS_GROUP` (сверено вживую 2026-07-30, заголовок «Process Groups»).
 - Список **Services**: `https://guu84124.live.dynatrace.com/ui/services`.
 - Список **Applications**: `https://guu84124.live.dynatrace.com/ui/applications`.
 - Карта вызовов между сервисами: **Distributed Traces** `https://guu84124.live.dynatrace.com/ui/diagnostictools/purepaths`.

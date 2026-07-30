@@ -6,7 +6,7 @@ verified: 2026-07-12
 ---
 ## ГДЕ
 Живой экран: Observe and explore → Smartscape Topology, route `/#smartscape` (сверено 2026-07-28: заголовок «Smartscape topology», тумблеры Show problems / Show third-party vulnerabilities). Apps-роут снапшота `/ui/apps/dynatrace.classic.smartscape` отдавал 404.
-Запасные экраны: Hosts (`/#newhosts`), Services `/ui/services`, Process Groups (`/ui/technologies`), карта вызовов Distributed Traces (`/ui/diagnostictools/purepaths`); в карточке сущности раздел Service flow / Topology.
+Запасные экраны: Hosts (`/#newhosts`), Services `/ui/services`, Process Groups `/ui/entity/list/PROCESS_GROUP`, карта вызовов Distributed Traces (`/ui/diagnostictools/purepaths`); в карточке сущности раздел Service flow / Topology.
 
 ## ЗАЧЕМ
 Smartscape это непрерывно обновляемая карта зависимостей всей инфраструктуры по данным OneAgent, без ручной прорисовки.

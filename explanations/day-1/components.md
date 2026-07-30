@@ -101,7 +101,9 @@
 
 **Блок Automatic updates status / статус распространения.**
 
-По подсекциям в разрезе ОС: на снимке темы это Linux x86/64, Linux ARM, Windows, AIX (набор ОС в блоке зависит от вашего парка агентов, у вас он может отличаться: подсекция появляется для той ОС, чьи агенты есть в окружении). В каждой строки вида `X OneAgent instances is outdated. Target revision is 1.AAA.BBB (currently 1.CCC.DDD)`. Читается так: на этой ОС N агентов устарели, целевая сборка 1.AAA.BBB, у них сейчас 1.CCC.DDD. Клик по строке: проваливается в список конкретных хостов с этой версией.
+По подсекциям в разрезе ОС: на снимке темы это Linux x86/64, Linux ARM, Windows, AIX (набор ОС в блоке зависит от вашего парка агентов, у вас он может отличаться: подсекция появляется для той ОС, чьи агенты есть в окружении). В каждой строки вида `X OneAgent instances is outdated. Target revision is 1.AAA.BBB (currently 1.CCC.DDD)`. Читается так: на этой ОС N агентов устарели, целевая сборка 1.AAA.BBB, у них сейчас 1.CCC.DDD.
+
+Что нажать: саму строку `X OneAgent instances is outdated…`. Куда попадаешь: список конкретных хостов с этой версией агента, то есть на экран Deployment Status, **Manage → Deploy Dynatrace → Deployment status** → `https://guu84124.live.dynatrace.com/ui/deploymentstatus`. Дальше по имени хоста открывается его карточка. Разбор экрана Deployment Status: День 1, тема 12 «Установка OneAgent и контроль парка».
 
 **Air-gapped: как на самом деле работают обновления.**
 
@@ -134,7 +136,7 @@
 
 ![Update windows: список окон обслуживания агентов](screenshots/day-1/components/settings/builtindeployment.management.update-windows/Update-windows-for-OneAgent-updates-Environment-Settings-Demo-live-Demo-Live-Dyn.png)
 
-Путь: **Settings → Updates → Update windows for OneAgent updates** → `https://guu84124.live.dynatrace.com/ui/settings/builtin:deployment.management.update-windows`.
+Путь: **Settings → Updates → Update windows for OneAgent and ActiveGate** → `https://guu84124.live.dynatrace.com/ui/settings/builtin:deployment.management.update-windows`. Название страницы сверено вживую 2026-07-30: раньше она называлась «Update windows for OneAgent updates», теперь окно распространяется и на ActiveGate, поэтому на снимке этой темы заголовок старый.
 
 *Что делает.* Хранит **именованные окна обслуживания**: правила «когда разрешено обновление» в виде набора параметров: время начала и окончания, повторяемость (Once / Daily / Weekly / Monthly), часовой пояс. Окно создаётся один раз и привязывается к произвольному числу объектов: к агенту, к хост-группе или ко всему окружению.
 

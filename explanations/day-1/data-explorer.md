@@ -73,7 +73,9 @@
 
 **Advanced mode**: тумблер справа. Включает редактор **Metrics Selector** для сложных выражений: деление метрик, соотношения, агрегации по нескольким метрикам одновременно. Это не DQL: DQL живёт на SaaS-платформе поверх Grail, в Managed пока недоступен.
 
-**Start with a template**: готовые шаблоны визуализаций. На этом демо-тенанте представлены: Container restarts over time, Server-side response time, Web request/service failure rate, Kubernetes-дашборды, Disk space used %, Crash-free user rate, Core web vitals (LCP / CLS / FID), Application satisfaction SLO. Названия шаблонов процитированы с экрана как есть; заметка на полях: в актуальном наборе веб-стандарта Core Web Vitals показатель FID заменён на INP, шаблон отражает состояние сборки. Клик по шаблону моментально строит график на данных текущего окружения: удобно как стартовая точка или как референс синтаксиса.
+**Start with a template**: готовые шаблоны визуализаций. На этом демо-тенанте представлены: Container restarts over time, Server-side response time, Web request/service failure rate, Kubernetes-дашборды, Disk space used %, Crash-free user rate, Core web vitals (LCP / CLS / FID), Application satisfaction SLO. Названия шаблонов процитированы с экрана как есть; заметка на полях: в актуальном наборе веб-стандарта Core Web Vitals показатель FID заменён на INP, шаблон отражает состояние сборки.
+
+Как воспользоваться шаблоном: на экране Data Explorer (**Observe and explore → Data Explorer** → `https://guu84124.live.dynatrace.com/ui/data-explorer`) нажать на название шаблона в блоке **Start with a template**. Что произойдёт: график строится сразу, на данных вашего окружения, и открывается в том же редакторе. Дальше его правят как обычный запрос (Select metric, Split by, Filter) либо смотрят как референс синтаксиса.
 
 **Settings** в правой панели:
 - Тип линии.
@@ -124,7 +126,7 @@
 
 На демо-тенанте хорошо представлено семейство **billing**: `builtin:billing.full_stack_monitoring.metric_data_points.included`, `builtin:billing.infrastructure_monitoring.metric_data_points.included`, `builtin:billing.custom_metrics_classic.usage.other_by_entity`, `builtin:billing.synthetic.actions.usage_by_browser_monitor`. Эти метрики учитывают расход лицензии по типам мониторинга: Full Stack, Infrastructure, кастомные метрики, Synthetic, Log Monitoring.
 
-**Раскрытие строки** (клик по стрелке справа) показывает:
+**Раскрытие строки метрики.** Где: экран Metrics, **Observe and explore → Metrics** → `https://guu84124.live.dynatrace.com/ui/metrics`. Что нажать: стрелку в колонке **Details** справа в строке нужной метрики. Страница не меняется, строка раскрывается на месте и показывает:
 - Полное описание.
 - Единица измерения: проценты, байты, миллисекунды, запросы в минуту.
 - Доступные measurements: min, max, avg для time-series.

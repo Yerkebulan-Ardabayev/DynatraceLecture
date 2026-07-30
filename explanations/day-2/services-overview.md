@@ -59,7 +59,9 @@
 
 **Зачем разные имена у одного сервиса.** Если в кластере запущено два nginx-ingress-controller deployment'а на разных портах (9024 и 80,443), Dynatrace создаёт два Service, по одному на каждый port-сочетание. Это позволяет отдельно видеть метрики каждого endpoint.
 
-**Открываем конкретный сервис.** В карточке одного сервиса (клик по имени):
+**Открываем конкретный сервис.** Где: этот же экран Services, **Application Observability → Services** → `https://guu84124.live.dynatrace.com/ui/services`. Что нажать: имя сервиса в колонке **Name** (на демо для тренировки годится любая строка из списка выше, например `_:9024 nginx`), либо кнопку **Open service drilldown** в той же строке. Как вернуться: кнопка «назад» браузера либо снова **Application Observability → Services**.
+
+**Что внутри карточки:**
 - **Service properties**: Service type, Technology, Detection rule (которая его породила), Instances (связанные Process Groups).
 - **Service flow**: граф вызовов: кто ходит в этот сервис, куда он сам ходит.
 - **Top endpoints**: самые частые HTTP-эндпоинты.

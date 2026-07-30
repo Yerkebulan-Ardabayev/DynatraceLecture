@@ -202,7 +202,7 @@
 
 Страница управляет **переключением на новое Kubernetes-приложение**. В обычном Dynatrace старая страница K8s-мониторинга постепенно заменяется отдельным Kubernetes-приложением с расширенной визуализацией (топология кластера, drill-down до подов с корреляцией метрик и логов). <!-- qc:ignore=SAAS новый Kubernetes app назван как контекст; ниже явно сказано, что в air-gapped Managed его нет -->
 
-**Что на странице.** Тумблер или редирект: когда открывать классический UI (`/ui/kubernetes`), когда новое приложение.
+**Что на странице.** Тумблер или редирект: когда открывать классический UI (список кластеров `/ui/entity/list/KUBERNETES_CLUSTER`, адрес пункта меню **Infrastructure Observability → Kubernetes**), когда новое приложение.
 
 *В air-gapped Managed остаёмся на Classic UI.* Новое Kubernetes-приложение это часть Apps-платформы (тот же стек, на котором работают Grail и KSPM-findings), а её в изолированном контуре нет. Поэтому экран здесь по сути информационный: вся работа с кластерами идёт через классические страницы Kubernetes-мониторинга и пять экранов anomaly detection из Шагов 4-8, которые в Classic полностью функциональны (в документации помечены «Supported in: Kubernetes Classic, Kubernetes app»). <!-- last-verified: 2026-06-03 source: docs.dynatrace.com/managed/observe/infrastructure-observability/container-platform-monitoring/kubernetes-monitoring/alert-on-kubernetes-issues -->
 

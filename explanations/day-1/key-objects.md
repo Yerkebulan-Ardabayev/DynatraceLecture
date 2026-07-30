@@ -18,7 +18,7 @@
 | Сущность | Путь в меню | Прямая ссылка |
 |---|---|---|
 | **Hosts / хосты** | **Infrastructure Observability → Hosts** | `https://guu84124.live.dynatrace.com/#newhosts` (живой адрес пункта меню, сверено 2026-07-28; маршрут снапшота `/ui/entity/list/HOST`) |
-| **Process Groups / группы процессов** | **Infrastructure Observability → Technologies & Processes** | `https://guu84124.live.dynatrace.com/ui/technologies` |
+| **Process Groups / группы процессов** | **Infrastructure Observability → Technologies & Processes** | `https://guu84124.live.dynatrace.com/ui/entity/list/PROCESS_GROUP` (сверено вживую 2026-07-30, заголовок «Process Groups») |
 | **Services / сервисы** | **Application Observability → Services** | `https://guu84124.live.dynatrace.com/ui/services` |
 | **Applications / приложения** | **Application Observability → Frontend** | `https://guu84124.live.dynatrace.com/ui/applications` |
 
@@ -76,7 +76,9 @@ Data Center (ДЦ или облачный регион)
 
 На демо-тенанте в именах видны характерные признаки: `_:9024 nginx`, `_:80,443 nginx ingress-nginx-controller-*`, `:10246 nginx ingress-nginx-controller-*`: автообнаружение nginx-сервисов и Kubernetes ingress-контроллеров.
 
-**Карточка сервиса.** Клик по имени: ключевой инструмент расследования. В карточке:
+**Карточка сервиса: как открыть.** Где: этот же экран Services. Что нажать: имя сервиса в колонке **Name**, либо кнопку **Open service drilldown** в той же строке. Куда попадаешь: карточка одного сервиса, адрес вида `https://guu84124.live.dynatrace.com/ui/nav/SERVICE-4B770D7846DE018B`. Как вернуться: кнопка «назад» браузера либо снова **Application Observability → Services**. Дословный состав карточки и маршрут разбора: День 1, тема 5 «Обзор интерфейса и навигации», а полностью: День 2, тема 8.
+
+Что в карточке ищет инженер:
 - Графики Response time, Throughput, Failure rate за период, с наложением проблем.
 - **Service flow / граф вызовов сервиса**: карта, показывающая, кто вызывает сервис и кого вызывает он.
 - **Top requests / топ HTTP-эндпоинтов**: самые частые и самые медленные.
@@ -117,7 +119,7 @@ Data Center (ДЦ или облачный регион)
 - Сервисы: `https://guu84124.live.dynatrace.com/ui/services`
 - Приложения: `https://guu84124.live.dynatrace.com/ui/applications`
 - Базы данных: `https://guu84124.live.dynatrace.com/ui/databases`
-- Группы процессов: `https://guu84124.live.dynatrace.com/ui/technologies`
+- Группы процессов: `https://guu84124.live.dynatrace.com/ui/entity/list/PROCESS_GROUP` (сверено вживую 2026-07-30, заголовок «Process Groups»)
 - Контейнеры: `https://guu84124.live.dynatrace.com/ui/entity/list/CONTAINER_GROUP`
 - Kubernetes workloads: `https://guu84124.live.dynatrace.com/ui/entity/list/CLOUD_APPLICATION`
 
@@ -127,9 +129,9 @@ Data Center (ДЦ или облачный регион)
 
 На этом демо-тенанте страницы Hosts и Technologies & Processes не вошли в набор снятых скриншотов. Описание ниже: что инженер увидит на этих экранах на боевом окружении.
 
-**Hosts.** Таблица хостов с колонками: имя хоста, OS, версия OneAgent, CPU, Memory, Network, число процессов, теги, Management Zone. Фильтры слева по OS, тегам, MZ, состоянию OneAgent. Клик на хост открывает карточку с графиками и списком процессов.
+**Hosts.** Путь: **Infrastructure Observability → Hosts**; типизированный адрес списка `https://guu84124.live.dynatrace.com/ui/entity/list/HOST` (при живой досверке 2026-07-28 пункт меню вёл на классический `https://guu84124.live.dynatrace.com/#newhosts`, поэтому надёжнее идти через меню). Таблица хостов с колонками: имя хоста, OS, версия OneAgent, CPU, Memory, Network, число процессов, теги, Management Zone. Фильтры слева по OS, тегам, MZ, состоянию OneAgent. Карточка хоста: клик по имени хоста в таблице, внутри графики и список процессов. Подробный разбор: День 2, тема 3 «Хосты и процессы».
 
-**Technologies & Processes.** Группы процессов, сгруппированные по технологии (Java, .NET, Node.js, Python, nginx, Apache). Для каждой группы: число инстансов, CPU, память. Клик открывает карточку группы с графиками и списком экземпляров.
+**Technologies & Processes.** Путь: **Infrastructure Observability → Technologies & Processes**, прямой адрес `https://guu84124.live.dynatrace.com/ui/entity/list/PROCESS_GROUP` (сверено вживую 2026-07-30, заголовок «Process Groups»). Старый адрес `/ui/technologies` рабочей страницы не отдаёт (проверено вживую 2026-07-30: приходит пустая оболочка без заголовка). Группы процессов, сгруппированные по технологии (Java, .NET, Node.js, Python, nginx, Apache). Для каждой группы: число инстансов, CPU, память. Карточка группы: клик по плитке технологии, внутри графики и список экземпляров.
 
 ---
 

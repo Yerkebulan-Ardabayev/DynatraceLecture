@@ -351,6 +351,48 @@ def run_drift() -> str:
 
 # ---------------------------------------------------------------- notify
 
+def run_facts_check() -> str:
+    """Свежесть чисел тенанта (state/tenant_facts.json). Без сети и без модели.
+
+    Дёшево и всегда: просто читает даты наблюдения. Обновление значений — уже
+    отдельная команда (`tenant_facts.py --from-api`), она требует токена, и
+    вызывать её из джобы без явного решения владельца мы не будем.
+    """
+    script = ROOT / "scripts" / "tenant_facts.py"
+    if not script.exists():
+        return "пропущен: нет scripts/tenant_facts.py"
+    try:
+        p = subprocess.run([sys.executable, str(script), "--check"],
+                           capture_output=True, text=True, cwd=ROOT, timeout=60)
+        tail = (p.stdout + p.stderr).strip()[-800:]
+        verdict = "все факты свежие" if p.returncode == 0 else "ЕСТЬ ПРОТУХШИЕ"
+        return f"{verdict}\n{tail}"
+    except subprocess.TimeoutExpired:
+        return "прерван по таймауту"
+
+
+def run_routes_live() -> str:
+    """Подтверждение адресов курса по Settings API v2. Два HTTP-запроса, без браузера.
+
+    Покрывает 105 из 144 адресов (страницы Settings 2.0 и типизированные списки).
+    Без токена молча пропускаем: офлайн-сверка со снапшотом всё равно идёт в
+    гейте сборки, а требовать токен от джобы мы не вправе.
+    """
+    env = load_env()
+    if not (env.get("DT_API_TOKEN") and env.get("DT_TENANT")):
+        return "пропущен: нет DT_API_TOKEN в .env (офлайн-сверка со снапшотом идёт в гейте сборки)"
+    script = ROOT / "scripts" / "routes_check.py"
+    if not script.exists():
+        return "пропущен: нет scripts/routes_check.py"
+    try:
+        p = subprocess.run([sys.executable, str(script), "--confirm-live"],
+                           capture_output=True, text=True, cwd=ROOT, timeout=180)
+        tail = (p.stdout + p.stderr).strip()[-700:]
+        return f"{'обновлено' if p.returncode == 0 else f'rc={p.returncode}'}\n{tail}"
+    except subprocess.TimeoutExpired:
+        return "прерван по таймауту"
+
+
 def notify(title: str, message: str) -> None:
     try:
         subprocess.run(["osascript", "-e",
@@ -579,6 +621,8 @@ def run_cycle(args, run_id: str) -> int:
             applied_edits = [dict(e, rolled_back=True) for e in applied_edits]
 
     drift_line = "пропущен (--no-drift)" if args.no_drift else run_drift()
+    drift_line += "\n\n**Числа тенанта (`state/tenant_facts.json`):** " + run_facts_check()
+    drift_line += "\n\n**Адреса по Settings API v2:** " + run_routes_live()
 
     save_json(SNAPSHOT_FILE, snapshot)
     save_json(MANUAL_FILE, manual)

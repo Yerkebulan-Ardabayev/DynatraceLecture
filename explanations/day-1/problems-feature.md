@@ -20,7 +20,7 @@
 | Настройка уведомлений | **Settings → Integration → Problem notifications** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:problem.notifications` |
 | Категоризация готовых алертов | **Settings → Anomaly detection → Ready-made alerts category update** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:anomaly.detection.alerts-category-update` |
 | Alerting profiles / профили алертинга | **Settings → Alerting → Alerting profiles** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:alerting.profile` |
-| Maintenance windows / окна обслуживания | **Settings → Maintenance windows** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:maintenance-window` |
+| Maintenance windows / окна обслуживания | **Settings → Maintenance windows** | `https://guu84124.live.dynatrace.com/ui/settings/builtin:alerting.maintenance-window` |
 
 **Термины темы.**
 
@@ -138,7 +138,15 @@
 
 **Фаза 4. Уведомление.** Davis создаёт Problem, отправляет в активные проблемы. Привязанные Alerting profiles срабатывают. В профиль `prod-high-priority` (сервис Production, Impact Application) попадает эта проблема. Все интеграции профиля: email дежурному, Teams в канал `#prod-incidents`, Jira-тикет в проект `DEVOPS`: получают уведомление. Одно на всю проблему, а не пять на разные симптомы.
 
-**Фаза 5. Работа оператора.** Дежурный получает уведомление, открывает карточку проблемы. Видит: корневая причина: диск на `payment-host-03`. Проваливается в карточку хоста, смотрит метрики диска, замечает заполнение 99%. Логинится на хост, очищает временные файлы. В 14:28 iowait спадает, сервис возвращается к нормальному отклику.
+**Фаза 5. Работа оператора.** Те же действия в интерфейсе, по шагам (маршрут повторяется на любой реальной проблеме вашего тенанта):
+
+1. **Problems.** Дежурный получает уведомление и открывает **Observe and explore → Problems** → `https://guu84124.live.dynatrace.com/ui/problems`. Находит проблему по идентификатору `P-NNNNNNNN` из письма.
+2. **Карточка проблемы.** Клик по строке в колонке **Problem**. Видит хронологию, список затронутых сущностей и вывод Davis в поле **Root cause**: в нашем примере это диск на хосте `payment-host-03`.
+3. **Карточка хоста.** Клик по имени хоста прямо в поле **Root cause** карточки проблемы: так переход идёт сразу в нужную сущность, без возврата в списки. Смотрит метрики диска и видит заполнение 99%.
+4. **Действие вне Dynatrace.** Логинится на хост, очищает временные файлы.
+5. **Проверка.** Возвращается в карточку проблемы и следит за графиком: в 14:28 iowait спадает, сервис возвращается к нормальному отклику.
+
+Полный разбор переходов из карточки проблемы: День 2, тема 9 «Переход к сервисам и хостам из карточки Problems».
 
 **Фаза 6. Закрытие.** Davis, убедившись в устойчивом восстановлении, помечает проблему Closed. Jira-интеграция закрывает тикет, в Teams приходит сообщение «проблема разрешена». Проблема уходит из Open-списка, остаётся в истории для постмортема.
 

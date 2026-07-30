@@ -11,5 +11,7 @@ venv/
 .idea/
 .vscode/
 .link_check_cache.json
+drift_report.md
+drift_full.md
 .ruff_cache/
 *.backup-*

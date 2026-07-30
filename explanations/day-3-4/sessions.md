@@ -91,6 +91,8 @@
 
 *Триггеры отправки batch'а.* 1000 завершённых сессий, или объём bulk превысил ~896 KB, или прошло 30 секунд без новых завершений: что наступит первым.
 
+*Блок «Strict firewall policy?» на экране.* Появился на демо-тенанте (сверено вживую 2026-07-30): секция с текстом «To allow Dynatrace to send user session exports directly into your network, allow incoming connections from» и списком конкретных IP-адресов. Это блок SaaS-окружения: адреса принадлежат стороне Dynatrace, которая инициирует исходящее соединение в вашу сеть. Для своей инсталляции список источников нужно уточнять по своей схеме размещения, а не переносить адреса с этого экрана: на демо они относятся к SaaS-среде, а не к Managed-кластеру.
+
 <!-- last-verified: 2026-04-27 source: https://docs.dynatrace.com/managed/observe/digital-experience/session-segmentation/export-session-data -->
 
 ---

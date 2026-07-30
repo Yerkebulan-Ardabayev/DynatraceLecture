@@ -49,9 +49,11 @@
 
 Путь: **Application Observability → Frontend → Applications** → `https://guu84124.live.dynatrace.com/#uemapplications`.
 
-**Что на экране.** Заголовок **24 Applications** и кнопка **Monitoring settings**. Слева панель фильтров: **Status** (Monitored), **Application type** (Web applications, Mobile apps, Custom applications), **Injection type**, **Platform** (Android / iOS / Windows), **Tags**. Справа таблица приложений с колонками **Name / Application type / Performance**. В колонке Performance у каждого приложения рейтинг Apdex (Excellent / Good / Fair и далее); у проблемных строка подсвечена и подписана причиной (например, «Too many slow user actions»). Примеры на этом демо: Astroshop, www.angular.easytravel.com, easyTravel .NET, easyTravel mainframe, SAP_RUM. Клик по строке открывает дашборд конкретного приложения.
+**Что на экране.** Заголовок на снимке этой темы: **24 Applications** (у вашего тенанта число другое) и кнопка **Monitoring settings**. Слева панель фильтров: **Status** (Monitored), **Application type** (Web applications, Mobile apps, Custom applications), **Injection type**, **Platform** (Android / iOS / Windows), **Tags**. Справа таблица приложений с колонками **Name / Application type / Performance**. В колонке Performance у каждого приложения рейтинг Apdex (Excellent / Good / Fair и далее); у проблемных строка подсвечена и подписана причиной (например, «Too many slow user actions»). Примеры на этом демо: Astroshop, www.angular.easytravel.com, easyTravel .NET, easyTravel mainframe, SAP_RUM.
 
-**Что внутри приложения.** Клик по строке открывает дашборд приложения, где видно:
+**Карточка приложения: как открыть.** Где: этот же экран Applications. Что нажать: имя приложения в колонке **Name** (для тренировки берите реальное с демо, например `Astroshop`). Куда попадаешь: дашборд одного приложения. Как вернуться: кнопка «назад» браузера либо снова **Application Observability → Frontend → Applications**.
+
+**Что внутри карточки приложения:**
 - **Apdex / индекс удовлетворённости**: число от 0 до 1.
 - **Число активных пользователей**: в реальном времени и за период.
 - **Медианное и 90-й перцентиль времени загрузки**.
@@ -121,7 +123,9 @@
 - **Total conversions**: сколько бизнес-целей пройдено.
 - **Errors and annoyances**: ошибки и раздражители сессии.
 
-**Карточка сессии.** Клик на строку открывает подробную карточку. В ней:
+**Карточка сессии: как открыть.** Где: экран User sessions, **Application Observability → Frontend → User sessions** → `https://guu84124.live.dynatrace.com/ui/user-sessions`. Что нажать: строку сессии в таблице справа (колонка **User session** с временем старта визита). Куда попадаешь: карточка одного визита. Как вернуться: кнопка «назад» браузера либо снова **User sessions**.
+
+**Что внутри карточки сессии:**
 - Полная хронология действий пользователя.
 - Все страницы, которые он посетил.
 - Все JavaScript-ошибки со стеком.

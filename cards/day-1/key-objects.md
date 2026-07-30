@@ -5,7 +5,7 @@ timing_min: 18
 verified: 2026-07-12
 ---
 ## ГДЕ
-Четыре типа объектов: Hosts (Infrastructure Observability → Hosts, живой route `/#newhosts`, сверено 2026-07-28), Process Groups (`/ui/technologies`), Services `/ui/services`, Applications `/ui/applications`.
+Четыре типа объектов: Hosts (Infrastructure Observability → Hosts, живой route `/#newhosts`, сверено 2026-07-28), Process Groups `/ui/entity/list/PROCESS_GROUP`, Services `/ui/services`, Applications `/ui/applications`.
 Универсальный route темы `/ui/entity/list` отдаёт 404: вместо него пункты меню по типам сущностей или глобальный поиск Ctrl+Shift+F.
 
 ## ЗАЧЕМ

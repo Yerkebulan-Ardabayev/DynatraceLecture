@@ -272,6 +272,141 @@ SOURCE_MARKER_RE = re.compile(
 SRC_WINDOW = 10  # строк ± (в размер секции/таблицы)
 
 
+# ---------- ROUTE DETECTORS ------------------------------------------------
+# Курс должен быть воспроизводим: ученик обязан суметь повторить показанное,
+# не догадываясь, где живёт объект и что нажать. Два дефекта, из-за которых
+# это ломается (правка 2026-07-30 по замечанию владельца курса):
+#   ROUTE_SCENARIO_NO_STEPS (error) — сценарий пересказан прозой, без шагов.
+#   ROUTE_NO_ADDRESS        (error) — объект/клик описан без адреса рядом.
+# Оба сняты с реальных дефектов ui-overview.md: «Карточка сервиса. Клик по
+# имени» (где именно имя, что откроется, какой URL?) и «Типичный сценарий.
+# Инженер ищет payment-service…» (сервис выдуман, повторить нельзя).
+
+# Заголовок или лид-абзац, который обещает сценарий/маршрут.
+SCENARIO_INTRO_RE = re.compile(
+    r"^(?:#{2,6}\s*|\*\*|[-*]\s*\*\*)?"
+    r"(?:Типичный|Типовой|Практический)?\s*"
+    r"(?:сценари[йя]|маршрут)\b",
+    re.IGNORECASE,
+)
+# Нумерованный шаг: «1. …». Ищем именно начало списка.
+STEP_START_RE = re.compile(r"^\s*1\.\s+\S")
+SCENARIO_WINDOW = 14  # строк вперёд, в которых обязан начаться список шагов
+
+# Детектор бьёт только по сценариям, которые показывают в интерфейсе. Слово
+# «сценарий» в курсе значит ещё и «вариант конфигурации» (нарезка окружения на
+# Production/Staging/Dev), там нумерованные шаги были бы неуместны. Отличаем по
+# наличию навигации в теле блока.
+NAVIGATION_MARKER_RE = re.compile(
+    r"клик|нажат|открыва|перехо|провалива|экран|карточк|drilldown|/ui/",
+    re.IGNORECASE,
+)
+
+# Объект или действие, требующие адреса: «Карточка X», «Клик по … открывает».
+OBJECT_INTRO_RE = re.compile(
+    r"(?:^|\*\*)Карточка\s+[а-яёa-z]+"
+    r"|Клик(?:\s+по|\s+на|аю)?\b[^.]{0,80}?(?:открывает|раскрывает|ведёт|проваливается)",
+    re.IGNORECASE,
+)
+# Что считается адресом: URL тенанта, маршрут /ui/, строка «Путь:»,
+# явный блок «Как открыть» либо путь по меню со стрелкой между пунктами.
+ADDRESS_RE = re.compile(
+    r"https?://[^\s`]*dynatrace\.com/(?:ui|#)"
+    r"|/ui/[a-z#]"
+    r"|Путь(?:\s+в\s+меню)?:"
+    r"|Как\s+открыть"
+    r"|Что\s+нажать"
+    r"|\*\*[^*]{3,40}\s+→\s+[^*]{3,40}\*\*",
+    re.IGNORECASE,
+)
+ADDR_WINDOW = 12  # строк ± (лид-абзац секции обычно держит путь выше блока)
+
+# Абзацы-определения: перечисление терминов, глоссарий, «X (путь): это …».
+# Там клик упоминается как пример, а не как действие на экране.
+DEFINITION_GUARD_RE = re.compile(
+    r"Термины\s+темы"
+    r"|^\s*[-*]\s*\*\*[^*]+\s*\((?:путь|воронка)\)\*\*"
+    r"|Настраивается\s+через",
+    re.IGNORECASE,
+)
+
+
+def _in_code_fence(lines: list[str]) -> list[bool]:
+    """Маска: True для строк внутри ``` … ``` (детекторы их не трогают)."""
+    inside = False
+    mask: list[bool] = []
+    for line in lines:
+        if line.lstrip().startswith("```"):
+            inside = not inside
+            mask.append(True)
+            continue
+        mask.append(inside)
+    return mask
+
+
+def scan_routes(rel: str, lines: list[str]) -> list[Issue]:
+    """Детекторы воспроизводимости: сценарий без шагов, объект без адреса."""
+    issues: list[Issue] = []
+    fence = _in_code_fence(lines)
+
+    for idx, line in enumerate(lines):
+        if fence[idx]:
+            continue
+        stripped = line.strip()
+        if not stripped:
+            continue
+        ignored = _ignored_classes(line)
+        if "*" in ignored:
+            continue
+
+        # 1. Сценарий обязан разворачиваться в нумерованные шаги.
+        if "ROUTE_SCENARIO_NO_STEPS" not in ignored and SCENARIO_INTRO_RE.match(stripped):
+            window = lines[idx + 1 : idx + 1 + SCENARIO_WINDOW]
+            navigational = NAVIGATION_MARKER_RE.search(stripped) or NAVIGATION_MARKER_RE.search(
+                "\n".join(window)
+            )
+            if navigational and not any(STEP_START_RE.match(w) for w in window):
+                issues.append(
+                    Issue(
+                        file=rel,
+                        line=idx + 1,
+                        cls="ROUTE_SCENARIO_NO_STEPS",
+                        severity="error",
+                        snippet=stripped[:160],
+                        suggestion=(
+                            "сценарий пересказан прозой — развернуть в нумерованные шаги "
+                            "(где я → что делаю → что вижу → почему дальше туда), "
+                            "пример: explanations/day-1/ui-overview.md"
+                        ),
+                    )
+                )
+
+        # 2. Объект или клик обязан иметь адрес рядом.
+        if "ROUTE_NO_ADDRESS" in ignored or DEFINITION_GUARD_RE.search(stripped):
+            continue
+        if not OBJECT_INTRO_RE.search(stripped):
+            continue
+        lo = max(0, idx - ADDR_WINDOW)
+        hi = min(len(lines), idx + ADDR_WINDOW + 1)
+        if ADDRESS_RE.search("\n".join(lines[lo:hi])):
+            continue
+        issues.append(
+            Issue(
+                file=rel,
+                line=idx + 1,
+                cls="ROUTE_NO_ADDRESS",
+                severity="error",
+                snippet=stripped[:160],
+                suggestion=(
+                    "объект описан без адреса — добавить рядом «Как открыть»: "
+                    "путь по меню, что нажать, куда попадаешь "
+                    "(URL брать из ui_elements.json / study_plan.yaml, не выдумывать)"
+                ),
+            )
+        )
+    return issues
+
+
 def scan_file(path: Path) -> list[Issue]:
     rel = path.relative_to(ROOT).as_posix()
     issues: list[Issue] = []
@@ -342,6 +477,8 @@ def scan_file(path: Path) -> list[Issue]:
                         ),
                     )
                 )
+
+    issues.extend(scan_routes(rel, lines))
     return issues
 
 

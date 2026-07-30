@@ -32,6 +32,7 @@ EXPL_DIR = ROOT / "explanations"
 OUT_FILE = ROOT / "output" / "training.html"
 QC_SCRIPT = ROOT / "scripts" / "quality_check.py"
 LC_SCRIPT = ROOT / "scripts" / "link_check.py"
+RC_SCRIPT = ROOT / "scripts" / "routes_check.py"
 
 
 def pre_build_quality_check(cards: bool = False) -> None:
@@ -74,6 +75,44 @@ def pre_build_quality_check(cards: bool = False) -> None:
         )
         sys.exit(result.returncode)
     print("✓ quality_check: ✅ 0 errors\n")
+
+
+def pre_build_routes_check() -> None:
+    """Сверяет адреса тенанта в explanations с study_plan.yaml и ui_elements.json.
+
+    Без сети: ground truth уже в репозитории. Ловит опечатки и выдуманные
+    маршруты — курс обещает ученику конкретный адрес, и адрес обязан быть
+    настоящим. Неизвестный адрес блокирует сборку (--strict); «не сверено»
+    печатается предупреждением. Отключается SKIP_RC=1 (только отладка).
+    """
+    if os.environ.get("SKIP_RC") == "1":
+        print("⚠️  SKIP_RC=1 — routes_check пропущен (отладка; не коммитить так).")
+        return
+    if not RC_SCRIPT.exists():
+        print(f"⚠️  {RC_SCRIPT} не найден — routes_check пропущен.")
+        return
+    print("→ routes_check…")
+    result = subprocess.run(
+        [sys.executable, str(RC_SCRIPT), "--strict"],
+        cwd=str(ROOT),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if result.stdout:
+        print(result.stdout.rstrip())
+    if result.stderr:
+        print(result.stderr.rstrip(), file=sys.stderr)
+    if result.returncode != 0:
+        print(
+            "\n❌ BUILD BLOCKED: routes_check нашёл адрес вне ground truth. "
+            "Исправить адрес по study_plan.yaml / ui_elements.json либо внести "
+            "в ALLOWLIST в scripts/routes_check.py с обоснованием.",
+            file=sys.stderr,
+        )
+        sys.exit(result.returncode)
+    print("✓ routes_check: адреса сверены\n")
 
 
 def pre_build_link_check() -> None:
@@ -1149,6 +1188,7 @@ def render_v2_html(data: list, build_id: str) -> str:
 def main():
     v2 = "--v2" in sys.argv[1:]
     pre_build_quality_check(cards=v2)
+    pre_build_routes_check()
     pre_build_link_check()
     plan = load_plan()
     pages = load_pages()
