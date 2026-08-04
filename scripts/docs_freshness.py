@@ -52,6 +52,16 @@ REPORT_FILE = ROOT / "output" / "freshness_report.md"
 ARCHIVE_DIR = ROOT / "logs" / "freshness"
 STORAGE_STATE = STATE_DIR / "storage_state.json"
 
+# .env проекта: под launchd переменных окружения нет, а оттуда берутся токен
+# claude (`claude setup-token`) и реквизиты Telegram-уведомления. Загружаем ДО
+# первого чтения os.environ, без перезаписи уже заданного снаружи.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env", override=False)
+except ImportError:  # dev-запуск без python-dotenv: переменные ставит окружение
+    pass
+
 WATCH_HOSTS = ("docs.dynatrace.com",)   # следим только за официальной документацией
 MAX_LLM_PER_RUN = 12                    # защита от всплеска: остальное в следующий запуск
 MAX_ATTEMPTS_PER_DIFF = 2               # после двух неудачных LLM-попыток — в ручной разбор
@@ -224,12 +234,37 @@ FILE>>>
 Поле "old" обязано встречаться в файле ровно один раз: копируй его посимвольно, включая пробелы."""
 
 
+def _claude_env() -> dict[str, str]:
+    """Окружение для `claude -p` под launchd.
+
+    Без этого джоба падала с `rc=1: Not logged in · Please run /login`: launchd
+    даёт голое окружение без интерактивной сессии claude, и проверка свежести
+    молча доезжала до конца БЕЗ модели (2026-08-04). Токен берём из .env проекта
+    (`claude setup-token`), он же gitignored.
+
+    ANTHROPIC_*/CLAUDE_CODE_* родителя срезаем ВСЕГДА, даже когда токена нет:
+    иначе унаследованный ANTHROPIC_API_KEY увёл бы вызов на метрический
+    pay-as-you-go (деньги за токены вместо подписки), а чужой ANTHROPIC_BASE_URL
+    на другой endpoint. Паттерн тот же, что в ботах ai_news_bot/football.
+    """
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if not (k.upper().startswith("ANTHROPIC") or k.upper().startswith("CLAUDE_CODE"))
+    }
+    token = os.environ.get("CLAUDE_CODE_OAUTH_TOKEN", "")
+    if token:
+        env["CLAUDE_CODE_OAUTH_TOKEN"] = token
+    return env
+
+
 def call_claude(prompt: str, claude_bin: str) -> tuple[dict | None, str]:
     """Вернёт (parsed_json | None, raw_output). Оба потока в лог (причина ошибки в stdout)."""
     try:
         p = subprocess.run(
             [claude_bin, "-p", "--model", CLAUDE_MODEL],
             input=prompt, capture_output=True, text=True, timeout=CLAUDE_TIMEOUT,
+            env=_claude_env(),
         )
     except subprocess.TimeoutExpired:
         return None, "timeout"
